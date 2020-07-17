@@ -4,6 +4,9 @@ include("CalGeneral.js")
 
 // Global definitions
 cbvt_VmaxAC = 8000;		// in V
+cbvt_VminAC = 1000;		// in V
+cbvt_VstpAC = 500;		// in V
+
 cbvt_VmaxDC	= 4500;		// in V
 //
 cbvt_Shunt	= 100;		// in Ohms
@@ -74,9 +77,9 @@ function CBVT_CalibrateV()
 {
 	cbvt_MaxP = 0;
 	//
-	cbvt_Vmin	= 500;
+	cbvt_Vmin	= cbvt_VminAC;
 	cbvt_Vmax	= cbvt_VmaxAC;
-	cbvt_Vstp	= 500;
+	cbvt_Vstp	= cbvt_VstpAC;
 	
 	CBVT_Prepare();
 	CBVT_ResetVCal();
@@ -110,7 +113,7 @@ function CBVT_CalibrateI()
 	cbvt_MaxP = 0;
 	//
 	var Vmax = Math.round(cbvt_Ilimit1 * cbvt_R * 0.9 / 1000);
-	cbvt_Vmin = 500;
+	cbvt_Vmin = cbvt_VminAC;
 	cbvt_Vmax = (Vmax > cbvt_VmaxAC) ? cbvt_VmaxAC : Vmax;
 	cbvt_Vstp = Math.round((cbvt_Vmax - cbvt_Vmin) / 10);
 	
@@ -122,7 +125,7 @@ function CBVT_CalibrateIP()
 	cbvt_MaxP = 1;
 	//
 	var Vmax = Math.round(cbvt_Ilimit2 * cbvt_RP * 0.9 / 1000);
-	cbvt_Vmin = 500;
+	cbvt_Vmin = cbvt_VminAC;
 	cbvt_Vmax = (Vmax > cbvt_VmaxAC) ? cbvt_VmaxAC : Vmax;
 	cbvt_Vstp = Math.round((cbvt_Vmax - cbvt_Vmin) / 10);
 	
@@ -162,9 +165,9 @@ function CBVT_VerifyV()
 {
 	cbvt_MaxP = 0;
 	//
-	cbvt_Vmin	= 500;
+	cbvt_Vmin	= cbvt_VminAC;
 	cbvt_Vmax	= cbvt_VmaxAC;
-	cbvt_Vstp	= 500;
+	cbvt_Vstp	= cbvt_VstpAC;
 	
 	CBVT_Prepare();
 	
@@ -185,7 +188,7 @@ function CBVT_VerifyI()
 	cbvt_MaxP = 0;
 	//
 	var Vmax = Math.round(cbvt_Ilimit1 * cbvt_R * 0.9 / 1000);
-	cbvt_Vmin = 500;
+	cbvt_Vmin = cbvt_VminAC;
 	cbvt_Vmax = (Vmax > cbvt_VmaxAC) ? cbvt_VmaxAC : Vmax;
 	cbvt_Vstp = Math.round((cbvt_Vmax - cbvt_Vmin) / 10);
 	
@@ -197,7 +200,7 @@ function CBVT_VerifyIP()
 	cbvt_MaxP = 1;
 	//
 	var Vmax = Math.round(cbvt_Ilimit2 * cbvt_RP * 0.9 / 1000);
-	cbvt_Vmin = 500;
+	cbvt_Vmin = cbvt_VminAC;
 	cbvt_Vmax = (Vmax > cbvt_VmaxAC) ? cbvt_VmaxAC : Vmax;
 	cbvt_Vstp = Math.round((cbvt_Vmax - cbvt_Vmin) / 10);
 	
