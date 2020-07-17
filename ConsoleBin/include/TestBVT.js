@@ -6,21 +6,22 @@ bvt_idrm = [];
 bvt_irrm = [];
 
 bvt_direct = 1;
-bvt_start_v = 500;
-bvt_rate = 20;
-bvt_test_time = 3000;
-bvt_pulse_sleep = 1000;
+bvt_start_v = 500;			// in V
+bvt_rate = 20;				// in kV/s x10
+bvt_test_time = 3000;		// in ms
+bvt_pulse_sleep = 1000;		// in ms
+bvt_5hz_current = 50;		// in mA
 
 function BVT_StartPulse(N, Voltage, Current)
 {	
 	dev.w(128, 3);				// Test type - reverse pulse
-	dev.w(130, Current);		// Voltage
-	dev.w(131, Voltage);		// Current
+	dev.w(130, Current);
+	dev.w(131, Voltage);
 	dev.w(132, bvt_test_time)	// Time plate
 	dev.w(133, bvt_rate);		// Rise rate
 	dev.w(134, bvt_start_v);	// Start voltage
 	
-	if (Current > 500)
+	if (Current > bvt_5hz_current * 10)
 		dev.w(136, 10);
 	else
 		dev.w(136, 1);
