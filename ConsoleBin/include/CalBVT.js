@@ -19,6 +19,7 @@ cbvt_RangeV = 2;		// Voltage range number
 cbvt_RangeI = 1;		// Current range number
 //
 cbvt_UseRangeTuning = 1;
+cbvt_UseMicroAmps = 0;	// Use microamp precision for current
 //
 cbvt_Vmin	= 0;
 cbvt_Vmax	= 0;
@@ -462,7 +463,7 @@ function CBVT_MeasureI(Channel)
 	var f = TEK_Measure(Channel);
 	if (Math.abs(f) > 2e+4)
 		f = 0;
-	return (f / ((cbvt_MaxP == 0) ? cbvt_Shunt : cbvt_ShuntP) * 1000).toFixed(2);
+	return f / ((cbvt_MaxP == 0) ? cbvt_Shunt : cbvt_ShuntP) * 1000;
 }
 
 function CBVT_MeasureIDC(Channel)
@@ -484,7 +485,7 @@ function CBVT_Probe(PrintMode)
 	var f_i = CBVT_MeasureI(cbvt_chMeasureI);
 	
 	var v = Math.abs(dev.rs(198));
-	var i = Math.abs(dev.rs(199) / 10);
+	var i = BVT_ReadCurrent(cbvt_UseMicroAmps);
 	
 	cbvt_v.push(v);
 	cbvt_i.push(i);
@@ -508,8 +509,8 @@ function CBVT_Probe(PrintMode)
 			break;
 		
 		case 2:
-			print("I,    mA: " + i);
-			print("Itek, mA: " + f_i);
+			print("I,    mA: " + i.toFixed(cbvt_UseMicroAmps ? 3 : 1));
+			print("Itek, mA: " + f_i.toFixed(3));
 			break;
 	}
 	

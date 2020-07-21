@@ -6,6 +6,7 @@ bvt_idrm = [];
 bvt_irrm = [];
 
 bvt_direct = 1;
+bvt_use_microamps = 0;		// use microampere precision
 bvt_start_v = 500;			// in V
 bvt_rate = 20;				// in kV/s x10
 bvt_test_time = 3000;		// in ms
@@ -35,12 +36,12 @@ function BVT_StartPulse(N, Voltage, Current)
 		if (bvt_direct)
 		{
 			print("Vdrm,  V: " + Math.abs(dev.rs(198)));
-			print("Idrm, mA: " + Math.abs(dev.rs(199) / 10));
+			print("Idrm, mA: " + BVT_ReadCurrent(bvt_use_microamps).toFixed(bvt_use_microamps ? 3 : 1));
 		}
 		else
 		{
 			print("Vrrm,  V: " + Math.abs(dev.rs(198)));
-			print("Irrm, mA: " + Math.abs(dev.rs(199) / 10));
+			print("Irrm, mA: " + BVT_ReadCurrent(bvt_use_microamps).toFixed(bvt_use_microamps ? 3 : 1));
 		}
 		print("-------------");
 		
@@ -173,6 +174,15 @@ function BVT_Test(Voltage, Current)
 	dev.w(131, Voltage);
 	//
 	dev.c(100);
+}
+
+function BVT_ReadCurrent(UseMicroAmps)
+{
+	var CoarseI = Math.abs(dev.r(199) / 10);
+	if (UseMicroAmps)
+		return Math.floor(CoarseI) + dev.r(200) / 1000;
+	else
+		return CoarseI;
 }
 
 function BVT_Read()
