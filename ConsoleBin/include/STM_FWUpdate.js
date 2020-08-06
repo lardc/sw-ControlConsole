@@ -117,193 +117,55 @@
 		print("The memory has been cleared!");
 	}
 }
+//------------------------
+
+// TOMU HP
+function FWU_TOMUHP()
+{
+	FWUpdateSTM("../../hw-TOMUHPControlBoard/Firmware/Release/TOMUHPControlBoard.binary");
+}
+
+function FWU_DumpTOMUHP()
+{
+	dev.Dump("../../hw-TOMUHPControlBoard/tomuhp.regdump", 0, 126);
+}
+
+function FWU_RestoreTOMUHP()
+{
+	dev.Restore("../../hw-TOMUHPControlBoard/tomuhp.regdump");
+}
+//------------------------
+
+// TOCU HP
+function FWU_TOCUHP()
+{
+	FWUpdateSTM("../../hw-TOCUHPControlBoard/Firmware/Release/TOCUHPControlBoard.binary");
+}
+
+function FWU_DumpTOCUHP()
+{
+	dev.Dump("../../hw-TOCUHPControlBoard/Firmware/tocuhp.regdump", 0, 126);
+}
+
+function FWU_RestoreTOCUHP()
+{
+	dev.Restore("../../hw-TOCUHPControlBoard/Firmware/tocuhp.regdump");
+}
+//------------------------
 
 // LSLH
-function FWU_LSLH(Version)
+function FWU_LSLH()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdateSTM("../../../../../../../Static Losses/LSLH/Controller soft/Version " + Version + "/Soft/Debug/Exe/LSLH.bin");
+	FWUpdateSTM("../../hw-LSLHControlBoard/Firmware/Release/LSLHControlBoard.binary");
 }
 
-function FWU_DumpLSLH(Version)
+function FWU_DumpLSLH()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../Static Losses/LSLH/Controller soft/Version " + Version + "/Soft/lslh.regdump", 0, 126);
+	dev.Dump("../../hw-LSLHControlBoard/Firmware/lslh.regdump", 0, 126);
 }
 
-function FWU_RestoreLSLH(Version)
+function FWU_RestoreLSLH()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../Static Losses/LSLH/Controller soft/Version " + Version + "/Soft/lslh.regdump");
-}
-//------------------------
-
-// LSLPC
-function FWU_LSLPC(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdateSTM("../../../../../../../Static Losses/LSLPC/Controller soft/Version " + Version + "/Soft/Debug/Exe/LSLPowerCell.bin");
-}
-
-function FWU_DumpLSLPC(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../Static Losses/LSLPC/Controller soft/Version " + Version + "/Soft/lslpc.regdump", 0, 62);
-}
-
-function FWU_RestoreLSLPC(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../Static Losses/LSLPC/Controller soft/Version " + Version + "/Soft/lslpc.regdump");
-}
-//------------------------
-
-function FWU_SCH()
-{
-	FWUpdateSTM("../../../../../../../Surge Current Test Unit/SCH/Controller soft/Version 2.0/SCHead/Soft/Debug/Exe/SCHead.bin");
-}
-
-function FWU_SCPC()
-{
-	FWUpdateSTM("E:/proton/Test equipment/Surge Current Test Unit/SCPC/Controller soft/Version 1.1/Soft/Debug/Exe/SCPowerCell.bin");
-}
-
-function FWU_SCPC2()
-{
-	FWUpdateSTM("../../../../../../../Surge Current Test Unit/SCPC/Controller soft/Version 2.0/Soft/Debug/Exe/SCPowerCell.bin");
-}
-
-function FWU_ATUold()
-{
-	FWUpdateSTM("../../../../../../../Avalanche Test Unit/Controller soft/Version 2.0 - ATU HP/Soft/Debug/Exe/ATU.bin");
-}
-
-// QPU
-function FWU_QPU()
-{
-	FWUpdateSTM("../../../../../../../QRR Tester/QPU LP/Controllers Soft/Version 1.0/QrrtqCurrentControlBoard/Debug/Exe/QrrtqCurrentControlBoard.bin");
-}
-
-function FWU_DumpQPU()
-{
-	dev.Dump("../../../../../../../QRR Tester/QPU LP/Controllers Soft/Version 1.0/QrrtqCurrentControlBoard/qpu.regdump", 0, 62);
-}
-
-function FWU_RestoreQPU()
-{
-	dev.Restore("../../../../../../../QRR Tester/QPU LP/Controllers Soft/Version 1.0/QrrtqCurrentControlBoard/qpu.regdump");
-}
-//------------------------
-
-// TOMU
-function FWU_TOMU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdateSTM("../../../../../../../Turn On Unit/Controller soft/Version " + Version + "/TOMUControlBoard/Release/TOMUControlBoard.binary");
-}
-
-function FWU_DumpTOMU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../Turn On Unit/Controller soft/Version " + Version + "/TOMUControlBoard/tomu.regdump", 0, 126);
-}
-
-function FWU_RestoreTOMU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../Turn On Unit/Controller soft/Version " + Version + "/TOMUControlBoard/tomu.regdump");
-}
-//------------------------
-
-// ATU
-function FWU_ATU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdateSTM("../../../../../../../Avalanche Test Unit/Controller soft/Version " + Version + "/ATUControlBoard/Release/ATUControlBoard.binary");
-}
-
-function FWU_DumpATU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../Avalanche Test Unit/Controller soft/Version " + Version + "/ATUControlBoard/atu.regdump", 0, 62);
-}
-
-function FWU_RestoreATU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../Avalanche Test Unit/Controller soft/Version " + Version + "/ATUControlBoard/atu.regdump");
-}
-//------------------------
-
-// DCU RCU
-function FWU_DRCU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdateSTM("../../../../../../../Qrr tq/DCU/Controller Soft/Version " + Version + "/DRCUControlBoard/Release/DRCUControlBoard.binary");
+	dev.Restore("../../hw-LSLHControlBoard/Firmware/lslh.regdump");
 }
 //------------------------
