@@ -184,37 +184,19 @@ function FWU_RestoreGTU(Version)
 //------------------------
 
 // BVT
-function FWU_BVT(Version)
+function FWU_BVT()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../Blocking Voltage Tester/Controllers soft/Version " + Version + "/BVTMainBoard/Release/BVTControlBoard.hex");
+	FWUpdate('../../hw-BVTControlBoard/Firmware/Release/BVTControlBoard.hex');
 }
 
-function FWU_DumpBVT(Version)
+function FWU_DumpBVT()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../Blocking Voltage Tester/Controllers soft/Version " + Version + "/BVTMainBoard/bvthp.regdump", 0, 126);
+	dev.Dump('../../hw-BVTControlBoard/Firmware/BVTControlBoard.regdump', 0, 126);
 }
 
-function FWU_RestoreBVT(Version)
+function FWU_RestoreBVT()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../Blocking Voltage Tester/Controllers soft/Version " + Version + "/BVTMainBoard/bvthp.regdump");
+	dev.Restore('../../hw-BVTControlBoard/Firmware/BVTControlBoard.regdump');
 }
 //------------------------
 
