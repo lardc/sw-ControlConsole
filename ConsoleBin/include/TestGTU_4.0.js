@@ -1,4 +1,5 @@
 include("PrintStatus.js")
+include("TestBVT.js")
 
 gtu_vg_lim	= 12000;
 gtu_vd_lim	= 12000;
@@ -142,6 +143,91 @@ function GTU_Latching()
 	print("Il,   mA: " + dev.r(202));
 	
 	gtu_il.push(dev.r(202));
+}
+
+function GTU_Vgnt(DirectVoltage, DirectCurrent)
+{
+	if (gtu_diag) print("\n#Not turn on gate voltage");
+	
+	// Проверка начальных состояний блоков
+	dev.nid(4);
+	if (dev.r(192) != 4)
+	{
+		print("BVT not ready. State: " + dev.r(192));
+		return;
+	}
+	dev.nid(3);
+	if (dev.r(192) != 0)
+	{
+		print("GTU not ready. State: " + dev.r(192));
+		return;
+	}
+	
+	// Конфигурация BVT
+	dev.nid(4);
+	dev.w(128, 3);					// Тип теста
+	dev.w(130, DirectCurrent * 10);	// Ток отсечки, мА
+	dev.w(131, DirectVoltage);		// Напряжение испытания, В
+	dev.w(132, 60000);				// Максимальное время приложения напряжения испытания, мсек
+	dev.w(133, 20);					// Скорость выхода на заданное напряжение, кВ/сек
+	dev.w(134, 200);				// Стартовое напряжение, в В
+	
+	// Конфигурация GTU
+	dev.nid(3);
+	dev.w(128, gtu_vd_lim);
+	dev.w(129, gtu_id_lim);
+	dev.w(130, gtu_vg_lim);
+	dev.w(131, gtu_ig_lim);
+	
+	// Запуск формирования прямого напряжения
+	dev.nid(4);
+	if (gtu_diag) print("Start of generating direct voltage " + DirectVoltage + "V");
+	dev.c(100);
+	while((dev.r(192) == 5) && (dev.r(201) == 0))
+		sleep(100);
+	
+	if (dev.r(192) != 5)
+	{
+		print("BVT failed to reach direct voltage. Block state: " + dev.r(192));
+		return;
+	}
+	else
+		if (gtu_diag) print("BVT reached configured voltage");
+	
+	// Запсук формирования напряжения в цепи управления
+	dev.nid(3);
+	dev.c(106);
+	
+	// Ожидание завершения измерения
+	var gtu_state, bvt_state;
+	do
+	{
+		dev.nid(4);
+		bvt_state = dev.r(192);
+		dev.nid(3);
+		gtu_state = dev.r(192);
+		sleep(100);
+	}
+	while(bvt_state == 5 && gtu_state == 9);
+	
+	// Проверка необходимости принудительной отановки BVT
+	sleep(100);
+	dev.nid(4);
+	if (dev.r(192) == 5)
+	{
+		dev.c(101);
+		print("BVT forced to stop");
+	}
+	
+	// Считывание результата
+	dev.nid(3)
+	if (gtu_diag)
+	{
+		print("#Test complete code: " + dev.r(197));
+		if (dev.r(197) == 2) print("#Problem: " + dev.r(196));
+	}
+	
+	print("Vgnt, mV: " + dev.r(205));
 }
 
 function GTU_ResetA()
