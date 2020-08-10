@@ -169,3 +169,20 @@ function FWU_RestoreLSLH()
 	dev.Restore("../../hw-LSLHControlBoard/Firmware/lslh.regdump");
 }
 //------------------------
+
+// EC Multiplexer
+function FWU_Multiplexer()
+{
+	FWUpdateSTM("../../hw-ECMultiplexerBoard/Firmware/Release/ECMultiplexerBoard.binary");
+}
+
+function FWU_DumpMultiplexer()
+{
+	dev.Dump("../../hw-ECMultiplexerBoard/Firmware/ECMultiplexerBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreMultiplexer()
+{
+	dev.Restore("../../hw-ECMultiplexerBoard/Firmware/ECMultiplexerBoard.regdump");
+}
+//------------------------
