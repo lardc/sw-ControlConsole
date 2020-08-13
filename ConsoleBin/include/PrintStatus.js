@@ -25,3 +25,33 @@ function PrintStatus()
 		print("Problem:	" + dev.r(100));
 	}
 }
+
+function PrintFWInfo()
+{
+	// Check connection
+	dev.r(0);
+	
+	try
+	{
+		dev.Read16Silent(256);
+		
+		print("");
+		print("Slave CAN ID:	" + dev.r(256));
+		print("Master CAN ID:	" + dev.r(257));
+		
+		var StrLen = dev.r(260);
+		var Str = '';
+		for (var i = 0; i < StrLen / 2; i++)
+		{
+			var Word = dev.r(261 + i);
+			Str.concat(String.fromCharCode(Word >> 8));
+			Str.concat(String.fromCharCode(Word & 0xFF));
+		}
+		
+		print(Str);
+	}
+	catch(e)
+	{
+		print("No firmware information.");
+	}
+}
