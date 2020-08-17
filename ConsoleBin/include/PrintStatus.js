@@ -35,20 +35,22 @@ function PrintFWInfo()
 	{
 		dev.Read16Silent(256);
 		
-		print("");
 		print("Slave CAN ID:	" + dev.r(256));
 		print("Master CAN ID:	" + dev.r(257));
 		
 		var StrLen = dev.r(260);
-		var Str = '';
+		var Str = "";
 		for (var i = 0; i < StrLen / 2; i++)
 		{
 			var Word = dev.r(261 + i);
-			Str.concat(String.fromCharCode(Word >> 8));
-			Str.concat(String.fromCharCode(Word & 0xFF));
+			Str = Str.concat(String.fromCharCode(Word >> 8));
+			Str = Str.concat(String.fromCharCode(Word & 0xFF));
 		}
 		
-		print(Str);
+		var str_arr = Str.split(',');
+		print("Git branch:	" + str_arr[2]);
+		print("Git commit:	" + str_arr[0]);
+		print("Commit date:	" + str_arr[1]);
 	}
 	catch(e)
 	{
