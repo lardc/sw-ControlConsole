@@ -82,33 +82,14 @@ function TOCUHP_Pulse(N, Voltage, Bit)
 }
 
 // TOMU HP
-function GD_Pulse(Rise, Fall, Imax)
+function GD_Pulse(GateCurrentRate, GateCurrent)
 {
 	dev.w(190,1);
-	dev.c(15);
 	dev.c(18);
 	dev.c(19);
 	
-	dev.w(190,Imax);
-	dev.c(10);
+	dev.w(130, GateCurrent);
+	dev.w(131, GateCurrentRate);
 	
-	dev.w(190,Rise);
-	dev.c(12);
-	
-	dev.w(190,Fall);
-	dev.c(13);
-	
-	dev.w(190,(Imax * 0.1));
-	dev.c(11);
-	
-	sleep(10);
-	
-	dev.w(190,0);
-	dev.c(15);
-	sleep(100);
-	
-	dev.c(14);
-	
-	dev.w(190,1);
-	dev.c(15);
+	dev.c(110);
 }
