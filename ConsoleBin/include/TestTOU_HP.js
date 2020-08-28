@@ -82,7 +82,7 @@ function TOCUHP_Pulse(N, Voltage, Bit)
 }
 
 // TOMU HP
-function GD_Pulse(GateCurrentRate, GateCurrent)
+function TOMUHP_GatePulse(GateCurrentRate, GateCurrent)
 {
 	dev.w(190,1);
 	dev.c(18);
