@@ -1,8 +1,8 @@
 include("PrintStatus.js")
 
 // Global definitions
-GateCurrentRate = 60;
-GateCurrent = 60;
+GateCurrentRate = 1000;
+GateCurrent = 1000;
 //
 tou_print = 1;
 PulseToPulseDelay = 2000;
@@ -19,12 +19,9 @@ function TOUHP_Start(N, Voltage, Current)
 
 		if(dev.r(193) || dev.r(196))
 		{
-			print("DeviceState   	  = "+dev.r(192));
-			print("FaultReason   	  = "+dev.r(193));
-			print("Warning       	  = "+dev.r(195));
-			print("Problem       	  = "+dev.r(196));
+			TOUHP_PrintFault();
 			break;
-		}		
+		}
 		
 		sleep(PulseToPulseDelay);
 		
@@ -35,16 +32,22 @@ function TOUHP_Start(N, Voltage, Current)
 
 function TOUHP_Measure(Voltage, Current)
 {
+	while(dev.r(192) != 3)
+	{
+		sleep(50);
+		
+		if(dev.r(192) == 1)
+			return;
+	}
+		
 	dev.w(128, Voltage);
 	dev.w(129, Current);
 	dev.w(130, GateCurrent);
 	dev.w(131, GateCurrentRate);
 	
-	while(dev.r(192) != 3){}
-	
 	dev.c(100);
 	
-	sleep(10);
+	sleep(100);
 	
 	while(dev.r(192) == 4){sleep(50);}
 	
@@ -54,6 +57,14 @@ function TOUHP_Measure(Voltage, Current)
 		print("Turn on delay, ns = " + dev.r(251));
 		print("--------------");
 	}
+}
+
+function TOUHP_PrintFault()
+{
+	print("DeviceState   	  = "+dev.r(192));
+	print("FaultReason   	  = "+dev.r(193));
+	print("Warning       	  = "+dev.r(195));
+	print("Problem       	  = "+dev.r(196));
 }
 
 // TOCU HP
@@ -82,33 +93,14 @@ function TOCUHP_Pulse(N, Voltage, Bit)
 }
 
 // TOMU HP
-function GD_Pulse(Rise, Fall, Imax)
+function TOMUHP_GatePulse(GateCurrentRate, GateCurrent)
 {
 	dev.w(190,1);
-	dev.c(15);
 	dev.c(18);
 	dev.c(19);
 	
-	dev.w(190,Imax);
-	dev.c(10);
+	dev.w(130, GateCurrent);
+	dev.w(131, GateCurrentRate);
 	
-	dev.w(190,Rise);
-	dev.c(12);
-	
-	dev.w(190,Fall);
-	dev.c(13);
-	
-	dev.w(190,(Imax * 0.1));
-	dev.c(11);
-	
-	sleep(10);
-	
-	dev.w(190,0);
-	dev.c(15);
-	sleep(100);
-	
-	dev.c(14);
-	
-	dev.w(190,1);
-	dev.c(15);
+	dev.c(110);
 }
