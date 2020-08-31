@@ -148,38 +148,22 @@ function FWUpdate(FileName)
 		print("Checksum missmatch, process aborted");
 	}
 }
+//------------------------
+
 // GTU
-function FWU_GTU(Version)
+function FWU_GTU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../Gate Test Unit/Controllers soft/Version " + Version + "/GateTester/Release/GateTester.hex");
+	FWUpdate("../../hw-GTUControlBoard/Firmware/Release/GTUControlBoard.hex");
 }
 
-function FWU_DumpGTU(Version)
+function FWU_DumpGTU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../Gate Test Unit/Controllers soft/Version " + Version + "/GateTester/gtu.regdump", 0, 126);
+	dev.Dump("../../hw-GTUControlBoard/Firmware/GTUControlBoard.regdump", 0, 126);
 }
 
-function FWU_RestoreGTU(Version)
+function FWU_RestoreGTU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../Gate Test Unit/Controllers soft/Version " + Version + "/GateTester/gtu.regdump");
+	dev.Restore("../../hw-GTUControlBoard/Firmware/GTUControlBoard.regdump");
 }
 //------------------------
 
