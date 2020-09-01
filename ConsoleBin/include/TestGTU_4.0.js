@@ -228,6 +228,7 @@ function GTU_Vgnt(DirectVoltage, DirectCurrent)
 	}
 	
 	print("Vgnt, mV: " + dev.r(205));
+	print("Ignt, mA: " + dev.r(206));
 }
 
 function GTU_ResetA()
