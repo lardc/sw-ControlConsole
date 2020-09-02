@@ -3,21 +3,27 @@ include("Tektronix.js")
 include("CalGeneral.js")
 
 // Input params
-ctou_ud_test = 1500;		// Available - 600V, 1000V, 1500V
-ctou_idmax = 100;		// MAX DUT Current [A]
+ctou_id_max = 100;		// MAX DUT Current [A]
+ctou_ud_test = 600;		// Available - 600V, 1000V, 1500V	
 ctou_Ri = 1e-3;			// Current shunt resistance
-//
 ctou_nid = 11;			// CAN node id
 ctou_TOCUHP_nid = 21;	// TOCU HP node id
 
 // Calibrate Id
+
 ctou_idmin = 10;
-ctou_idmax = ctou_idmax;
+ctou_idmax = ctou_id_max;
 ctou_idstp = 10;
 
 // Calibrate Ud
 ctou_id_test = 50;			// Test current [A]
 ctou_UdArray = [600, 1000, 1500];
+
+// Ton/Ton_del data collect
+ctou_igmin	= 1000;
+ctou_igmax = 6000;
+ctou_igstp = 500;
+GateCurrentRate = ctou_igmax;
 
 // Counters
 ctou_cntTotal = 0;
@@ -79,7 +85,7 @@ function CTOU_CalIdbrateId()
 {
 	dev.nid(ctou_nid);
 	
-	CTOMU_CommutationControl(0);
+	TOMU_CommutationControl(0);
 	
 	// Collect data
 	CTOU_ResetA();
@@ -111,14 +117,14 @@ function CTOU_CalIdbrateId()
 		CTOU_PrintIdSetCal();
 	}
 	
-	CTOMU_CommutationControl(1);
+	TOMU_CommutationControl(1);
 }
 
 function CTOU_CalIdbrateUd()
 {
 	dev.nid(ctou_nid);
 	
-	CTOMU_CommutationControl(1);
+	TOMU_CommutationControl(1);
 	
 	// Collect data
 	CTOU_ResetA();
@@ -145,7 +151,7 @@ function CTOU_VerifyId()
 {
 	dev.nid(ctou_nid);
 	
-	CTOMU_CommutationControl(0);
+	TOMU_CommutationControl(0);
 	
 	// Collect data
 	CTOU_ResetA();
@@ -167,14 +173,14 @@ function CTOU_VerifyId()
 		scattern(ctou_id_set, ctou_idset_err, "Current (in A)", "Error (in %)", "Current setpoint relative error");
 	}
 	
-	CTOMU_CommutationControl(1);
+	TOMU_CommutationControl(1);
 }
 
 function CTOU_VerifyUd()
 {	
 	dev.nid(ctou_nid);
 	
-	CTOMU_CommutationControl(1);
+	TOMU_CommutationControl(1);
 	
 	// Collect data
 	CTOU_ResetA();
@@ -189,6 +195,56 @@ function CTOU_VerifyUd()
 		// Plot relative error distribution
 		scattern(ctou_ud, ctou_ud_err, "Voltage (in V)", "Error (in %)", "Voltage setpoint relative error");
 	}
+}
+
+function CTOU_VerifyTimingParams()
+{	
+	dev.nid(ctou_nid);
+	
+	TOMU_CommutationControl(0);
+	
+	// Collect data
+	CTOU_ResetA();
+	
+	// Tektronix init
+	CTOU_TimingParamsTekInit();
+	
+	// Collect data
+	var IdArray = CGEN_GetRange(ctou_idmin, ctou_idmax, ctou_idstp);
+	var IgArray = CGEN_GetRange(ctou_igmin, ctou_igmax, ctou_igstp);
+
+	if (CTOU_TimingParamsCollect(IdArray, IgArray, ctou_Iterations))
+	{
+		CTOU_SaveTondel("tou_Tondel_fixed");
+		CTOU_SaveTon("tou_Ton_fixed");
+		
+		// Plot relative error distribution
+		scattern(ctou_tondel, ctou_tondel_err, "Time (in uS)", "Error (in %)", "Turn on delay relative error");
+		scattern(ctou_ton, ctou_ton_err, "Time (in uS)", "Error (in %)", "Turn on relative error");
+	}
+}
+
+function CTOU_TimingParamsTekInit()
+{
+	// Init channels
+	TEK_ChannelInit(ctou_chMeasureUd, "1000", "100");
+	TEK_ChannelInit(ctou_chSync, "1", "1");
+	TEK_ChannelScale(ctou_chMeasureUd, ctou_ud_test);
+	// Init trigger
+	TEK_TriggerInit(ctou_chSync, "1");
+	// Horizontal settings
+	TEK_Horizontal("1e-6", "4e-6");
+	
+		// Display channels
+	for (var i = 1; i <= 4; i++)
+	{
+		if (i == ctou_chMeasureUd || i == ctou_chSync)
+			TEK_ChannelOn(i);
+		else
+			TEK_ChannelOff(i);
+	}
+
+	CTOU_TimingParamsTekCursor(ctou_chMeasureUd);
 }
 
 function CTOU_IdTekInit()
@@ -239,12 +295,20 @@ function CTOU_UdTekInit()
 	CTOU_Measure(ctou_chMeasureUd, "4");
 }
 
+function CTOU_TimingParamsTekCursor(Channel)
+{
+	TEK_Send("cursor:select:source ch" + Channel);
+	TEK_Send("cursor:function vbars");
+	TEK_Send("cursor:vbars:position1 4e-6");
+	TEK_Send("cursor:vbars:position2 0e-6");
+}
+
 function CTOU_IdTekCursor(Channel)
 {
 	TEK_Send("cursor:select:source ch" + Channel);
 	TEK_Send("cursor:function vbars");
-	TEK_Send("cursor:vbars:position1 12.5e-6");
-	TEK_Send("cursor:vbars:position2 12.5e-6");
+	TEK_Send("cursor:vbars:position1 17.5e-6");
+	TEK_Send("cursor:vbars:position2 17.5e-6");
 }
 
 function CTOU_UdTekCursor(Channel)
@@ -364,7 +428,7 @@ function CTOU_UdCollect(VoltageValues, IterationsCount)
 
 			for (var k = 0; k < AvgNum; k++)
 			{
-				TOUHP_Measure(VoltageValues[j], ctou_id_test * 10);
+				TOUHP_Measure(VoltageValues[j], ctou_id_max * 10);
 				sleep(1000);
 			}
 			
@@ -382,6 +446,49 @@ function CTOU_UdCollect(VoltageValues, IterationsCount)
 
 			// Relative error
 			ctou_ud_err.push(((ud_sc - ud) / ud * 100).toFixed(2));
+			print("--------------------");
+			
+			if (anykey()) return 0;
+		}
+	}
+
+	return 1;
+}
+
+function CTOU_TimingParamsCollect(IdValues, IgValues, IterationsCount)
+{
+	ctou_cntTotal = IterationsCount * IdValues.length;
+	ctou_cntDone = 1;
+	
+	for (var i = 0; i < IterationsCount; i++)
+	{
+		for (var j = 0; j < IdValues.length; j++)
+		{
+			print("-- result " + ctou_cntDone++ + " of " + ctou_cntTotal + " --");
+			
+			//
+			var tou_print_copy = tou_print;
+			tou_print = 0;
+
+			GateCurrent = ctou_igmax - IgValues[j] + ctou_igmin;
+			TOUHP_Measure(ctou_ud_test, IdValues[j] * 10);
+			
+			tou_print = tou_print_copy;
+			
+			// Unit data
+			var ton_read = dev.r(252);
+			ctou_ton.push(ton_read);
+			
+			// Scope data
+			var ton_sc = (CTOU_Measure(ctou_chMeasureId, "4") / ctou_Ri * 10).toFixed(0);
+			ctou_id_sc.push(id_sc);
+			
+			// Relative error
+			ctou_idset_err.push(((id_sc - id_set) / id_set * 100).toFixed(2));
+			ctou_id_err.push(((id_read - id_sc) / id_sc * 100).toFixed(2));
+			
+			print("Idtek, A: " + id_sc);
+			print("Idtou, A: " + id_read);
 			print("--------------------");
 			
 			if (anykey()) return 0;
@@ -563,17 +670,4 @@ function CTOU_CalUdApllySettings()
 	dev.c(40);
 	
 	sleep(10);
-}
-
-function CTOMU_CommutationControl(Control)
-{
-	if(Control)
-	{
-		dev.w(14,0);
-		dev.w(190,0);
-		dev.c(22);
-		dev.c(23);
-	}
-	else
-		dev.w(14,1);
 }
