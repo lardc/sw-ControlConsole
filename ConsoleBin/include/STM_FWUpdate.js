@@ -186,3 +186,20 @@ function FWU_RestoreMultiplexer()
 	dev.Restore("../../hw-ECMultiplexerBoard/Firmware/ECMultiplexerBoard.regdump");
 }
 //------------------------
+
+// EC ControlBoard
+function FWU_ECControlBoard()
+{
+	FWUpdateSTM("../../hw-ECControlBoard/Firmware/Release/ECControlBoard.binary");
+}
+
+function FWU_DumpECControlBoard()
+{
+	dev.Dump("../../hw-ECControlBoard/Firmware/ECControlBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreECControlBoard()
+{
+	dev.Restore("../../hw-ECControlBoard/Firmware/ECControlBoard.regdump");
+}
+//------------------------
