@@ -220,28 +220,11 @@ function FWU_RestoreSLH(Version)
 //------------------------
 
 // CU
-function FWU_CU(Version)
+function FWU_CU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../Commutation Unit/High Voltage/CU HV/Controller Soft/Version " + Version + "/CUControlBoard/Release/CUControlBoard.hex");
+	FWUpdate("../../hw-CUControlBoard/Firmware/Release/CUControlBoard.hex");
 }
 //------------------------
-
-function FWU_DumpCU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../Commutation Unit/High Voltage/CU HV/Controller Soft/Version " + Version + "/CUControlBoard/cu.regdump", 0, 126);
-}
 
 // ControlUnit
 function FWU_ControlUnit(Version)
