@@ -240,37 +240,19 @@ function FWU_ControlUnit(Version)
 //------------------------
 
 // dVdt
-function FWU_CROVU(Version)
+function FWU_CROVU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../CROVU/Controller soft/Version " + Version + "/dVdtControlBoard/Release/dVdtControlBoard.hex");
+	FWUpdate("../../hw-dVdtControlBoard/Firmware/Release/dVdtControlBoard.hex");
 }
 
-function FWU_DumpCROVU(Version)
+function FWU_DumpCROVU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../CROVU/Controller soft/Version " + Version + "/dVdtControlBoard/dvdt.regdump", 0, 126);
+	dev.Dump("../../hw-dVdtControlBoard/Firmware/dVdtControlBoard.regdump", 0, 126);
 }
 
-function FWU_RestoreCROVU(Version)
+function FWU_RestoreCROVU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../CROVU/Controller soft/Version " + Version + "/dVdtControlBoard/dvdt.regdump");
+	dev.Restore("../../hw-dVdtControlBoard/Firmware/dVdtControlBoard.regdump");
 }
 //------------------------
 
