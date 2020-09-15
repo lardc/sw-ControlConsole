@@ -88,7 +88,7 @@ function CBVT_CalibrateV()
 	CBVT_Prepare();
 	CBVT_ResetVCal();
 	
-	if (CBVT_Collect(cbvt_VoltageValues, cbvt_Iterations, 1))
+	if (CBVT_Collect(cbvt_VoltageValues, cbvt_Iterations, 1, false))
 	{
 		CBVT_SaveV("bvt_v");
 		
@@ -141,7 +141,7 @@ function CBVT_CalibrateIx(FileName)
 	CBVT_Prepare();
 	CBVT_ResetICal();
 	
-	if (CBVT_Collect(cbvt_VoltageValues, cbvt_Iterations, 2))
+	if (CBVT_Collect(cbvt_VoltageValues, cbvt_Iterations, 2, true))
 	{
 		CBVT_SaveI(FileName);
 		
@@ -175,7 +175,7 @@ function CBVT_VerifyV()
 	
 	CBVT_Prepare();
 	
-	if (CBVT_Collect(cbvt_VoltageValues, cbvt_Iterations, 1))
+	if (CBVT_Collect(cbvt_VoltageValues, cbvt_Iterations, 1, false))
 	{
 		CBVT_SaveV("bvt_v_fixed");
 		
@@ -183,7 +183,7 @@ function CBVT_VerifyV()
 		scattern(cbvt_v_sc, cbvt_v_err, "Voltage (in V)", "Error (in %)", "Voltage relative error");
 		
 		// Plot summary error distribution
-		scattern(cbvt_v_sc, cbvt_v_err_sum, "Voltage (in V)", "Error (in %)", "Voltage summary error");
+		// scattern(cbvt_v_sc, cbvt_v_err_sum, "Voltage (in V)", "Error (in %)", "Voltage summary error");
 	}
 }
 
@@ -215,7 +215,7 @@ function CBVT_VerifyIx(FileName)
 {
 	CBVT_Prepare();
 	
-	if (CBVT_Collect(cbvt_VoltageValues, cbvt_Iterations, 2))
+	if (CBVT_Collect(cbvt_VoltageValues, cbvt_Iterations, 2, true))
 	{
 		CBVT_SaveI(FileName);
 		
@@ -325,19 +325,22 @@ function CBVT_VerifyIDC()
 	}
 }
 
-function CBVT_Collect(VoltageValues, IterationsCount, PrintMode)
+function CBVT_Collect(VoltageValues, IterationsCount, PrintMode, ModeI)
 {
-	if (cbvt_MaxP == 0)
+	if (ModeI)
 	{
-		print("Load resistance set to " + (cbvt_R / 1000) + " kOhms");
-		print("Shunt resistance set to " + cbvt_Shunt + " Ohms");
+		if (cbvt_MaxP == 0)
+		{
+			print("Load resistance set to " + (cbvt_R / 1000) + " kOhms");
+			print("Shunt resistance set to " + cbvt_Shunt + " Ohms");
+		}
+		else
+		{
+			print("Load resistance set to " + (cbvt_RP / 1000) + " kOhms");
+			print("Shunt resistance set to " + cbvt_ShuntP + " Ohms");
+		}
+		print("-----------");
 	}
-	else
-	{
-		print("Load resistance set to " + (cbvt_RP / 1000) + " kOhms");
-		print("Shunt resistance set to " + cbvt_ShuntP + " Ohms");
-	}
-	print("-----------");
 	
 	// Acquire mode
 	TEK_AcquireAvg(4);
@@ -761,13 +764,13 @@ function CBVT_PrintVCal()
 		switch (cbvt_RangeV)
 		{
 			case 1:
-				print("Range [ < 500V]");
+				print("Range [ < 1000V]");
 				print("V1 P2 x1e6:	" + dev.rs(104));
 				print("V1 P1 x1000:	" + dev.r(105));
 				print("V1 P0 x10:	" + dev.rs(114));
 				break;
 			case 2:
-				print("Range [500-" + cbvt_VmaxAC + "V]");
+				print("Range [1000-" + cbvt_VmaxAC + "V]");
 				print("V2 P2 x1e6:	" + dev.rs(106));
 				print("V2 P1 x1000:	" + dev.r(107));
 				print("V2 P0 x10:	" + dev.rs(115));
@@ -817,7 +820,7 @@ function CBVT_PrintICal()
 				print("I1 P0 x1000:	" + dev.rs(116));
 				break;
 			case 2:
-				print("Range [30-300mA]");
+				print("Range [ < 500mA]");
 				print("I2 P2 x1e6:	" + dev.rs(98));
 				print("I2 P1 x1000:	" + dev.r(99));
 				print("I2 P0 x1000:	" + dev.rs(117));
@@ -890,12 +893,12 @@ function CBVT_ResetVCal()
 		{
 			case 1:
 				CBVT_Cal2V1(0, 1, 0);
-				print("Range [ < 500V]");
+				print("Range [ < 1000V]");
 				print("Voltage calibration reset done");
 				break;
 			case 2:
 				CBVT_Cal2V2(0, 1, 0);
-				print("Range [500-" + cbvt_VmaxAC + "V]");
+				print("Range [ 1000-" + cbvt_VmaxAC + "V]");
 				print("Voltage calibration reset done");
 				break;
 			default:
@@ -1028,12 +1031,12 @@ function CBVT_Correct2V(P2, P1, P0)
 	{
 		case 1:
 			CBVT_Cal2V1(P2, P1, P0);
-			print("Range [ < 500V]");
+			print("Range [ < 1000V]");
 			print("Voltage calibration updated");
 			break;
 		case 2:
 			CBVT_Cal2V2(P2, P1, P0);
-			print("Range [500-" + cbvt_VmaxAC + "V]");
+			print("Range [ 1000-" + cbvt_VmaxAC + "V]");
 			print("Voltage calibration updated");
 			break;
 		default:
