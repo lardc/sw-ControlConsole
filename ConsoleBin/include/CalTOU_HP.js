@@ -6,7 +6,7 @@ include("CalGeneral.js")
 ctou_id_max = 100;		// MAX DUT Current [A]
 ctou_ud_test = 600;		// Available - 600V, 1000V, 1500V	
 ctou_Ri = 1e-3;			// Current shunt resistance
-ctou_nid = 11;			// CAN node id
+ctou_nid = 0;			// CAN node id
 ctou_TOCUHP_nid = 21;	// TOCU HP node id
 
 // Calibrate Id
@@ -19,9 +19,9 @@ ctou_idstp = 10;
 ctou_id_test = 50;			// Test current [A]
 ctou_UdArray = [600, 1000, 1500];
 
-// Ton/Ton_del data collect
+// Ton/Tdel data collect
 ctou_igmin	= 1000;
-ctou_igmax = 6000;
+ctou_igmax = 8000;
 ctou_igstp = 500;
 GateCurrentRate = ctou_igmax;
 
@@ -31,6 +31,9 @@ ctou_cntDone = 0;
 
 // Iterations
 ctou_Iterations = 1;
+
+// Device number
+ctou_DeviceNumber = 1;
 
 // Channels
 ctou_chMeasureId = 1;
@@ -43,20 +46,28 @@ ctou_ud_array = [];
 ctou_id = [];
 ctou_id_set = [];
 ctou_ud = [];
+ctou_ton = [];
+ctou_tdel = [];
 
 // Tektronix data
 ctou_id_sc = [];
 ctou_ud_sc = [];
+ctou_ton_sc = [];
+ctou_tdel_sc = [];
 
 // Relative error
 ctou_id_err = [];
 ctou_idset_err = [];
 ctou_ud_err = [];
+ctou_ton_err = [];
+ctou_tdel_err = [];
 
 // Correction
 ctou_id_corr = [];
 ctou_id_set_corr = [];
 ctou_ud_corr = [];
+ctou_ton_corr = [];
+ctou_tdel_corr = [];
 
 ctou_UseAvg = 1;
 
@@ -81,7 +92,7 @@ function CTOU_Init(portTOU, portTek, channelMeasureId, channelMeasureUd, channel
 	TEK_PortInit(portTek);
 }
 
-function CTOU_CalIdbrateId()
+function CTOU_CalibrateId()
 {
 	dev.nid(ctou_nid);
 	
@@ -120,7 +131,7 @@ function CTOU_CalIdbrateId()
 	TOMU_CommutationControl(1);
 }
 
-function CTOU_CalIdbrateUd()
+function CTOU_CalibrateUd()
 {
 	dev.nid(ctou_nid);
 	
@@ -147,6 +158,42 @@ function CTOU_CalIdbrateUd()
 	}
 }
 
+function CTOU_CalibrateTonTdel()
+{
+	dev.nid(ctou_nid);
+	
+	TOMU_CommutationControl(0);
+	
+	// Collect data
+	CTOU_ResetA();
+	CTOU_ResetTonTdelCal();
+	
+	// Tektronix init
+	CTOU_TonTdelTekInit();
+	
+	// Collect data
+	var IdArray = CGEN_GetRange(ctou_idmin, ctou_idmax, ctou_idstp);
+	var IgArray = CGEN_GetRange(ctou_igmin, ctou_igmax, ctou_igstp);
+
+	if (CTOU_TonTdelCollect(IdArray, IgArray, ctou_DeviceNumber))
+	{
+		CTOU_SaveTdel("touhp_tdel");
+		CTOU_SaveTon("touhp_ton");
+		
+		// Plot relative error distribution
+		scattern(ctou_tdel, ctou_tdel_err, "Time (in uS)", "Error (in %)", "Turn on delay relative error");
+		scattern(ctou_ton, ctou_ton_err, "Time (in uS)", "Error (in %)", "Turn on relative error");
+		
+		// Calculate correction
+		ctou_tdel_corr = CGEN_GetCorrection2("touhp_tdel");
+		ctou_ton_corr = CGEN_GetCorrection2("touhp_ton");
+		CTOU_CalTdel(ctou_tdel_corr[0], ctou_tdel_corr[1], ctou_tdel_corr[2]);
+		CTOU_CalTon(ctou_ton_corr[0], ctou_ton_corr[1], ctou_ton_corr[2]);
+		CTOU_PrintTdelCal();
+		CTOU_PrintTonCal();
+	}
+}
+
 function CTOU_VerifyId()
 {
 	dev.nid(ctou_nid);
@@ -164,8 +211,8 @@ function CTOU_VerifyId()
 
 	if (CTOU_IdCollect(CurrentArray, ctou_Iterations))
 	{
-		CTOU_SaveId("tou_i_fixed");
-		CTOU_SaveIdset("tou_iset_fixed");
+		CTOU_SaveId("touhp_i_fixed");
+		CTOU_SaveIdset("touhp_iset_fixed");
 
 		// Plot relative error distribution
 		scattern(ctou_id_sc, ctou_id_err, "Current (in A)", "Error (in %)", "Current relative error");
@@ -190,44 +237,44 @@ function CTOU_VerifyUd()
 
 	if (CTOU_UdCollect(ctou_UdArray, ctou_Iterations))
 	{
-		CTOU_SaveUd("tou_ud_fixed");
+		CTOU_SaveUd("touhp_ud_fixed");
 
 		// Plot relative error distribution
 		scattern(ctou_ud, ctou_ud_err, "Voltage (in V)", "Error (in %)", "Voltage setpoint relative error");
 	}
 }
 
-function CTOU_VerifyTimingParams()
+function CTOU_VerifyTonTdel()
 {	
 	dev.nid(ctou_nid);
 	
-	TOMU_CommutationControl(0);
+	TOMU_CommutationControl(1);
 	
 	// Collect data
 	CTOU_ResetA();
 	
 	// Tektronix init
-	CTOU_TimingParamsTekInit();
+	CTOU_TonTdelTekInit();
 	
 	// Collect data
 	var IdArray = CGEN_GetRange(ctou_idmin, ctou_idmax, ctou_idstp);
 	var IgArray = CGEN_GetRange(ctou_igmin, ctou_igmax, ctou_igstp);
 
-	if (CTOU_TimingParamsCollect(IdArray, IgArray, ctou_Iterations))
+	if (CTOU_TonTdelCollect(IdArray, IgArray, ctou_DeviceNumber))
 	{
-		CTOU_SaveTondel("tou_Tondel_fixed");
-		CTOU_SaveTon("tou_Ton_fixed");
+		CTOU_SaveTdel("touhp_tdel_fixed");
+		CTOU_SaveTon("touhp_ton_fixed");
 		
 		// Plot relative error distribution
-		scattern(ctou_tondel, ctou_tondel_err, "Time (in uS)", "Error (in %)", "Turn on delay relative error");
+		scattern(ctou_tdel, ctou_tdel_err, "Time (in uS)", "Error (in %)", "Turn on delay relative error");
 		scattern(ctou_ton, ctou_ton_err, "Time (in uS)", "Error (in %)", "Turn on relative error");
 	}
 }
 
-function CTOU_TimingParamsTekInit()
+function CTOU_TonTdelTekInit()
 {
 	// Init channels
-	TEK_ChannelInit(ctou_chMeasureUd, "1000", "100");
+	TEK_ChannelInit(ctou_chMeasureUd, "100", "100");
 	TEK_ChannelInit(ctou_chSync, "1", "1");
 	TEK_ChannelScale(ctou_chMeasureUd, ctou_ud_test);
 	// Init trigger
@@ -244,7 +291,7 @@ function CTOU_TimingParamsTekInit()
 			TEK_ChannelOff(i);
 	}
 
-	CTOU_TimingParamsTekCursor(ctou_chMeasureUd);
+	CTOU_TonTdelTekCursor(ctou_chMeasureUd);
 }
 
 function CTOU_IdTekInit()
@@ -295,7 +342,7 @@ function CTOU_UdTekInit()
 	CTOU_Measure(ctou_chMeasureUd, "4");
 }
 
-function CTOU_TimingParamsTekCursor(Channel)
+function CTOU_TonTdelTekCursor(Channel)
 {
 	TEK_Send("cursor:select:source ch" + Channel);
 	TEK_Send("cursor:function vbars");
@@ -328,6 +375,15 @@ function CTOU_Measure(Channel, Resolution)
 	if (Math.abs(f) > 2e+4)
 		f = 0;
 	return parseFloat(f).toFixed(Resolution);
+}
+
+function CTOU_TimeMeasure(Channel, Cursor)
+{
+	TEK_Send("cursor:select:source ch" + Channel);
+	sleep(500);
+
+	var f = TEK_Exec("cursor:vbars?").split(';');
+	return parseFloat(f[Cursor]);
 }
 
 function CTOU_IdCollect(CurrentValues, IterationsCount)
@@ -455,40 +511,74 @@ function CTOU_UdCollect(VoltageValues, IterationsCount)
 	return 1;
 }
 
-function CTOU_TimingParamsCollect(IdValues, IgValues, IterationsCount)
+function CTOU_TonTdelCollect(IdValues, IgValues, ctou_DeviceNumber)
 {
-	ctou_cntTotal = IterationsCount * IdValues.length;
+	ctou_cntTotal = ctou_DeviceNumber * IdValues.length;
 	ctou_cntDone = 1;
 	
-	for (var i = 0; i < IterationsCount; i++)
+	for (var i = 0; i < ctou_DeviceNumber; i++)
 	{
+		do
+		{
+			print("Install device " + (i + 1) + " and enter 'y'");
+			var sign = readline();
+		}
+		while(sign != 'y')
+			
 		for (var j = 0; j < IdValues.length; j++)
 		{
 			print("-- result " + ctou_cntDone++ + " of " + ctou_cntTotal + " --");
 			
-			//
-			var tou_print_copy = tou_print;
-			tou_print = 0;
-
 			GateCurrent = ctou_igmax - IgValues[j] + ctou_igmin;
-			TOUHP_Measure(ctou_ud_test, IdValues[j] * 10);
-			
-			tou_print = tou_print_copy;
+			do
+			{
+				var tou_print_copy = tou_print;
+				tou_print = 0;
+
+				TOUHP_Measure(ctou_ud_test, IdValues[j] * 10);
+				
+				tou_print = tou_print_copy;
+				
+				print("Go to the next step? Enter 'y' if yes or 'n' if no.");
+				var sign = readline();
+			}
+			while(sign == 'n')
 			
 			// Unit data
+			var tdel_read = dev.r(251);
+			ctou_tdel.push(tdel_read);
+			
 			var ton_read = dev.r(252);
 			ctou_ton.push(ton_read);
 			
 			// Scope data
-			var ton_sc = (CTOU_Measure(ctou_chMeasureId, "4") / ctou_Ri * 10).toFixed(0);
-			ctou_id_sc.push(id_sc);
+			var time1_sc = Math.round(CTOU_TimeMeasure(ctou_chMeasureUd, 1) * 1e9);
+			var time2_sc = Math.round(CTOU_TimeMeasure(ctou_chMeasureUd, 2) * 1e9);
+			
+			if(time1_sc > time2_sc)
+			{
+				var tdel_sc = time2_sc;
+				var ton_sc = time1_sc;
+				ctou_tdel_sc.push(tdel_sc);
+				ctou_ton_sc.push(ton_sc);
+			}
+			else
+			{
+				var tdel_sc = time1_sc;
+				var ton_sc = time2_sc;
+				ctou_tdel_sc.push(tdel_sc);
+				ctou_ton_sc.push(ton_sc);
+			}
 			
 			// Relative error
-			ctou_idset_err.push(((id_sc - id_set) / id_set * 100).toFixed(2));
-			ctou_id_err.push(((id_read - id_sc) / id_sc * 100).toFixed(2));
+			ctou_tdel_err.push(((tdel_read - tdel_sc) / tdel_sc * 100).toFixed(2));
+			ctou_ton_err.push(((ton_read - ton_sc) / ton_sc * 100).toFixed(2));
 			
-			print("Idtek, A: " + id_sc);
-			print("Idtou, A: " + id_read);
+			print("ton del tek, ns: " + tdel_sc);
+			print("ton del tou, ns: " + tdel_read);
+			print("");
+			print("ton tek, ns    : " + ton_sc);
+			print("ton tou, ns    : " + ton_read);
 			print("--------------------");
 			
 			if (anykey()) return 0;
@@ -510,20 +600,28 @@ function CTOU_ResetA()
 	ctou_id = [];
 	ctou_id_set = [];
 	ctou_ud = [];
+	ctou_ton = [];
+	ctou_tdel = [];
 
 	// Tektronix data
 	ctou_id_sc = [];
 	ctou_ud_sc = [];
+	ctou_ton_sc = [];
+	ctou_tdel_sc = [];
 
 	// Relative error
 	ctou_id_err = [];
 	ctou_idset_err = [];
 	ctou_ud_err = [];
+	ctou_ton_err = [];
+	ctou_tdel_err = [];
 
 	// Correction
 	ctou_id_corr = [];
 	ctou_id_set_corr = [];
 	ctou_ud_corr = [];
+	ctou_ton_corr = [];
+	ctou_tdel_corr = [];
 }
 
 function CTOU_SaveId(NameId)
@@ -539,6 +637,16 @@ function CTOU_SaveIdset(NameIdset)
 function CTOU_SaveUd(NameUd)
 {
 	CGEN_SaveArrays(NameUd, ctou_ud_sc, ctou_ud, ctou_ud_err);
+}
+
+function CTOU_SaveTon(NameTon)
+{
+	CGEN_SaveArrays(NameTon, ctou_ton, ctou_ton_sc, ctou_ton_err);
+}
+
+function CTOU_SaveTdel(NameTdel)
+{
+	CGEN_SaveArrays(NameTdel, ctou_tdel, ctou_tdel_sc, ctou_tdel_err);
 }
 
 function CTOU_PrintIdSetCal()
@@ -569,6 +677,66 @@ function CTOU_PrintIdSetCal()
 	print("Id set P2 x1e6 : " + P2);
 	print("Id set P1 x1000: " + P1);
 	print("Id set P0      : " + P0);
+}
+
+function CTOU_PrintTdelCal()
+{
+	var P2, P1, P0;
+	
+	switch(ctou_ud_test)
+	{
+		case 600:
+			P2 = dev.r(60);
+			P1 = dev.r(61);
+			P0 = dev.r(62);
+			break;
+			
+		case 1000:
+			P2 = dev.r(63);
+			P1 = dev.r(64);
+			P0 = dev.r(65);
+			break;
+			
+		case 1500:
+			P2 = dev.r(66);
+			P1 = dev.r(67);
+			P0 = dev.r(68);
+			break;
+	}
+	
+	print("Tdel P2 x1e6 : " + P2);
+	print("Tdel P1 x1000: " + P1);
+	print("Tdel P0      : " + P0);
+}
+
+function CTOU_PrintTonCal()
+{
+	var P2, P1, P0;
+	
+	switch(ctou_ud_test)
+	{
+		case 600:
+			P2 = dev.r(70);
+			P1 = dev.r(71);
+			P0 = dev.r(72);
+			break;
+			
+		case 1000:
+			P2 = dev.r(73);
+			P1 = dev.r(74);
+			P0 = dev.r(75);
+			break;
+			
+		case 1500:
+			P2 = dev.r(76);
+			P1 = dev.r(77);
+			P0 = dev.r(78);
+			break;
+	}
+	
+	print("Ton P2 x1e6 : " + P2);
+	print("Ton P1 x1000: " + P1);
+	print("Ton P0      : " + P0);
 }
 
 function CTOU_PrintIdCal()
@@ -607,6 +775,12 @@ function CTOU_ResetIdCal()
 function CTOU_ResetUdCal()
 {
 	CTOU_CalUd(0, 1, 0);
+}
+
+function CTOU_ResetTonTdelCal()
+{
+	CTOU_CalTon(0, 1, 0);
+	CTOU_CalTdel(0, 1, 0);
 }
 
 function CTOU_CalId_Set(P2, P1, P0)
@@ -661,6 +835,54 @@ function CTOU_CalUd(P2, P1, P0)
 	dev.c(42);
 	
 	sleep(10);
+}
+
+function CTOU_CalTdel(P2, P1, P0)
+{
+	switch(ctou_ud_test)
+	{
+		case 600:
+			dev.ws(60, Math.round(P2 * 1e6));
+			dev.w(61, Math.round(P1 * 1000));
+			dev.ws(62, Math.round(P0));
+			break;
+			
+		case 1000:
+			dev.ws(63, Math.round(P2 * 1e6));
+			dev.w(64, Math.round(P1 * 1000));
+			dev.ws(65, Math.round(P0));
+			break;
+			
+		case 1500:
+			dev.ws(66, Math.round(P2 * 1e6));
+			dev.w(67, Math.round(P1 * 1000));
+			dev.ws(68, Math.round(P0));
+			break;
+	}
+}
+
+function CTOU_CalTon(P2, P1, P0)
+{
+	switch(ctou_ud_test)
+	{
+		case 600:
+			dev.ws(70, Math.round(P2 * 1e6));
+			dev.w(71, Math.round(P1 * 1000));
+			dev.ws(72, Math.round(P0));
+			break;
+			
+		case 1000:
+			dev.ws(73, Math.round(P2 * 1e6));
+			dev.w(74, Math.round(P1 * 1000));
+			dev.ws(75, Math.round(P0));
+			break;
+			
+		case 1500:
+			dev.ws(76, Math.round(P2 * 1e6));
+			dev.w(77, Math.round(P1 * 1000));
+			dev.ws(78, Math.round(P0));
+			break;
+	}
 }
 
 function CTOU_CalUdApllySettings()
