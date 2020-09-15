@@ -7,6 +7,15 @@ function PrintStatus()
 	{
 		dev.Read16Silent(192);
 		
+		var short_flag = 0;
+		try
+		{
+			short_flag = dev.Read16Silent(258);
+		}
+		catch(e) {}
+		if (short_flag == 1)
+			throw 'short'
+		
 		print("Registers [192 - 196]");
 		print("Device state:	" + dev.r(192));
 		print("Fault reason:	" + dev.r(193));
