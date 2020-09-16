@@ -183,3 +183,17 @@ function FWU_RestoreLSLH()
 	dev.Restore("../../hw-LSLHControlBoard/Firmware/lslh.regdump");
 }
 //------------------------
+
+// ECDCVoltageBoard
+function FWU_ECDCVB()
+{
+	FWUpdateSTM("../../hw-ECDCVoltageBoard/Firmware/Release/ECDCVoltageBoard.binary");
+}
+//------------------------
+
+// ECControlBoard
+function FWU_ECCB()
+{
+	FWUpdateSTM("../../hw-ECControlBoard/Firmware/Release/ECControlBoard.binary");
+}
+//------------------------
