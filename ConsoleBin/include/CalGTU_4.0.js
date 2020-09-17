@@ -14,15 +14,15 @@ cgtu_PlotSummaryError = 0;
 // Current limits
 cgtu_Imax = 1000;
 cgtu_Imin = 50;
-cgtu_Istp = 47.5;
+cgtu_Istp = 95;
 
 cgtu_Vdmax = 12000;
 cgtu_Vdmin = 2000;
-cgtu_Vdstp = 500;
+cgtu_Vdstp = 1000;
 
 cgtu_Vgmax = 12000;
 cgtu_Vgmin = 100;
-cgtu_Vgstp = 595;
+cgtu_Vgstp = 1190;
 
 // Counters
 cgtu_cntTotal = 0;
@@ -153,8 +153,8 @@ function CGTU_CalibrateIGate()
 		CGTU_SaveIGate("gtu_igt", "gtu_igt_set");
 		
 		// Plot relative error distribution
-		scattern(cgtu_igt_sc, cgtu_igt_err, "Igt (in mA)", "Error (in %)", "Igt relative error");
-		scattern(cgtu_igt_sc, cgtu_igt_set_err, "Igt (in mA)", "Error (in %)", "Igt set relative error");
+		//scattern(cgtu_igt_sc, cgtu_igt_err, "Igt (in mA)", "Error (in %)", "Igt relative error");
+		//scattern(cgtu_igt_sc, cgtu_igt_set_err, "Igt (in mA)", "Error (in %)", "Igt set relative error");
 		
 		// Calculate correction			
 		cgtu_igt_corr = CGEN_GetCorrection2("gtu_igt");
@@ -184,8 +184,8 @@ function CGTU_CalibrateIPower()
 		CGTU_SaveIPower("gtu_id", "gtu_id_set");
 		
 		// Plot relative error distribution
-		scattern(cgtu_id_sc, cgtu_id_err, "Id (in mA)", "Error (in %)", "Id relative error");
-		scattern(cgtu_id_sc, cgtu_id_set_err, "Id set (in mA)", "Error (in %)", "Id set relative error");
+		//scattern(cgtu_id_sc, cgtu_id_err, "Id (in mA)", "Error (in %)", "Id relative error");
+		//scattern(cgtu_id_sc, cgtu_id_set_err, "Id set (in mA)", "Error (in %)", "Id set relative error");
 		
 		// Calculate correction
 		cgtu_id_corr = CGEN_GetCorrection2("gtu_id");
@@ -215,8 +215,8 @@ function CGTU_CalibrateVGate()
 		CGTU_SaveVGate("gtu_vgt");
 		
 		// Plot relative error distribution
-		scattern(cgtu_vgt_sc, cgtu_vgt_err, "Vgt (in mV)", "Error (in %)", "Vgt relative error");
-		scattern(cgtu_vgt_sc, cgtu_vgt_set_err, "Vgt (in mV)", "Error (in %)", "Vgt set relative error");
+		//scattern(cgtu_vgt_sc, cgtu_vgt_err, "Vgt (in mV)", "Error (in %)", "Vgt relative error");
+		//scattern(cgtu_vgt_sc, cgtu_vgt_set_err, "Vgt (in mV)", "Error (in %)", "Vgt set relative error");
 		
 		// Calculate correction			
 		cgtu_vgt_corr = CGEN_GetCorrection2("gtu_vgt");
@@ -244,8 +244,8 @@ function CGTU_CalibrateVPower()
 		CGTU_SaveVPower("gtu_vd");
 		
 		// Plot relative error distribution
-		scattern(cgtu_vd_sc, cgtu_vd_err, "Vd (in mV)", "Error (in %)", "Vd relative error");
-		scattern(cgtu_vd_sc, cgtu_vd_set_err, "Vd (in mV)", "Error (in %)", "Vd set relative error");
+		//scattern(cgtu_vd_sc, cgtu_vd_err, "Vd (in mV)", "Error (in %)", "Vd relative error");
+		//scattern(cgtu_vd_sc, cgtu_vd_set_err, "Vd (in mV)", "Error (in %)", "Vd set relative error");
 		
 		// Calculate correction		
 		cgtu_vd_corr = CGEN_GetCorrection2("gtu_vd");
@@ -269,7 +269,7 @@ function CGTU_VerifyVGate()
 		
 		// Plot relative error distribution
 		scattern(cgtu_vgt_sc, cgtu_vgt_err, "Vgt (in mV)", "Error (in %)", "Vgt relative error"); sleep(200);
-		scattern(cgtu_vgt_sc, cgtu_vgt_set_err, "Vgt (in mV)", "Error (in %)", "Vgt set relative error"); sleep(200);
+		//scattern(cgtu_vgt_sc, cgtu_vgt_set_err, "Vgt (in mV)", "Error (in %)", "Vgt set relative error"); sleep(200);
 		
 		// Plot summary error distribution
 		if(cgtu_PlotSummaryError)
@@ -290,7 +290,7 @@ function CGTU_VerifyIGate()
 		
 		// Plot relative error distribution
 		scattern(cgtu_igt_sc, cgtu_igt_err, "Igt (in mA)", "Error (in %)", "Igt relative error"); sleep(200);
-		scattern(cgtu_igt_sc, cgtu_igt_set_err, "Igt set (in mA)", "Error (in %)", "Igt set relative error");
+		//scattern(cgtu_igt_sc, cgtu_igt_set_err, "Igt set (in mA)", "Error (in %)", "Igt set relative error");
 		
 		// Plot summary error distribution
 		if(cgtu_PlotSummaryError)
@@ -311,7 +311,7 @@ function CGTU_VerifyVPower()
 		
 		// Plot relative error distribution
 		scattern(cgtu_vd_sc, cgtu_vd_err, "Vd (in mV)", "Error (in %)", "Vd relative error");
-		scattern(cgtu_vd_sc, cgtu_vd_set_err, "Vd (in mV)", "Error (in %)", "Vd set relative error");
+		//scattern(cgtu_vd_sc, cgtu_vd_set_err, "Vd (in mV)", "Error (in %)", "Vd set relative error");
 		
 		// Plot summary error distribution
 		if(cgtu_PlotSummaryError)
@@ -332,7 +332,7 @@ function CGTU_VerifyIPower()
 		
 		// Plot relative error distribution
 		scattern(cgtu_id_sc, cgtu_id_err, "Id (in mA)", "Error (in %)", "Id relative error");
-		scattern(cgtu_id_sc, cgtu_id_set_err, "Id set (in mA)", "Error (in %)", "Id set relative error");
+		//scattern(cgtu_id_sc, cgtu_id_set_err, "Id set (in mA)", "Error (in %)", "Id set relative error");
 		
 		// Plot summary error distribution
 		if(cgtu_PlotSummaryError)
