@@ -525,13 +525,15 @@ function CTOU_TonTdelCollect(IdValues, IgValues, ctou_DeviceQuantity)
 			{
 				var tou_print_copy = tou_print;
 				tou_print = 0;
-
+				
+				print("Executing test...")
 				TOUHP_Measure(ctou_ud_test, IdValues[j] * 10);
 				
 				tou_print = tou_print_copy;
 				
 				print("Go to the next step? Enter 'y' if yes or 'n' if no.");
 				sign = readkey();
+				print("Pressed " + sign)
 				
 				if((sign != 'n') && (sign != 'y'))
 					return 0;
@@ -546,6 +548,7 @@ function CTOU_TonTdelCollect(IdValues, IgValues, ctou_DeviceQuantity)
 			// Scope tdel value
 			print("Enter turn delay value in nS");
 			var tdel_sc = readline();
+			ctou_tdel_sc.push(tdel_sc);
 			
 			// Unit ton vlaue
 			var ton_read = dev.r(252);
@@ -555,6 +558,7 @@ function CTOU_TonTdelCollect(IdValues, IgValues, ctou_DeviceQuantity)
 			// Scope ton value
 			print("Enter turn on value in nS");
 			var ton_sc = readline();
+			ctou_ton_sc.push(ton_sc);
 			
 			print("--------------------");
 			
