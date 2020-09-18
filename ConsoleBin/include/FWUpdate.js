@@ -219,75 +219,34 @@ function FWU_RestoreSLH(Version)
 }
 //------------------------
 
-// CU
-function FWU_CU(Version)
+// CUControlBoard
+function FWU_CU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../Commutation Unit/High Voltage/CU HV/Controller Soft/Version " + Version + "/CUControlBoard/Release/CUControlBoard.hex");
+	FWUpdate("../../hw-CUControlBoard/Firmware/Release/CUControlBoard.hex");
 }
 //------------------------
 
-function FWU_DumpCU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../Commutation Unit/High Voltage/CU HV/Controller Soft/Version " + Version + "/CUControlBoard/cu.regdump", 0, 126);
-}
-
 // ControlUnit
-function FWU_ControlUnit(Version)
+function FWU_ControlUnit()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../HMI Unit/Controllers soft/Version " + Version + "/ControlUnit/Release/ControlUnit.hex");
+	FWUpdate("../../hw-ControlUnitBoard/Firmware/Release/ControlUnitBoard.hex");
 }
 //------------------------
 
 // dVdt
-function FWU_CROVU(Version)
+function FWU_CROVU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../CROVU/Controller soft/Version " + Version + "/dVdtControlBoard/Release/dVdtControlBoard.hex");
+	FWUpdate("../../hw-dVdtControlBoard/Firmware/Release/dVdtControlBoard.hex");
 }
 
-function FWU_DumpCROVU(Version)
+function FWU_DumpCROVU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../CROVU/Controller soft/Version " + Version + "/dVdtControlBoard/dvdt.regdump", 0, 126);
+	dev.Dump("../../hw-dVdtControlBoard/Firmware/dVdtControlBoard.regdump", 0, 126);
 }
 
-function FWU_RestoreCROVU(Version)
+function FWU_RestoreCROVU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../CROVU/Controller soft/Version " + Version + "/dVdtControlBoard/dvdt.regdump");
+	dev.Restore("../../hw-dVdtControlBoard/Firmware/dVdtControlBoard.regdump");
 }
 //------------------------
 
