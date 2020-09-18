@@ -1,11 +1,11 @@
 include("PrintStatus.js")
 
 // Global definitions
-GateCurrentRate = 1000;
-GateCurrent = 1000;
+GateCurrentRate = 8000;
+GateCurrent = 8000;
 //
 tou_print = 1;
-PulseToPulseDelay = 2000;
+PulseToPulseDelay = 1000;
 //
 
 // TOU HP
@@ -47,14 +47,14 @@ function TOUHP_Measure(Voltage, Current)
 	
 	dev.c(100);
 	
-	sleep(100);
+	sleep(2000);
 	
-	while(dev.r(192) == 4){sleep(50);}
+	while(dev.r(192) == 4){}
 	
 	if(tou_print)
 	{
-		print("Turn on, ns       = " + dev.r(252));
 		print("Turn on delay, ns = " + dev.r(251));
+		print("Turn on, ns       = " + dev.r(252));
 		print("--------------");
 	}
 }
@@ -103,4 +103,17 @@ function TOMUHP_GatePulse(GateCurrentRate, GateCurrent)
 	dev.w(131, GateCurrentRate);
 	
 	dev.c(110);
+}
+
+function TOMU_CommutationControl(Control)
+{
+	if(Control)
+	{
+		dev.w(14,0);
+		dev.w(190,0);
+		dev.c(21);
+		dev.c(22);
+	}
+	else
+		dev.w(14,1);
 }
