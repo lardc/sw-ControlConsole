@@ -219,7 +219,7 @@ function FWU_RestoreSLH(Version)
 }
 //------------------------
 
-// CU
+// CUControlBoard
 function FWU_CU()
 {
 	FWUpdate("../../hw-CUControlBoard/Firmware/Release/CUControlBoard.hex");
@@ -227,15 +227,9 @@ function FWU_CU()
 //------------------------
 
 // ControlUnit
-function FWU_ControlUnit(Version)
+function FWU_ControlUnit()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../HMI Unit/Controllers soft/Version " + Version + "/ControlUnit/Release/ControlUnit.hex");
+	FWUpdate("../../hw-ControlUnitBoard/Firmware/Release/ControlUnitBoard.hex");
 }
 //------------------------
 
