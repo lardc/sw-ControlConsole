@@ -4,7 +4,7 @@ include("CalGeneral.js")
 
 // Input params
 ctou_id_max = 100;		// MAX DUT Current [A]
-ctou_ud_test = 600;		// Available - 600V, 1000V, 1500V	
+ctou_ud_test = 1500;		// Available - 600V, 1000V, 1500V	
 ctou_Ri = 1e-3;			// Current shunt resistance
 ctou_nid = 11;			// CAN node id
 ctou_TOCUHP_nid = 21;	// TOCU HP node id
@@ -69,6 +69,7 @@ ctou_ton_corr = [];
 ctou_tdel_corr = [];
 
 ctou_UseAvg = 1;
+ctou_param = "Turn delay";
 
 function CTOU_Init(portTOU, portTek, channelMeasureId, channelMeasureUd, channelSync)
 {
@@ -168,13 +169,13 @@ function CTOU_CalibrateTonTdel()
 	CTOU_ResetTonTdelCal();
 	
 	// Tektronix init
-	CTOU_TonTdelTekInit();
+	CTOU_TdelTekInit();
 	
 	// Collect data
 	var IdArray = CGEN_GetRange(ctou_idmin, ctou_idmax, ctou_idstp);
 	var IgArray = CGEN_GetRange(ctou_igmin, ctou_igmax, ctou_igstp);
 
-	if (CTOU_TonTdelCollect(IdArray, IgArray, ctou_DeviceQuantity))
+	if (CTOU_TdelTonCollect(IdArray, IgArray, ctou_DeviceQuantity))
 	{
 		CTOU_SaveTdel("touhp_tdel");
 		CTOU_SaveTon("touhp_ton");
@@ -243,8 +244,10 @@ function CTOU_VerifyUd()
 	}
 }
 
-function CTOU_VerifyTonTdel()
+function CTOU_VerifyTdel()
 {	
+	ctou_TdelCollect = 1;
+
 	dev.nid(ctou_nid);
 	
 	TOMU_CommutationControl(1);
@@ -253,35 +256,60 @@ function CTOU_VerifyTonTdel()
 	CTOU_ResetA();
 	
 	// Tektronix init
-	CTOU_TonTdelTekInit();
+	CTOU_TdelTekInit();
 	
 	// Collect data
 	var IdArray = CGEN_GetRange(ctou_idmin, ctou_idmax, ctou_idstp);
 	var IgArray = CGEN_GetRange(ctou_igmin, ctou_igmax, ctou_igstp);
 
-	if (CTOU_TonTdelCollect(IdArray, IgArray, ctou_DeviceQuantity))
+	if (CTOU_TdelTonCollect(IdArray, IgArray, ctou_DeviceQuantity))
 	{
 		CTOU_SaveTdel("touhp_tdel_fixed");
-		CTOU_SaveTon("touhp_ton_fixed");
 		
 		// Plot relative error distribution
 		scattern(ctou_tdel, ctou_tdel_err, "Time (in uS)", "Error (in %)", "Turn on delay relative error");
+	}
+}
+
+function CTOU_VerifyTon()
+{	
+	ctou_TdelCollect = 0;
+
+	dev.nid(ctou_nid);
+	
+	TOMU_CommutationControl(1);
+	
+	// Collect data
+	CTOU_ResetA();
+	
+	// Tektronix init
+	CTOU_TonTekInit();
+	
+	// Collect data
+	var IdArray = CGEN_GetRange(ctou_idmin, ctou_idmax, ctou_idstp);
+	var IgArray = CGEN_GetRange(ctou_igmin, ctou_igmax, ctou_igstp);
+
+	if (CTOU_TdelTonCollect(IdArray, IgArray, ctou_DeviceQuantity))
+	{
+		CTOU_SaveTdel("touhp_ton_fixed");
+		
+		// Plot relative error distribution
 		scattern(ctou_ton, ctou_ton_err, "Time (in uS)", "Error (in %)", "Turn on relative error");
 	}
 }
 
-function CTOU_TonTdelTekInit()
-{
+function CTOU_TdelTekInit()
+{	
 	// Init channels
-	TEK_ChannelInit(ctou_chMeasureUd, "100", ctou_ud_test / 7);
+	TEK_ChannelInit(ctou_chMeasureUd, "100", (ctou_ud_test * 0.9) / 7);
 	TEK_ChannelInit(ctou_chSync, "1", "1");
 
 	// Init trigger
 	TEK_TriggerInit(ctou_chSync, "1");
 	// Horizontal settings
-	TEK_Horizontal("1e-6", "4e-6");
+	TEK_Horizontal("250e-9", "1e-6");
 	
-		// Display channels
+	// Display channels
 	for (var i = 1; i <= 4; i++)
 	{
 		if (i == ctou_chMeasureUd || i == ctou_chSync)
@@ -290,7 +318,30 @@ function CTOU_TonTdelTekInit()
 			TEK_ChannelOff(i);
 	}
 
-	CTOU_TonTdelTekCursor(ctou_chMeasureUd);
+	CTOU_TdelTonTekCursor(ctou_chMeasureUd);
+}
+
+function CTOU_TonTekInit()
+{	
+	// Init channels
+	TEK_ChannelInit(ctou_chMeasureUd, "100", (ctou_ud_test * 0.1) / 2);
+	TEK_ChannelInit(ctou_chSync, "1", "1");
+
+	// Init trigger
+	TEK_TriggerInit(ctou_chSync, "1");
+	// Horizontal settings
+	TEK_Horizontal("1e-6", "4e-6");
+	
+	// Display channels
+	for (var i = 1; i <= 4; i++)
+	{
+		if (i == ctou_chMeasureUd || i == ctou_chSync)
+			TEK_ChannelOn(i);
+		else
+			TEK_ChannelOff(i);
+	}
+
+	CTOU_TdelTonTekCursor(ctou_chMeasureUd);
 }
 
 function CTOU_IdTekInit()
@@ -341,12 +392,21 @@ function CTOU_UdTekInit()
 	CTOU_Measure(ctou_chMeasureUd, "4");
 }
 
-function CTOU_TonTdelTekCursor(Channel)
+function CTOU_TdelTonTekCursor(Channel)
 {
 	TEK_Send("cursor:select:source ch" + Channel);
 	TEK_Send("cursor:function hbars");
-	TEK_Send("cursor:hbars:position1 " + ctou_ud_test * 0.9);
-	TEK_Send("cursor:hbars:position2 " + ctou_ud_test * 0.1);
+	
+	if(ctou_TdelCollect)
+	{
+		TEK_Send("cursor:hbars:position1 " + ctou_ud_test * 0.9);
+		TEK_Send("cursor:hbars:position2 " + ctou_ud_test * 0.9);
+	}
+	else
+	{
+		TEK_Send("cursor:hbars:position1 " + ctou_ud_test * 0.1);
+		TEK_Send("cursor:hbars:position2 " + ctou_ud_test * 0.1);
+	}
 }
 
 function CTOU_IdTekCursor(Channel)
@@ -501,7 +561,7 @@ function CTOU_UdCollect(VoltageValues, IterationsCount)
 	return 1;
 }
 
-function CTOU_TonTdelCollect(IdValues, IgValues, ctou_DeviceQuantity)
+function CTOU_TdelTonCollect(IdValues, IgValues, ctou_DeviceQuantity)
 {
 	ctou_cntTotal = ctou_DeviceQuantity * IdValues.length;
 	ctou_cntDone = 1;
@@ -525,7 +585,7 @@ function CTOU_TonTdelCollect(IdValues, IgValues, ctou_DeviceQuantity)
 			{
 				var tou_print_copy = tou_print;
 				tou_print = 0;
-				
+
 				print("Executing test...")
 				TOUHP_Measure(ctou_ud_test, IdValues[j] * 10);
 				
@@ -536,35 +596,48 @@ function CTOU_TonTdelCollect(IdValues, IgValues, ctou_DeviceQuantity)
 				print("Pressed " + sign)
 				
 				if((sign != 'n') && (sign != 'y'))
-					return 0;
+				{
+					print("Exit the process? Enter 'y' if yes or 'n' if no.");
+					sign = readkey();
+					
+					if(sign == 'y')
+						return 0;
+				}
 			}
-			while(sign == 'n')
-			
-			// Unit tdel value
-			var tdel_read = dev.r(251);
-			ctou_tdel.push(tdel_read);
-			print("tdel tou, ns: " + tdel_read);
-			
-			// Scope tdel value
-			print("Enter turn delay value in nS");
-			var tdel_sc = readline();
-			ctou_tdel_sc.push(tdel_sc);
-			
-			// Unit ton vlaue
-			var ton_read = dev.r(252);
-			ctou_ton.push(ton_read);
-			print("ton tou, ns    : " + ton_read);
-			
-			// Scope ton value
-			print("Enter turn on value in nS");
-			var ton_sc = readline();
-			ctou_ton_sc.push(ton_sc);
+			while(sign != 'y')
+				
+			if(ctou_TdelCollect)
+			{
+				// Unit tdel value
+				var tdel_read = dev.r(251);
+				ctou_tdel.push(tdel_read);
+				print("tdel tou, ns: " + tdel_read);
+				
+				// Scope tdel value
+				print("Enter turn delay value in nS");
+				var tdel_sc = readline();
+				ctou_tdel_sc.push(tdel_sc);
+				
+				// Relative error
+				ctou_tdel_err.push(((tdel_read - tdel_sc) / tdel_sc * 100).toFixed(2));
+			}
+			else
+			{
+				// Unit ton vlaue
+				var ton_read = dev.r(252);
+				ctou_ton.push(ton_read);
+				print("ton tou, ns    : " + ton_read);
+				
+				// Scope ton value
+				print("Enter turn on value in nS");
+				var ton_sc = readline();
+				ctou_ton_sc.push(ton_sc);
+				
+				// Relative error
+				ctou_ton_err.push(((ton_read - ton_sc) / ton_sc * 100).toFixed(2));
+			}
 			
 			print("--------------------");
-			
-			// Relative error
-			ctou_tdel_err.push(((tdel_read - tdel_sc) / tdel_sc * 100).toFixed(2));
-			ctou_ton_err.push(((ton_read - ton_sc) / ton_sc * 100).toFixed(2));
 		}
 	}
 
