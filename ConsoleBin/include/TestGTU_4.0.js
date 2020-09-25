@@ -284,10 +284,32 @@ function GTU_Plot()
 	plot(gtu_il, 1, 0);	
 }
 
-function GTU_PulseX(Time, Current, CMD)
+function GTU_VGate(Voltage)
 {
-	dev.w(140, Current);
+	dev.w(130, Voltage);
+	GTU_PulseX(110);
+}
 
+function GTU_IGate(Current)
+{
+	dev.w(131, Current);
+	GTU_PulseX(111);
+}
+
+function GTU_VPower(Voltage)
+{
+	dev.w(130, Voltage);
+	GTU_PulseX(112);
+}
+
+function GTU_IPower(Current)
+{
+	dev.w(131, Current);
+	GTU_PulseX(113);
+}
+
+function GTU_PulseX(CMD)
+{
 	dev.c(CMD);
 	
 	var state;
@@ -296,20 +318,12 @@ function GTU_PulseX(Time, Current, CMD)
 		state = dev.r(192);
 		sleep(50);
 	}
-	while (state >= 3);
+	while (state == 8);
 	
-	print("Ical, mA: " + dev.r(204));
-	print("Vcal, mV: " + dev.r(205));
-}
-
-function GTU_PulseGate(Time, Current)
-{
-	GTU_PulseX(Time, Current, 110);
-}
-
-function GTU_PulsePow(Time, Current)
-{
-	GTU_PulseX(Time, Current, 111);
+	if((CMD == 110) || (CMD == 112))
+		print("Vcal, mV: " + dev.r(204));
+	else
+		print("Ical, mA: " + dev.r(204));
 }
 
 function GTU_ResourceTest(N)
