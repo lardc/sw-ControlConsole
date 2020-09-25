@@ -298,13 +298,13 @@ function GTU_IGate(Current)
 
 function GTU_VPower(Voltage)
 {
-	dev.w(130, Voltage);
+	dev.w(128, Voltage);
 	GTU_PulseX(112);
 }
 
 function GTU_IPower(Current)
 {
-	dev.w(131, Current);
+	dev.w(129, Current);
 	GTU_PulseX(113);
 }
 
