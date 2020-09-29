@@ -184,7 +184,7 @@ function CAL_TekInit(Channel)
 		// Display channels
 	for (var i = 1; i <= 4; i++)
 	{
-		if (i == Channel || i == channelSync)
+		if (i == Channel || i == cal_chSync)
 			TEK_ChannelOn(i);
 		else
 			TEK_ChannelOff(i);
@@ -256,7 +256,7 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 			print("Idread, mA: " + id_read);
 
 			// Scope data
-			var id_sc = (CAL_Measure(cal_chMeasureId, "4") / cal_CurrentShunt_Ohm[cal_CurrentRange] * 1000).toFixed(0);
+			var id_sc = (CAL_Measure(cal_chMeasureId, "4") / cal_LoadResistance * 1000).toFixed(0);
 			cal_id_sc.push(id_sc);
 			print("Idtek, mA: " + id_sc);
 
