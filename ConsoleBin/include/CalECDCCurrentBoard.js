@@ -54,7 +54,7 @@ cal_ud_err = [];
 cal_id_corr = [];
 cal_ud_corr = [];
 
-ctou_UseAvg = 1;
+cal_UseAvg = 1;
 
 function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd, channelSync)
 {
@@ -184,7 +184,7 @@ function CAL_TekInit(Channel)
 		// Display channels
 	for (var i = 1; i <= 4; i++)
 	{
-		if (i == Channel || i == ctou_chSync)
+		if (i == Channel || i == channelSync)
 			TEK_ChannelOn(i);
 		else
 			TEK_ChannelOff(i);
