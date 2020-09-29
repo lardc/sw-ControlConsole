@@ -268,6 +268,25 @@ function GTU_All(Num, Pause)
 	}
 }
 
+function GTU_Run(Voltage)
+{
+	dev.nid(1);
+	dev.c(111);
+	
+	dev.nid(3);
+	GTU_Kelvin();
+	GTU_Gate();
+	GTU_Holding();
+	GTU_Latching();
+	
+	dev.nid(1);
+	dev.c(117);
+	GTU_Vgnt(Voltage, 200);
+	
+	dev.nid(1);
+	dev.c(110);
+}
+
 function GTU_SetKelvin(High, Low)
 {
 	dev.w(160, High);
@@ -300,6 +319,26 @@ function GTU_PulseX(Time, Current, CMD)
 	
 	print("Ical, mA: " + dev.r(204));
 	print("Vcal, mV: " + dev.r(205));
+}
+
+function GTU_SavePlots()
+{
+	var a;
+	
+	pl(a = dev.rafs(1));
+	save('vg.csv', a);
+	sleep(200);
+	
+	pl(a = dev.rafs(2));
+	save('ig.csv', a);
+	sleep(200);
+	
+	pl(a = dev.rafs(3));
+	save('vd.csv', a);
+	sleep(200);
+	
+	pl(a = dev.rafs(4));
+	save('id.csv', a);
 }
 
 function GTU_PulseGate(Time, Current)
