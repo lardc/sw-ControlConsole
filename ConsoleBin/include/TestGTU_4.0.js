@@ -114,7 +114,7 @@ function GTU_Holding()
 		if (dev.r(197) == 2) print("#Problem: " + dev.r(196));
 	}
 	
-	print("Ih,   mA: " + dev.r(201));
+	print("Ih,   mA: " + (dev.r(201) + dev.r(231) / 1000));
 	
 	gtu_ih.push(dev.r(201));
 	
