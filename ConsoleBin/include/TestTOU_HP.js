@@ -47,9 +47,9 @@ function TOUHP_Measure(Voltage, Current)
 	
 	dev.c(100);
 	
-	sleep(2000);
+	sleep(8000);
 	
-	while(dev.r(192) == 4){}
+	while(dev.r(192) == 4){sleep(100);}
 	
 	if(tou_print)
 	{
