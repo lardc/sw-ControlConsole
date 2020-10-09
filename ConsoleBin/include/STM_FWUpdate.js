@@ -197,3 +197,10 @@ function FWU_ECCB()
 	FWUpdateSTM("../../hw-ECControlBoard/Firmware/Release/ECControlBoard.binary");
 }
 //------------------------
+
+// ECDCHighVoltageBoard
+function FWU_ECDCHVB()
+{
+	FWUpdateSTM("../../hw-ECDCHighVoltageBoard/Firmware/Release/ECDCHighVoltageBoard.binary");
+}
+//------------------------
