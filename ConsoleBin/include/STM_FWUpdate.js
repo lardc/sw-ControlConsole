@@ -196,6 +196,16 @@ function FWU_ECCB()
 {
 	FWUpdateSTM("../../hw-ECControlBoard/Firmware/Release/ECControlBoard.binary");
 }
+
+function FWU_DumpECCB()
+{
+	dev.Dump("../../hw-ECControlBoard/Firmware/ECControlBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreECCB()
+{
+	dev.Restore("../../hw-ECControlBoard/Firmware/ECControlBoard.regdump");
+}
 //------------------------
 
 // ECDCHighVoltageBoard
