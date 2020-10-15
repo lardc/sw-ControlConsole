@@ -208,6 +208,23 @@ function FWU_RestoreECCB()
 }
 //------------------------
 
+// ECACVoltageBoard
+function FWU_ECACVB()
+{
+	FWUpdateSTM("../../hw-ECACVoltageBoard/Firmware/Release/ECACVoltageBoard.binary");
+}
+
+function FWU_DumpECACVB()
+{
+	dev.Dump("../../hw-ECACVoltageBoard/Firmware/ECACVoltageBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreECACVB()
+{
+	dev.Restore("../../hw-ECACVoltageBoard/Firmware/ECACVoltageBoard.regdump");
+}
+//------------------------
+
 // ECDCHighVoltageBoard
 function FWU_ECDCHVB()
 {
