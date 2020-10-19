@@ -210,12 +210,12 @@ function FWU_ECACVoltageBoard()
 	FWUpdateSTM("../../hw-ECACVoltageBoard/Firmware/Release/ECACVoltageBoard.binary");
 }
 
-function FWU_DumpMultiplexer()
+function FWU_DumpECACVoltageBoard()
 {
 	dev.Dump("../../hw-ECACVoltageBoard/Firmware/ECACVoltageBoard.regdump", 0, 126);
 }
 
-function FWU_RestoreMultiplexer()
+function FWU_RestoreECACVoltageBoard()
 {
 	dev.Restore("../../hw-ECACVoltageBoard/Firmware/ECACVoltageBoard.regdump");
 }
