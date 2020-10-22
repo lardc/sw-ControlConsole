@@ -125,7 +125,7 @@ function CAL_CalibrateId()
 	
 	if (CAL_Collect(VoltageArray, cal_Iterations, cal_PrintModeI))
 	{
-		CAL_SaveUd("ECACVoltageBoard_id");
+		CAL_SaveId("ECACVoltageBoard_id");
 
 		// Plot relative error distribution
 		scattern(cal_id_sc, cal_id_err, "Current (in uI)", "Error (in %)", "Current relative error");
@@ -339,7 +339,7 @@ function CAL_ResetA()
 	cal_ud_corr = [];
 }
 
-unction CAL_SaveId(NameId)
+function CAL_SaveId(NameId)
 {
 	CGEN_SaveArrays(NameId, cal_id, cal_id_sc, cal_id_err);
 }
