@@ -1,13 +1,31 @@
+include("PrintStatus.js")
+
 //-----------------------------------------------------------
 function ECAC_Pulse(Voltage, Current , Line)
 {
-	//Запись значения ударного тока
-	dev.w(128, Voltage);
-	w32(129, Current);
-	dev.w(131, Line);
+	if(dev.r(192) == 3)
+	{
+		//Запись значения ударного тока
+		dev.w(128, Voltage);
+		w32(129, Current);
+		dev.w(131, Line);
 	
-	//Формирование импульса
-	dev.c(100);
+		//Формирование импульса
+		dev.c(100);
+		
+		while(dev.r(192) == 5){sleep(10);}
+		
+		if(dev.r(192) == 1)
+		PrintStatus();
+	}
+	else
+	{
+		if(dev.r(192) != 1)
+			print("Device not ready");
+		else
+			PrintStatus();
+	}
+		
 }
 //-----------------------------------------------------------
 
@@ -64,3 +82,13 @@ function w32(Address, Value)
 }
 //------------------------------------------------------------
 
+function r32(Address)
+{
+	var ReadValue;
+	
+	ReadValue = dev.r(Address);
+	ReadValue |= (dev.r(Address + 1) << 16);
+	
+	return ReadValue;
+}
+//--------------------
