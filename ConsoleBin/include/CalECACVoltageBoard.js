@@ -79,9 +79,9 @@ function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd)
 
 function CAL_CalibrateUd()
 {
-	ud_min	= cal_VoltageRangeArrayMin[cal_VoltageRange];
-	ud_max	= cal_VoltageRangeArrayMax[cal_VoltageRange];
-	ud_stp	= (ud_max - ud_min) / 10;
+	var ud_min	= cal_VoltageRangeArrayMin[cal_VoltageRange];
+	var ud_max	= cal_VoltageRangeArrayMax[cal_VoltageRange];
+	var ud_stp	= (ud_max - ud_min) / 10;
 	
 	if(cal_VoltageRange != 0)
 	{
@@ -109,9 +109,9 @@ function CAL_CalibrateUd()
 
 function CAL_CalibrateId()
 {
-	ud_max = Math.round(cal_CurrentRangeArrayMax[cal_CurrentRange] * cal_Rload * 0.9 / 1000000);
-	ud_min = Math.round(cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload * 0.9 / 1000000);
-	ud_stp = Math.round((ud_max - ud_min) / 10) ;
+	var ud_max = Math.round(cal_CurrentRangeArrayMax[cal_CurrentRange] * cal_Rload * 0.9 / 1000000);
+	var ud_min = Math.round(cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload * 0.9 / 1000000);
+	var ud_stp = Math.round((ud_max - ud_min) / 10) ;
 	
 	if(cal_VoltageRange != 0)
 	{
@@ -140,9 +140,9 @@ function CAL_CalibrateId()
 function CAL_VerifyUd()
 {	
 
-	ud_min	= cal_VoltageRangeArrayMin[cal_VoltageRange];
-	ud_max	= cal_VoltageRangeArrayMax[cal_VoltageRange];
-	ud_stp	= (ud_max - ud_min) / 10;
+	var ud_min	= cal_VoltageRangeArrayMin[cal_VoltageRange];
+	var ud_max	= cal_VoltageRangeArrayMax[cal_VoltageRange];
+	var ud_stp	= (ud_max - ud_min) / 10;
 	
 	if(cal_VoltageRange != 0)
 	{
@@ -166,9 +166,9 @@ function CAL_VerifyUd()
 
 function CAL_VerifyId()
 {
-	ud_max = Math.round(cal_CurrentRangeArrayMax[cal_CurrentRange] * cal_Rload * 0.95 / 1000000);
-	ud_min = Math.round(cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload * 0.95 / 1000000);
-	ud_stp = Math.round((ud_max - ud_min) / 10) ;
+	var ud_max = Math.round(cal_CurrentRangeArrayMax[cal_CurrentRange] * cal_Rload * 0.95 / 1000000);
+	var ud_min = Math.round(cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload * 0.95 / 1000000);
+	var ud_stp = Math.round((ud_max - ud_min) / 10) ;
 	
 	if(cal_VoltageRange != 0)
 	{
