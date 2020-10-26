@@ -348,10 +348,6 @@ function CAL_CollectTargetU(VoltageValues, IterationsCount, CellNumder)
 	cal_CntTotal = IterationsCount * VoltageValues.length;
 	cal_CntDone = 1;
 	
-	var IRange = 4;
-	
-	var ItrgtMax = cal_CurrentRangeArrayMax[IRange];
-	
 	var CountOffSet = 0;
 	
 	if(CellNumber != 0)
@@ -386,21 +382,7 @@ function CAL_CollectTargetU(VoltageValues, IterationsCount, CellNumder)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				ECDC_HV_Measure(VoltageValues[j], ItrgtMax);
-				//if (dev.r(192) == 3)
-				//{
-				//	dev.w(128, Vcellmax);
-				//	w32(129, Idmax);
-				//	dev.c(100);	
-				//	while(dev.r(192) == 4){sleep(10);}	
-				//}
-				//else
-				//{
-				//	if(dev.r(192) != 1)
-				//	print("Device not ready");
-				//	else
-				//	PrintStatus();
-				//}
+				ECDC_HV_CalCell(VoltageValues[j], CellNumder);
 				sleep (10000);
 			}
 	
