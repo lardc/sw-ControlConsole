@@ -1,5 +1,19 @@
 ﻿function FWUpdateSTM(FileName)
 {
+	print("Current node id equal " + dev.GetNodeID() + ". Confirm execution pressing 'y' or exit pressing 'n'.");
+	var key = 0;
+	do
+	{
+		key = readkey();
+	}
+	while (key != "y" && key != "n")
+	
+	if (key == "n")
+	{
+		print("Exit.");
+		return;
+	}
+	
 	// Команды
 	var ACT_DEVICE_RESET = 320;				// Команда перезапуска процессора
 	var ACT_FLASH_ERASE = 300;				// Команда на очистку FLASH памяти процессора
