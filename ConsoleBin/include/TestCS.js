@@ -1,5 +1,5 @@
 include("PrintStatus.js")
-include("GetRandomInt.js")
+include("CalGeneral.js")
 
 cs_clamp_hold = 3000;
 cs_clamp_pause = 10000;
@@ -501,10 +501,10 @@ function CS_ClampResource(Counter, MaxForce)
 		print("#" + (Index + 1) + " Force " + (dev.r(110) / 10));
 		
 		// pause
-		sleep(getRandomInt(1000, 5000));
+		sleep(CGEN_GetRandomInt(1000, 5000));
 		
 		// update
-		var targetF = getRandomInt(50, MaxForce);
+		var targetF = CGEN_GetRandomInt(50, MaxForce);
 		dev.w(70, targetF);
 		print("#" + (Index + 1) + " Clamp target force, N: " + (targetF / 10));
 		print("#" + (Index + 1) + " Clamp - update");
@@ -519,7 +519,7 @@ function CS_ClampResource(Counter, MaxForce)
 		print("#" + (Index + 1) + " Force " + (dev.r(110) / 10));
 		
 		// pause
-		sleep(getRandomInt(1000, 5000));
+		sleep(CGEN_GetRandomInt(1000, 5000));
 		
 		// update
 		dev.w(70, 50)
@@ -535,7 +535,7 @@ function CS_ClampResource(Counter, MaxForce)
 		print("#" + (Index + 1) + " Force " + (dev.r(110) / 10));
 		
 		// pause
-		sleep(getRandomInt(1000, 5000));
+		sleep(CGEN_GetRandomInt(1000, 5000));
 		
 		// release
 		print("#" + (Index + 1) + " Clamp - down");
