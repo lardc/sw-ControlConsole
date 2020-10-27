@@ -234,3 +234,20 @@ function FWU_RestoreECACVoltageBoard()
 	dev.Restore("../../hw-ECACVoltageBoard/Firmware/ECACVoltageBoard.regdump");
 }
 //------------------------
+
+// EC DCVoltageBoard
+function FWU_ECDCVoltageBoard()
+{
+	FWUpdateSTM("../../hw-ECDCVoltageBoard/Firmware/Release/ECDCVoltageBoard.binary");
+}
+
+function FWU_DumpECDCVoltageBoard()
+{
+	dev.Dump("../../hw-ECDCVoltageBoard/Firmware/ECDCVoltageBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreECDCVoltageBoard()
+{
+	dev.Restore("../../hw-ECDCVoltageBoard/Firmware/ECDCVoltageBoard.regdump");
+}
+//------------------------
