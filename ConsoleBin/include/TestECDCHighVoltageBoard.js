@@ -1,4 +1,5 @@
 include("PrintStatus.js")
+include("Common.js")
 
 function ECDC_HV_CalCell(Voltage, CellNumder)
 {
@@ -44,23 +45,5 @@ function ECDC_HV_Measure(Voltage, Current)
 		else
 			PrintStatus();
 	}
-}
-//--------------------
-
-function w32(Address, Value)
-{
-	dev.w(Address,(Value & 0xffff));
-	dev.w((Address + 1),((Value >> 16) & 0xffff));
-}
-//--------------------
-
-function r32(Address)
-{
-	var ReadValue;
-	
-	ReadValue = dev.r(Address);
-	ReadValue |= (dev.r(Address + 1) << 16);
-	
-	return ReadValue;
 }
 //--------------------

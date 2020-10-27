@@ -1,4 +1,5 @@
 include("PrintStatus.js")
+include("Common.js")
 
 var ECDC_CB_Print = 1;
 
@@ -34,23 +35,5 @@ function ECDC_CB_Measure(Current, Voltage)
 		else
 			PrintStatus();
 	}
-}
-//--------------------
-
-function w32(Address, Value)
-{
-	dev.w(Address,(Value & 0xffff));
-	dev.w((Address + 1),((Value >> 16) & 0xffff));
-}
-//--------------------
-
-function r32(Address)
-{
-	var ReadValue;
-	
-	ReadValue = dev.r(Address);
-	ReadValue |= (dev.r(Address + 1) << 16);
-	
-	return ReadValue;
 }
 //--------------------

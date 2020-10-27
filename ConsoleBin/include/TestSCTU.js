@@ -1,4 +1,5 @@
 ﻿include("Tektronix.js");
+include("Common.js")
 
 //Const
 DEVICE_TYPE = 1234;//(1234-diode, 5678-thyristor)
@@ -59,18 +60,6 @@ ACT_SCPC_REG_READ = 107;									//Команда чтения регистра 
 SCPC_NOT_ANS = 1;
 SCPC_PULSE_ERROR = 4;
 SCPC_ERROR = 5;
-//
-
-
-
-//--------------
-function w32(Address,Value)
-{
-	dev.w(Address,(Value&0xffff));
-	dev.w((Address+1),((Value>>16)&0xffff));
-}
-//--------------
-
 
 //-------------Формирование одиночного импульса амплитудой CurrentValue Ампер----------------------//
 function SCTU_Pulse(CurrentValue,WaveForm,EdgeTime)
