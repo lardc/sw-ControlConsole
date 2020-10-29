@@ -24,6 +24,10 @@ cal_Iterations = 3;
 
 cal_UseAvg = 1;
 
+// Counters
+cal_CntTotal = 0;
+cal_CntDone = 0;
+
 // Channels
 cal_chMeasureId = 1;
 cal_chMeasureUd = 2;
