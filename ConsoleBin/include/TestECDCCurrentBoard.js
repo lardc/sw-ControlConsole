@@ -10,9 +10,9 @@ function ECDC_CB_Measure(Current, Voltage)
 		w32(128, Current);
 		w32(130, Voltage);
 		
-		dev.c(5);
+		dev.c(100);
 		
-		while(dev.r(192) == 5){sleep(10);}
+		while(dev.r(192) == 4){sleep(10);}
 		
 		if(dev.r(192) == 3)
 		{
