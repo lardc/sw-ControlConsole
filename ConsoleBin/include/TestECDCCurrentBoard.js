@@ -18,8 +18,8 @@ function ECDC_CB_Measure(Current, Voltage)
 		{
 			if(ECDC_CB_Print)
 			{
-				print("DUT Current, mсA: " + r32(250));
-				print("DUT Voltage, mсV: " + r32(252));
+				print("DUT Current, uA: " + r32(250));
+				print("DUT Voltage, uV: " + r32(252));
 				print("---------------");
 				print("");
 			}
