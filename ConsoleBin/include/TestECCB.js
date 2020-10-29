@@ -30,7 +30,7 @@ function ECCB_ReadRegS(NodeID, Reg)
 	}
 }
 
-function ECCB_ReadReg32(NodeID, RegL, RegH)
+function ECCB_ReadReg32d(NodeID, RegL, RegH)
 {
 	var result = 0
 	
@@ -65,6 +65,11 @@ function ECCB_ReadReg32(NodeID, RegL, RegH)
 	return result
 }
 
+function ECCB_ReadReg32(NodeID, RegL)
+{
+	return ECCB_ReadReg32d(NodeID, RegL, RegL + 1)
+}
+
 function ECCB_WriteReg(NodeID, Reg, Value)
 {
 	dev.w(185, NodeID)
@@ -87,7 +92,7 @@ function ECCB_WriteRegS(NodeID, Reg, Value)
 		print("Err code: " + dev.r(230))
 }
 
-function ECCB_WriteReg32(NodeID, RegL, RegH, Value)
+function ECCB_WriteReg32d(NodeID, RegL, RegH, Value)
 {
 	dev.w(185, NodeID)
 	dev.w(186, RegL)
@@ -110,6 +115,11 @@ function ECCB_WriteReg32(NodeID, RegL, RegH, Value)
 		print('Write high part error.')
 		print("Err code: " + dev.r(230))
 	}
+}
+
+function ECCB_WriteReg32(NodeID, RegL, Value)
+{
+	ECCB_WriteReg32d(NodeID, RegL, RegL + 1, Value)
 }
 
 function ECCB_Call(NodeID, Action)
