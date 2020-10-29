@@ -163,6 +163,7 @@ function ECCB_NodeStatus(Node)
 	print("Warning:	" + ECCB_ReadReg(Node, 195));
 	print("Problem:	" + ECCB_ReadReg(Node, 196));
 	print("OpResult:	" + ECCB_ReadReg(Node, 197))
+	print("Sub state:	" + ECCB_ReadReg(Node, 198))
 }
 
 function ECCB_Plot(Node, EndPoint)
