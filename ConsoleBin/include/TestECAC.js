@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-=======
 include("PrintStatus.js")
 include("Common.js")
 
->>>>>>> 5e7d31ae657ee1073d64fcce6a476164f96af5f8
-//-----------------------------------------------------------
 function ECAC_Pulse(Voltage, Current , Line)
 {
 	//Задание действующего значения напряжения и тока
@@ -61,14 +57,3 @@ function ECAC_Plot()
 	plot2(dev.raf(7), dev.raf(8), 1, 0);
 }
 //------------------------------------------------------------
-<<<<<<< HEAD
-
-function w32(Address, Value)
-{
-	dev.w(Address,(Value & 0xffff));
-	dev.w((Address + 1),((Value >> 16) & 0xffff));
-}
-//------------------------------------------------------------
-
-=======
->>>>>>> 5e7d31ae657ee1073d64fcce6a476164f96af5f8
