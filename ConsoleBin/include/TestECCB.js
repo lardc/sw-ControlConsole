@@ -1,4 +1,5 @@
-include("PrintStatus.js")
+include('PrintStatus.js')
+include('Common.js')
 
 function ECCB_ReadReg(NodeID, Reg)
 {
@@ -10,7 +11,7 @@ function ECCB_ReadReg(NodeID, Reg)
 		return dev.r(231)
 	else
 	{
-		print("Err code: " + dev.r(230))
+		print('Err code: ' + dev.r(230))
 		return 0
 	}
 }
@@ -25,7 +26,7 @@ function ECCB_ReadRegS(NodeID, Reg)
 		return dev.rs(231)
 	else
 	{
-		print("Err code: " + dev.r(230))
+		print('Err code: ' + dev.r(230))
 		return 0
 	}
 }
@@ -45,7 +46,7 @@ function ECCB_ReadReg32d(NodeID, RegL, RegH)
 	else
 	{
 		print('Read low part error.')
-		print("Err code: " + dev.r(230))
+		print('Err code: ' + dev.r(230))
 		return
 	}
 	
@@ -59,7 +60,7 @@ function ECCB_ReadReg32d(NodeID, RegL, RegH)
 	else
 	{
 		print('Read high part error.')
-		print("Err code: " + dev.r(230))
+		print('Err code: ' + dev.r(230))
 	}
 	
 	return result
@@ -78,7 +79,7 @@ function ECCB_WriteReg(NodeID, Reg, Value)
 	dev.c(11)
 	
 	if (dev.r(230) != 0)
-		print("Err code: " + dev.r(230))
+		print('Err code: ' + dev.r(230))
 }
 
 function ECCB_WriteRegS(NodeID, Reg, Value)
@@ -89,7 +90,7 @@ function ECCB_WriteRegS(NodeID, Reg, Value)
 	dev.c(11)
 	
 	if (dev.r(230) != 0)
-		print("Err code: " + dev.r(230))
+		print('Err code: ' + dev.r(230))
 }
 
 function ECCB_WriteReg32d(NodeID, RegL, RegH, Value)
@@ -102,7 +103,7 @@ function ECCB_WriteReg32d(NodeID, RegL, RegH, Value)
 	if (dev.r(230) != 0)
 	{
 		print('Write low part error.')
-		print("Err code: " + dev.r(230))
+		print('Err code: ' + dev.r(230))
 		return
 	}
 	
@@ -113,7 +114,7 @@ function ECCB_WriteReg32d(NodeID, RegL, RegH, Value)
 	if (dev.r(230) != 0)
 	{
 		print('Write high part error.')
-		print("Err code: " + dev.r(230))
+		print('Err code: ' + dev.r(230))
 	}
 }
 
@@ -129,7 +130,7 @@ function ECCB_Call(NodeID, Action)
 	dev.c(12)
 	
 	if (dev.r(230) != 0)
-		print("Err code: " + dev.r(230))
+		print('Err code: ' + dev.r(230))
 }
 
 function ECCB_ReadArray(NodeID, EndPoint)
@@ -139,37 +140,47 @@ function ECCB_ReadArray(NodeID, EndPoint)
 	dev.c(13)
 	
 	if (dev.r(230) != 0)
-		print("Err code: " + dev.r(230))
+		print('Err code: ' + dev.r(230))
 	else
 		pl(dev.rafs(1))
 }
 
 function ECCB_Status()
 {
-	print("Device state:		" + dev.r(192))
-	print("Device substate:	" + dev.r(220))
-	print("Config err code:	" + dev.r(221))
-	print("[Interface status]")
-	print("Device: 		" + dev.r(226))
-	print("Function: 		" + dev.r(227))
-	print("Error: 			" + dev.r(225))
-	print("ExtData:		" + dev.r(228))
+	PrintStatus()
+	print('---------')
+	print('OpResult:		' + dev.r(197))
+	print('Device substate:	' + dev.r(220))
+	print('Config err code:	' + dev.r(221))
+	print('[Interface status]')
+	print('Device: 		' + dev.r(226))
+	print('Function: 		' + dev.r(227))
+	print('Error: 			' + dev.r(225))
+	print('ExtData:		' + dev.r(228))
 }
 
 function ECCB_NodeStatus(Node)
 {
-	print("Registers [192 - 197]");
-	print("Device state:	" + ECCB_ReadReg(Node, 192));
-	print("Fault reason:	" + ECCB_ReadReg(Node, 193));
-	print("Disable reason:	" + ECCB_ReadReg(Node, 194));
-	print("Warning:	" + ECCB_ReadReg(Node, 195));
-	print("Problem:	" + ECCB_ReadReg(Node, 196));
-	print("OpResult:	" + ECCB_ReadReg(Node, 197))
-	print("Sub state:	" + ECCB_ReadReg(Node, 198))
+	print('Registers [192 - 197]')
+	print('Device state:	' + ECCB_ReadReg(Node, 192))
+	print('Fault reason:	' + ECCB_ReadReg(Node, 193))
+	print('Disable reason:	' + ECCB_ReadReg(Node, 194))
+	print('Warning:	' + ECCB_ReadReg(Node, 195))
+	print('Problem:	' + ECCB_ReadReg(Node, 196))
+	print('OpResult:	' + ECCB_ReadReg(Node, 197))
+	print('Sub state:	' + ECCB_ReadReg(Node, 198))
 }
 
 function ECCB_Plot(Node, EndPoint)
 {
 	ECCB_ReadArray(Node, EndPoint)
 	plot(dev.rafs(1), 1, 0)
+}
+
+function ECCBM_Static(Current, Voltage)
+{
+	dev.w(128, 2)
+	w32d(138, 152, Current)
+	w32d(139, 153, Voltage)
+	dev.c(100)
 }
