@@ -22,6 +22,8 @@ cal_VoltageRangeArrayMax = [200, 2000, 20000, 270000];						// Max voltage value
 cal_CntTotal = 0;
 cal_CntDone = 0;
 
+cal_UseAvg = 1;
+
 // Channels
 cal_chMeasureId = 1;
 cal_chMeasureUd = 2;
