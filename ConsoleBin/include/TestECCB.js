@@ -140,6 +140,8 @@ function ECCB_ReadArray(NodeID, EndPoint)
 	
 	if (dev.r(230) != 0)
 		print("Err code: " + dev.r(230))
+	else
+		pl(dev.rafs(1))
 }
 
 function ECCB_Status()
