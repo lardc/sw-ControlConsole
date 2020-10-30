@@ -3,11 +3,12 @@ include("Common.js")
 
 var ECDC_VB_Print = 1;
 
-function ECDC_VB_SetOutput(OutputLine, OutputType, OutputMode)
+function ECDC_VB_SetOutput(OutputLine, OutputType, OutputMode, PulseTime)
 {
 	dev.w(128, OutputLine);
 	dev.w(129, OutputType);
 	dev.w(130, OutputMode);
+	dev.w(131, PulseTime);
 }
 
 function ECDC_VB_Measure(Current, Voltage)
