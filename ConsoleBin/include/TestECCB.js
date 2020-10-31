@@ -177,7 +177,7 @@ function ECCB_Plot(Node, EndPoint)
 	plot(dev.rafs(1), 1, 0)
 }
 
-function ECCBM_Static(Current, Voltage)
+function ECCBM_OnState(Current, Voltage)
 {
 	dev.w(128, 2)
 	w32d(138, 152, Current)
