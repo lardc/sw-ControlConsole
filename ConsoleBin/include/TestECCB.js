@@ -183,4 +183,15 @@ function ECCBM_Static(Current, Voltage)
 	w32d(138, 152, Current)
 	w32d(139, 153, Voltage)
 	dev.c(100)
+	
+	while(dev.r(192) == 4)
+		sleep(100)
+	
+	if(dev.r(192) == 3)
+	{
+		p('Voltage : ' + r32d(199, 231))
+		p('Current : ' + r32(208))
+	}
+	else
+		p('Wrong state: ' + dev.r(192))
 }
