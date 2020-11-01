@@ -177,11 +177,19 @@ function ECCB_Plot(Node, EndPoint)
 	plot(dev.rafs(1), 1, 0)
 }
 
-function ECCBM_OnState(Current, Voltage)
+function ECCBM_OnState(Current, Voltage, ControlCurrent, ControlVoltage, ControlMode)
 {
 	dev.w(128, 2)
+	
+	// 1 - IDC, 2 - VDC, 3 - VAC
+	dev.w(131, ControlMode)
+	
 	w32d(138, 152, Current)
 	w32d(139, 153, Voltage)
+	
+	w32d(133, 151, ControlCurrent)
+	w32d(132, 150, ControlVoltage)
+	
 	dev.c(100)
 	
 	while(dev.r(192) == 4)
