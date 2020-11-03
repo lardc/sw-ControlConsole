@@ -140,9 +140,12 @@ function ECCB_ReadArray(NodeID, EndPoint)
 	dev.c(13)
 	
 	if (dev.r(230) != 0)
+	{
 		print('Err code: ' + dev.r(230))
+		return []
+	}
 	else
-		pl(dev.rafs(1))
+		return dev.rafs(1)
 }
 
 function ECCB_Status()
@@ -173,8 +176,7 @@ function ECCB_NodeStatus(Node)
 
 function ECCB_Plot(Node, EndPoint)
 {
-	ECCB_ReadArray(Node, EndPoint)
-	plot(dev.rafs(1), 1, 0)
+	pl(ECCB_ReadArray(Node, EndPoint))
 }
 
 function ECCBM_OnState(Current, Voltage, ControlCurrent, ControlVoltage, ControlMode)
@@ -197,8 +199,10 @@ function ECCBM_OnState(Current, Voltage, ControlCurrent, ControlVoltage, Control
 	
 	if(dev.r(192) == 3)
 	{
-		p('Voltage : ' + r32d(199, 231))
-		p('Current : ' + r32(208))
+		p('Vt :\t' + r32d(199, 231))
+		p('It :\t' + r32(208))
+		p('Vctrl :\t' + r32d(201, 233))
+		p('Ictrl :\t' + r32d(200, 232))
 	}
 	else
 		p('Wrong state: ' + dev.r(192))
