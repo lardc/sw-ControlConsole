@@ -179,6 +179,23 @@ function ECCB_Plot(Node, EndPoint)
 	pl(ECCB_ReadArray(Node, EndPoint))
 }
 
+function ECCB_PrintSettings()
+{
+	ECCB_PrintNodeSetting('multiplexer', 0)
+	ECCB_PrintNodeSetting('dc_current',  1)
+	ECCB_PrintNodeSetting('dc_high_volt',2)
+	ECCB_PrintNodeSetting('dc_voltage1', 3)
+	ECCB_PrintNodeSetting('dc_voltage2', 4)
+	ECCB_PrintNodeSetting('dc_voltage3', 5)
+	ECCB_PrintNodeSetting('ac_voltage1', 6)
+	ECCB_PrintNodeSetting('ac_voltage2', 7)
+}
+
+function ECCB_PrintNodeSetting(Name, Index)
+{
+	p(Name + ',\tnid[' + Index + ']: ' + dev.r(Index) + ',\tem[' + (Index + 10) + ']: ' + dev.r(Index + 10))
+}
+
 function ECCBM_OnState(Current, Voltage, ControlCurrent, ControlVoltage, ControlMode)
 {
 	dev.w(128, 2)
