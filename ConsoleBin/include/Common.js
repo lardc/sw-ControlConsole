@@ -1,12 +1,24 @@
 function w32(Address, Value)
 {
-	dev.w(Address, (Value & 0xffff));
-	dev.w((Address + 1), (Value >> 16) & 0xffff);
+	w32d(Address, Address + 1, Value);
+}
+//--------------------
+
+function w32d(AddressL, AddressH, Value)
+{
+	dev.w(AddressL, (Value & 0xffff));
+	dev.w(AddressH, (Value >> 16) & 0xffff);
 }
 //--------------------
 
 function r32(Address)
 {
-	return dev.r(Address) | (dev.r(Address + 1) << 16);
+	return r32d(Address, Address + 1);
+}
+//--------------------
+
+function r32d(AddressL, AddressH)
+{
+	return dev.r(AddressL) | (dev.r(AddressH) << 16);
 }
 //--------------------
