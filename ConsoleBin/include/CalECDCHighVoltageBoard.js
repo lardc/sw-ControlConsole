@@ -152,7 +152,7 @@ function CAL_CalibrateThresholdI()
 	// Collect data
 	var IthrMin = cal_CurrentRangeArrayMin[cal_CurrentRange];
 	var IthrMax = cal_CurrentRangeArrayMax[cal_CurrentRange];
-	var IthrStp = 10
+	var IthrStp = 10;
 	
 	CAL_ResetA();
 	CAL_ResetIthrCal();
@@ -214,7 +214,7 @@ function CAL_CalibrateId()
 	// Collect data
 	var IdMin = cal_CurrentRangeArrayMin[cal_CurrentRange];
 	var IdMax = cal_CurrentRangeArrayMax[cal_CurrentRange];
-	var IdStp = 10
+	var IdStp = 10;
 		
 	CAL_ResetA();
 	CAL_ResetIdCal();
@@ -277,7 +277,7 @@ function CAL_VerifyThresholdI()
 	// Collect data
 	var IthrMin = cal_CurrentRangeArrayMin[cal_CurrentRange];
 	var IthrMax = cal_CurrentRangeArrayMax[cal_CurrentRange];
-	var IthrStp = 10
+	var IthrStp = 10;
 	
 	CAL_ResetA();
 	
@@ -327,7 +327,7 @@ function CAL_VerifyId()
 	// Collect data
 	var IdMin = cal_CurrentRangeArrayMin[cal_CurrentRange];
 	var IdMax = cal_CurrentRangeArrayMax[cal_CurrentRange];
-	var IdStp = 10
+	var IdStp = 10;
 		
 	CAL_ResetA();
 	
