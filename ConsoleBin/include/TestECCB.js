@@ -7,11 +7,11 @@ function ECCB_ReadReg(NodeID, Reg)
 	dev.w(186, Reg)
 	dev.c(10)
 	
-	if (dev.r(230) == 0)
-		return dev.r(231)
+	if (dev.r(222) == 0)
+		return dev.r(223)
 	else
 	{
-		print('Err code: ' + dev.r(230))
+		print('Err code: ' + dev.r(222))
 		return 0
 	}
 }
@@ -22,11 +22,11 @@ function ECCB_ReadRegS(NodeID, Reg)
 	dev.w(186, Reg)
 	dev.c(10)
 	
-	if (dev.r(230) == 0)
-		return dev.rs(231)
+	if (dev.r(222) == 0)
+		return dev.rs(223)
 	else
 	{
-		print('Err code: ' + dev.r(230))
+		print('Err code: ' + dev.r(222))
 		return 0
 	}
 }
@@ -39,28 +39,28 @@ function ECCB_ReadReg32d(NodeID, RegL, RegH)
 	dev.w(186, RegL)
 	dev.c(10)
 	
-	if (dev.r(230) == 0)
+	if (dev.r(222) == 0)
 	{
-		result |= dev.r(231)
+		result |= dev.r(223)
 	}
 	else
 	{
 		print('Read low part error.')
-		print('Err code: ' + dev.r(230))
+		print('Err code: ' + dev.r(222))
 		return
 	}
 	
 	dev.w(186, RegH)
 	dev.c(10)
 	
-	if (dev.r(230) == 0)
+	if (dev.r(222) == 0)
 	{
-		result |= dev.r(231) << 16
+		result |= dev.r(223) << 16
 	}
 	else
 	{
 		print('Read high part error.')
-		print('Err code: ' + dev.r(230))
+		print('Err code: ' + dev.r(222))
 	}
 	
 	return result
@@ -78,8 +78,8 @@ function ECCB_WriteReg(NodeID, Reg, Value)
 	dev.w(187, Value)
 	dev.c(11)
 	
-	if (dev.r(230) != 0)
-		print('Err code: ' + dev.r(230))
+	if (dev.r(222) != 0)
+		print('Err code: ' + dev.r(222))
 }
 
 function ECCB_WriteRegS(NodeID, Reg, Value)
@@ -89,8 +89,8 @@ function ECCB_WriteRegS(NodeID, Reg, Value)
 	dev.ws(187, Value)
 	dev.c(11)
 	
-	if (dev.r(230) != 0)
-		print('Err code: ' + dev.r(230))
+	if (dev.r(222) != 0)
+		print('Err code: ' + dev.r(222))
 }
 
 function ECCB_WriteReg32d(NodeID, RegL, RegH, Value)
@@ -100,10 +100,10 @@ function ECCB_WriteReg32d(NodeID, RegL, RegH, Value)
 	dev.w(187, Value & 0xffff)
 	dev.c(11)
 	
-	if (dev.r(230) != 0)
+	if (dev.r(222) != 0)
 	{
 		print('Write low part error.')
-		print('Err code: ' + dev.r(230))
+		print('Err code: ' + dev.r(222))
 		return
 	}
 	
@@ -111,10 +111,10 @@ function ECCB_WriteReg32d(NodeID, RegL, RegH, Value)
 	dev.w(187, (Value >> 16) & 0xffff)
 	dev.c(11)
 	
-	if (dev.r(230) != 0)
+	if (dev.r(222) != 0)
 	{
 		print('Write high part error.')
-		print('Err code: ' + dev.r(230))
+		print('Err code: ' + dev.r(222))
 	}
 }
 
@@ -129,8 +129,8 @@ function ECCB_Call(NodeID, Action)
 	dev.w(186, Action)
 	dev.c(12)
 	
-	if (dev.r(230) != 0)
-		print('Err code: ' + dev.r(230))
+	if (dev.r(222) != 0)
+		print('Err code: ' + dev.r(222))
 }
 
 function ECCB_ReadArray(NodeID, EndPoint)
@@ -139,9 +139,9 @@ function ECCB_ReadArray(NodeID, EndPoint)
 	dev.w(186, EndPoint)
 	dev.c(13)
 	
-	if (dev.r(230) != 0)
+	if (dev.r(222) != 0)
 	{
-		print('Err code: ' + dev.r(230))
+		print('Err code: ' + dev.r(222))
 		return []
 	}
 	else
