@@ -160,6 +160,7 @@ function ECCB_Status()
 	print('Function: 		' + dev.r(227))
 	print('Error: 			' + dev.r(225))
 	print('ExtData:		' + dev.r(228))
+	print('Details:		' + dev.r(229))
 }
 
 function ECCB_NodeStatus(Node)
