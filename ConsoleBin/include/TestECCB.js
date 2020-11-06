@@ -196,18 +196,18 @@ function ECCB_PrintNodeSetting(Name, Index)
 	p(Name + ',\tnid[' + Index + ']: ' + dev.r(Index) + ',\tem[' + (Index + 10) + ']: ' + dev.r(Index + 10))
 }
 
-function ECCBM_OnState(Current, Voltage, ControlCurrent, ControlVoltage, ControlMode)
+function ECCBM_OnState(Voltage, Current, ControlVoltage, ControlCurrent, ControlMode)
 {
 	dev.w(128, 2)
 	
 	// 1 - IDC, 2 - VDC, 3 - VAC
 	dev.w(131, ControlMode)
 	
-	w32d(138, 152, Current)
-	w32d(139, 153, Voltage)
-	
-	w32d(133, 151, ControlCurrent)
 	w32d(132, 150, ControlVoltage)
+	w32d(133, 151, ControlCurrent)
+	
+	w32d(139, 153, Voltage)
+	w32d(138, 152, Current)
 	
 	dev.c(100)
 	
@@ -218,6 +218,38 @@ function ECCBM_OnState(Current, Voltage, ControlCurrent, ControlVoltage, Control
 	{
 		p('Vt :\t' + r32d(199, 231))
 		p('It :\t' + r32(208))
+		p('Vctrl :\t' + r32d(201, 233))
+		p('Ictrl :\t' + r32d(200, 232))
+	}
+	else
+		p('Wrong state: ' + dev.r(192))
+}
+
+function ECCBM_Leak(Voltage, Current, ControlVoltage, ControlCurrent, ControlMode, LeakMode)
+{
+	dev.w(128, 1)
+	
+	// 1 - IDC, 2 - VDC, 3 - VAC
+	dev.w(131, ControlMode)
+	
+	w32d(132, 150, ControlVoltage)
+	w32d(133, 151, ControlCurrent)
+	
+	// 1 - DC, 2 - Action
+	dev.w(134, LeakMode)
+	
+	w32d(139, 153, Voltage)
+	w32d(138, 152, Current)
+	
+	dev.c(100)
+	
+	while(dev.r(192) == 4)
+		sleep(100)
+	
+	if(dev.r(192) == 3)
+	{
+		p('Vd :\t' + r32d(199, 231))
+		p('Id :\t' + r32(208))
 		p('Vctrl :\t' + r32d(201, 233))
 		p('Ictrl :\t' + r32d(200, 232))
 	}
