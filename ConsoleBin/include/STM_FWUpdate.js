@@ -218,6 +218,23 @@ function FWU_RestoreECControlBoard()
 }
 //------------------------
 
+// EC DCCurrentBoard
+function FWU_ECDCCurrentBoard()
+{
+	FWUpdateSTM("../../hw-ECDCCurrentBoard/Firmware/Release/ECDCCurrentBoard.binary");
+}
+
+function FWU_DumpECDCCurrentBoard()
+{
+	dev.Dump("../../hw-ECDCCurrentBoard/Firmware/ECDCCurrentBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreECDCCurrentBoard()
+{
+	dev.Restore("../../hw-ECDCCurrentBoard/Firmware/ECDCCurrentBoard.regdump");
+}
+//------------------------
+
 // EC ACVoltageBoard
 function FWU_ECACVoltageBoard()
 {
@@ -249,5 +266,22 @@ function FWU_DumpECDCVoltageBoard()
 function FWU_RestoreECDCVoltageBoard()
 {
 	dev.Restore("../../hw-ECDCVoltageBoard/Firmware/ECDCVoltageBoard.regdump");
+}
+//------------------------
+
+// EC DCHighVoltageBoard
+function FWU_ECDCHighVoltageBoard()
+{
+	FWUpdateSTM("../../hw-ECDCHighVoltageBoard/Firmware/Release/ECDCHighVoltageBoard.binary");
+}
+
+function FWU_DumpECDCHighVoltageBoard()
+{
+	dev.Dump("../../hw-ECDCHighVoltageBoard/Firmware/ECDCHighVoltageBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreECDCHighVoltageBoard()
+{
+	dev.Restore("../../hw-ECDCHighVoltageBoard/Firmware/ECDCHighVoltageBoard.regdump");
 }
 //------------------------
