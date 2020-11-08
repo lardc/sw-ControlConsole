@@ -4,11 +4,11 @@ include("Common.js")
 function ECAC_Pulse(Voltage, Current , Line)
 {
 	//Задание действующего значения напряжения и тока
-	dev.w(128, Voltage);
-	w32(129, Current);
-	
+	w32(128, Voltage);
+	w32(130, Current);
+
 	// Заданние выходной цепи 1 - POW, 2 - CTRL
-	dev.w(131, Line);
+	dev.w(132, Line);
 	
 	//Формирование импульса
 	dev.c(100);
@@ -51,9 +51,21 @@ function ECAC_Plot()
 {
 	plot2(dev.rafs(1), dev.rafs(2), 1, 0); sleep(500);
 	plot2(dev.rafs(3), dev.rafs(4), 1, 0); sleep(500);
-	
 	plot2(dev.raf(5), dev.raf(6), 1, 0); sleep(500);
-	
 	plot2(dev.raf(7), dev.raf(8), 1, 0);
+}
+//------------------------------------------------------------
+
+function ECAC_IsRMS()
+{
+	p("____RMS____");
+	p("Voltage " + r32(200) + " mV");		// Регистр состояния
+	p("Current " + r32(202) + " uA");
+}
+//------------------------------------------------------------
+
+function ECAC_Stop()
+{
+	dev.c(101);
 }
 //------------------------------------------------------------
