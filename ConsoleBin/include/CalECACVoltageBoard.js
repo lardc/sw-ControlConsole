@@ -7,15 +7,15 @@ DEV_STATE_INPROCESS = 4
 DEV_STATE_INREADY = 3
 
 // Input params
-cal_VoltageRangeArrayMin = [5000, 40000];				// Min mV values for ranges
+cal_VoltageRangeArrayMin = [5000, 46000];				// Min mV values for ranges
 cal_VoltageRangeArrayMax = [45000, 330000];				// Max mV values for ranges
 
-cal_CurrentRangeArrayMin = [10, 250, 4000];				// Min uA values for ranges
+cal_CurrentRangeArrayMin = [10, 301, 5001];				// Min uA values for ranges
 cal_CurrentRangeArrayMax = [300, 5000, 110000];			// Max uA values for ranges
 
 cal_VoltageRange  = 0;		
 cal_CurrentRange  = 0;	
-cal_OutLine = 0;	// 0 - nothing line, 1 - POW, 2 - ctrl	
+cal_OutLine = 1;	// 0 - nothing line, 1 - POW, 2 - ctrl	
 cal_Rload = 1;	
 cal_Rshunt = 1;
 
@@ -55,8 +55,10 @@ cal_UseAvg = 1;
 cal_PrintModeU = 1;
 cal_PrintModeI = 2;
 
-cal_WaitTimeVoltageReady = 15 // Seconds
+cal_WaitTimeVoltageReady = 30 // Seconds
 cal_WaitTimeVoltageCollect = 10 // Seconds
+
+cal_NumberOfMeasurements = 10;
 //------------------------
 
 function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd)
@@ -92,7 +94,7 @@ function CAL_CalibrateUd()
 {
 	var ud_min	= cal_VoltageRangeArrayMin[cal_VoltageRange];
 	var ud_max	= cal_VoltageRangeArrayMax[cal_VoltageRange];
-	var ud_stp	= (ud_max - ud_min) / 10;
+	var ud_stp	= (ud_max - ud_min) / cal_NumberOfMeasurements;
 	
 	TEK_ChannelInit(cal_chMeasureUd, "100", "1");
 	TEK_Send("ch" + cal_chMeasureUd + ":position 0");
@@ -108,7 +110,7 @@ function CAL_CalibrateUd()
 		CAL_SaveUd("ECACVoltageBoard_ud");
 
 		// Plot relative error distribution
-		scattern(cal_ud_sc, cal_ud_err, "Voltage (in V)", "Error (in %)", "Voltage relative error");
+		scattern(cal_ud_sc, cal_ud_err, "Voltage (in mV)", "Error (in %)", "Voltage relative error");
 
 		// Calculate correction
 		cal_ud_corr = CGEN_GetCorrection2("ECACVoltageBoard_ud");
@@ -122,7 +124,7 @@ function CAL_CalibrateId()
 {
 	var ud_max = Math.round((cal_CurrentRangeArrayMax[cal_CurrentRange] * cal_Rload) / 1000);
 	var ud_min = Math.round((cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload) / 1000);
-	var ud_stp = Math.round((ud_max - ud_min) / 10);
+	var ud_stp = Math.round((ud_max - ud_min) / cal_NumberOfMeasurements);
 	
 	TEK_ChannelOn(cal_chMeasureId);
 	TEK_ChannelOn(cal_chMeasureUd);
@@ -157,7 +159,7 @@ function CAL_VerifyUd()
 {	
 	var ud_min	= cal_VoltageRangeArrayMin[cal_VoltageRange];
 	var ud_max	= cal_VoltageRangeArrayMax[cal_VoltageRange];
-	var ud_stp	= (ud_max - ud_min) / 10;
+	var ud_stp	= (ud_max - ud_min) / cal_NumberOfMeasurements;
 	
 	TEK_ChannelInit(cal_chMeasureUd, "100", "1");
 	TEK_Send("ch" + cal_chMeasureUd + ":position 1");
@@ -183,7 +185,7 @@ function CAL_VerifyId()
 {
 	var ud_max = Math.round((cal_CurrentRangeArrayMax[cal_CurrentRange] * cal_Rload) / 1000);
 	var ud_min = Math.round((cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload) / 1000);
-	var ud_stp = Math.round((ud_max - ud_min) / 10);
+	var ud_stp = Math.round((ud_max - ud_min) / cal_NumberOfMeasurements);
 	
 	TEK_ChannelOn(cal_chMeasureId);
 	TEK_ChannelOn(cal_chMeasureUd);
@@ -236,8 +238,7 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 			p("Voltage set = " + VoltageValues[j] + " mV");
 			
 			CAL_TekScale(cal_chMeasureUd, VoltageValues[j]);
-			CAL_TekScale(cal_chMeasureId, VoltageValues[j] / cal_Rload * cal_Rshunt);
-//			TEK_TriggerLevelF(VoltageValues[j] / 2);
+			CAL_TekScale(cal_chMeasureId, VoltageValues[j] / cal_Rload * cal_Rshunt * 10);
 			sleep(1000);
 			
 			TEK_AcquireSample();
@@ -266,7 +267,7 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 				
 				CAL_WaitCollect();
 				ECAC_Stop();
-				sleep(200);
+				sleep(250);
 				CAL_Probe(PrintMode);
 			}
 			else
@@ -285,15 +286,15 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 function CAL_Probe(PrintMode)
 {
 	// Unit data
-	var ud_read = r32(200).toFixed(2);
-	cal_ud.push(ud_read);
+	var ud_read = (r32(200)).toFixed(2);
+	cal_ud.push((ud_read / 1000 ).toFixed(2));
 	
 	var id_read = r32(202).toFixed(2);
-	cal_id.push(id_read);	
+	cal_id.push((id_read / 1000).toFixed(2));	
 	
 	// Scope data
 	var ud_sc = (CAL_MeasureUd(cal_chMeasureUd)).toFixed(2);			
-	cal_ud_sc.push(ud_sc);
+	cal_ud_sc.push((ud_sc / 1000) .toFixed(2));
 			
 	var id_sc = (CAL_MeasureId(cal_chMeasureId)).toFixed(2);			
 	cal_id_sc.push(id_sc);	
@@ -394,17 +395,17 @@ function CAL_PrintCoefUd()
 	{
 		case 0:
 		{
-			print("Ud range U1 P0 : " + dev.rs(17));
-			print("Ud range U1 P1 x1000 : " + dev.rs(16));
-			print("Ud range U1 P2 x1e6 : " + dev.rs(15));
+			print("Ud range U1 P0 : " + dev.rs(43));
+			print("Ud range U1 P1 x1000 : " + dev.rs(42));
+			print("Ud range U1 P2 x1e6 : " + dev.rs(41));
 		}
 		break;
 		
 		case 1:
 		{
-			print("Ud range U2 P0: " + dev.rs(22));
-			print("Ud range U2 P1 x1000: " + dev.rs(21));
-			print("Ud range U2 P2 x1e6: " + dev.rs(20));
+			print("Ud range U2 P0: " + dev.rs(46));
+			print("Ud range U2 P1 x1000: " + dev.rs(45));
+			print("Ud range U2 P2 x1e6: " + dev.rs(44));
 		}
 		break;
 	}
@@ -460,17 +461,17 @@ function CAL_SetCoefUd(P2, P1, P0)
 	{
 		case 0:
 		{
-			dev.ws(17, Math.round(P0));
-			dev.w(16, Math.round(P1 * 1000));
-			dev.ws(15, Math.round(P2 * 1e6));
+			dev.ws(43, Math.round(P0));
+			dev.w(42, Math.round(P1 * 1000));
+			dev.ws(41, Math.round(P2 * 1e6));
 		}
 		break;
 		
 		case 1:
 		{
-			dev.ws(22, Math.round(P0));
-			dev.w(21, Math.round(P1 * 1000));
-			dev.ws(20, Math.round(P2 * 1e6));
+			dev.ws(46, Math.round(P0));
+			dev.w(45, Math.round(P1 * 1000));
+			dev.ws(44, Math.round(P2 * 1e6));
 		}
 		break;
 	}
@@ -483,25 +484,25 @@ function CAL_SetCoefId(P2, P1, P0)
 	{
 		case 0:
 		{
-			dev.ws(27, Math.round(P0));
-			dev.w(26, Math.round(P1 * 1000));
-			dev.ws(25, Math.round(P2 * 1e6));
+			dev.ws(49, Math.round(P0));
+			dev.w(48, Math.round(P1 * 1000));
+			dev.ws(47, Math.round(P2 * 1e6));
 		}
 		break;
 		
 		case 1:
 		{
-			dev.ws(32, Math.round(P0));
-			dev.w(31, Math.round(P1 * 1000));
-			dev.ws(30, Math.round(P2 * 1e6));
+			dev.ws(52, Math.round(P0));
+			dev.w(51, Math.round(P1 * 1000));
+			dev.ws(50, Math.round(P2 * 1e6));
 		}
 		break;
 		
 		case 2:
 		{
-			dev.ws(37, Math.round(P0));
-			dev.w(36, Math.round(P1 * 1000));
-			dev.ws(35, Math.round(P2 * 1e6));
+			dev.ws(55, Math.round(P0));
+			dev.w(54, Math.round(P1 * 1000));
+			dev.ws(53, Math.round(P2 * 1e6));
 		}
 		break;	
 	}	
