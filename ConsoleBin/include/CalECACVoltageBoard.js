@@ -238,7 +238,7 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 			p("Voltage set = " + VoltageValues[j] + " mV");
 			
 			CAL_TekScale(cal_chMeasureUd, VoltageValues[j]);
-			CAL_TekScale(cal_chMeasureId, VoltageValues[j] / cal_Rload * cal_Rshunt * 10);
+			CAL_TekScale(cal_chMeasureId, VoltageValues[j] / cal_Rload * cal_Rshunt);
 			sleep(1000);
 			
 			TEK_AcquireSample();
@@ -290,7 +290,7 @@ function CAL_Probe(PrintMode)
 	cal_ud.push((ud_read / 1000 ).toFixed(2));
 	
 	var id_read = r32(202).toFixed(2);
-	cal_id.push((id_read / 1000).toFixed(2));	
+	cal_id.push(id_read);	
 	
 	// Scope data
 	var ud_sc = (CAL_MeasureUd(cal_chMeasureUd)).toFixed(2);			
@@ -395,7 +395,7 @@ function CAL_PrintCoefUd()
 	{
 		case 0:
 		{
-			print("Ud range U1 P0 : " + dev.rs(43));
+			print("Ud range U1 P0 x1000: " + dev.rs(43));
 			print("Ud range U1 P1 x1000 : " + dev.rs(42));
 			print("Ud range U1 P2 x1e6 : " + dev.rs(41));
 		}
@@ -403,7 +403,7 @@ function CAL_PrintCoefUd()
 		
 		case 1:
 		{
-			print("Ud range U2 P0: " + dev.rs(46));
+			print("Ud range U2 P0 x1000: " + dev.rs(46));
 			print("Ud range U2 P1 x1000: " + dev.rs(45));
 			print("Ud range U2 P2 x1e6: " + dev.rs(44));
 		}
@@ -418,25 +418,25 @@ function CAL_PrintCoefId()
 	{
 		case 0:
 		{
-			print("Id range I1 P0 : " + dev.rs(27));
-			print("Id range I1 P1 x1000 : " + dev.rs(26));
-			print("Id range I1 P2 x1e6 : " + dev.rs(25));
+			print("Id range I1 P0 x1000: " + dev.rs(49));
+			print("Id range I1 P1 x1000 : " + dev.rs(48));
+			print("Id range I1 P2 x1e6 : " + dev.rs(47));
 		}
 		break;
 		
 		case 1:
 		{
-			print("Id range I2 P0 : " + dev.rs(32));
-			print("Id range I2 P1 x1000 : " + dev.rs(31));
-			print("Id range I2 P2 x1e6 : " + dev.rs(30));
+			print("Id range I2 P0 x1000: " + dev.rs(52));
+			print("Id range I2 P1 x1000 : " + dev.rs(51));
+			print("Id range I2 P2 x1e6 : " + dev.rs(50));
 		}
 		break;
 		
 		case 2:
 		{
-			print("Id range I3 P0 : " + dev.rs(37));
-			print("Id range I3 P1 x1000 : " + dev.rs(36));
-			print("Id range I3 P2 x1e6 : " + dev.rs(35));
+			print("Id range I3 P0 x1000: " + dev.rs(55));
+			print("Id range I3 P1 x1000 : " + dev.rs(54));
+			print("Id range I3 P2 x1e6 : " + dev.rs(53));
 		}
 		break;
 	}
@@ -461,7 +461,7 @@ function CAL_SetCoefUd(P2, P1, P0)
 	{
 		case 0:
 		{
-			dev.ws(43, Math.round(P0));
+			dev.ws(43, Math.round(P0 * 1000));
 			dev.w(42, Math.round(P1 * 1000));
 			dev.ws(41, Math.round(P2 * 1e6));
 		}
@@ -469,7 +469,7 @@ function CAL_SetCoefUd(P2, P1, P0)
 		
 		case 1:
 		{
-			dev.ws(46, Math.round(P0));
+			dev.ws(46, Math.round(P0 * 1000));
 			dev.w(45, Math.round(P1 * 1000));
 			dev.ws(44, Math.round(P2 * 1e6));
 		}
@@ -484,7 +484,7 @@ function CAL_SetCoefId(P2, P1, P0)
 	{
 		case 0:
 		{
-			dev.ws(49, Math.round(P0));
+			dev.ws(49, Math.round(P0 * 1000));
 			dev.w(48, Math.round(P1 * 1000));
 			dev.ws(47, Math.round(P2 * 1e6));
 		}
@@ -492,7 +492,7 @@ function CAL_SetCoefId(P2, P1, P0)
 		
 		case 1:
 		{
-			dev.ws(52, Math.round(P0));
+			dev.ws(52, Math.round(P0 * 1000));
 			dev.w(51, Math.round(P1 * 1000));
 			dev.ws(50, Math.round(P2 * 1e6));
 		}
@@ -500,7 +500,7 @@ function CAL_SetCoefId(P2, P1, P0)
 		
 		case 2:
 		{
-			dev.ws(55, Math.round(P0));
+			dev.ws(55, Math.round(P0 * 1000));
 			dev.w(54, Math.round(P1 * 1000));
 			dev.ws(53, Math.round(P2 * 1e6));
 		}
