@@ -12,15 +12,17 @@ cal_Rshunt = 1;		// Shunt resistance in Ohm
 
 // Hardware definitions
 cal_CurrentRangeLvArrayMin = [8, 110, 1010, 10010];							// Min current values for ranges
-cal_CurrentRangeLvArrayMax = [100, 1000, 10000, 110000];					// Max current values for ranges
-cal_CurrentRangeHvArrayMin = [8, 80, 800, 8000];							// Min current values for ranges
-cal_CurrentRangeHvArrayMax = [100, 1000, 10000, 110000];					// Max current values for ranges
+cal_CurrentRangeLvArrayMax = [100, 1000, 10000, 99900];					// Max current values for ranges
+cal_CurrentRangeHvArrayMin = [8, 110, 1010, 10010];							// Min current values for ranges
+cal_CurrentRangeHvArrayMax = [100, 1000, 10000, 99900];					// Max current values for ranges
 cal_VoltageRangeArrayMin = [40, 210, 2010, 20010];							// Min voltage values for ranges
 cal_VoltageRangeArrayMax = [200, 2000, 20000, 270000];						// Max voltage values for ranges
 
 // Counters
 cal_CntTotal = 0;
 cal_CntDone = 0;
+
+cal_HvDev = 0.9
 
 cal_Iterations = 3
 
@@ -78,9 +80,17 @@ function CAL_TekInit(Channel)
 	// Init trigger
 	TEK_TriggerInit(Channel, "2");
 	// Horizontal settings
-	TEK_Horizontal("10e-3", "180e-3");
-	
-	//CAL_TekCursor(Channel);
+	TEK_Horizontal("100e-6", "0");
+}
+
+function CAL_TekInit10Scale(Channel)
+{
+	TEK_ChannelInit(Channel, "10", "1");
+	TEK_ChannelScale(Channel, "1");
+	// Init trigger
+	TEK_TriggerInit(Channel, "2");
+	// Horizontal settings
+	TEK_Horizontal("100e-6", "0");
 }
 
 function CAL_TekMeasurement(Channel)
@@ -94,8 +104,8 @@ function CAL_TekCursor(Channel)
 {
 	TEK_Send("cursor:select:source ch" + Channel);
 	TEK_Send("cursor:function vbars");
-	TEK_Send("cursor:vbars:position1 190e-3");
-	TEK_Send("cursor:vbars:position2 190e-3");
+	TEK_Send("cursor:vbars:position1 1.2e-3");
+	TEK_Send("cursor:vbars:position2 1.2e-3");
 }
 
 function CAL_TekScale(Channel, Value)
@@ -111,17 +121,6 @@ function CAL_Measure(Channel, Resolution)
 		f = 0;
 	return parseFloat(f).toFixed(Resolution);
 }
-
-//function CAL_Measure(Channel, Resolution)
-//{
-//	TEK_Send("cursor:select:source ch" + Channel);
-//	sleep(500);
-
-//	var f = TEK_Exec("cursor:vbars:hpos2?");
-//	if (Math.abs(f) > 2.7e+8)
-//		f = 0;
-//	return parseFloat(f).toFixed(Resolution);
-//}
 
 function CAL_CalibrateIdLv()
 {	
@@ -164,8 +163,14 @@ function CAL_CalibrateUd()
 	CAL_ResetUdCal();
 	
 	// Tektronix init
-	CAL_TekInit(cal_chMeasureUd);
-
+	if(cal_VoltageRange < 3)
+	{
+		CAL_TekInit(cal_chMeasureUd);
+	}
+	else
+	{
+		CAL_TekInit10Scale(cal_chMeasureUd);
+	}
 	// Reload values
 	var VoltageArray = CGEN_GetRange(UdMin, UdMax, UdStp);
 
@@ -189,6 +194,8 @@ function CAL_CalibrateIdHv()
 	var IdMin = cal_CurrentRangeHvArrayMin[cal_CurrentRangeHv];
 	var IdMax = cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv];
 	var IdStp = ((IdMax - IdMin) / 10) + 1;
+	
+	cal_HvDev = 0.90;
 		
 	CAL_ResetA();
 	CAL_ResetIdHvCal();
@@ -208,7 +215,7 @@ function CAL_CalibrateIdHv()
 
 		// Calculate correction
 		cal_IdhvCorr = CGEN_GetCorrection2("ECDCVoltageBoard_idhv");
-		CAL_SetCoefIdhv(cal_IdhvCorr[0], cal_IdhvCorr[1], cal_IdhvCorr[2]);
+		CAL_SetCoefIdHv(cal_IdhvCorr[0], cal_IdhvCorr[1], cal_IdhvCorr[2]);
 		CAL_PrintCoefIdHv();
 	}
 }
@@ -248,7 +255,14 @@ function CAL_VerifyUd()
 	CAL_ResetA();
 	
 	// Tektronix init
-	CAL_TekInit(cal_chMeasureUd);
+	if(cal_VoltageRange < 3)
+	{
+		CAL_TekInit(cal_chMeasureUd);
+	}
+	else
+	{
+		CAL_TekInit10Scale(cal_chMeasureUd);
+	}
 	
 	// Reload values
 	var VoltageArray = CGEN_GetRange(UdMin, UdMax, UdStp);
@@ -267,7 +281,9 @@ function CAL_VerifyIdHv()
 	// Collect data
 	var IdMin = cal_CurrentRangeHvArrayMin[cal_CurrentRangeHv];
 	var IdMax = cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv];
-	var IdStp = 10;
+	var IdStp = ((IdMax - IdMin) / 10) + 1;
+	
+	cal_HvDev = 0.97;
 		
 	CAL_ResetA();
 	
@@ -294,7 +310,14 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 	var AvgNum;
 	if (cal_UseAvg)
 	{
-		AvgNum = 10;
+		if(cal_CurrentRangeLv == 0)
+		{
+			AvgNum = 20;
+		}
+		else
+		{
+			AvgNum = 4;
+		}
 		TEK_AcquireAvg(AvgNum);
 	}
 	else
@@ -303,6 +326,7 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
+	TEK_Horizontal("200e-6", "20e-3");
 	CAL_TekMeasurement(cal_chMeasureId);
 	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "5e-3", "positive", "outside");
 	sleep(1000);
@@ -316,7 +340,7 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 			print("-- target uA " + CurrentValues[j]);
 			//
 			CAL_TekScale(cal_chMeasureId, CurrentValues[j]* cal_Rload / 1000000);
-			TEK_TriggerLevelF((CurrentValues[j]* cal_Rload / 1000000) * 0.35);
+			TEK_TriggerLevelF((CurrentValues[j]* cal_Rload / 1000000) * 0.30);
 			sleep(1500);
 
 			//
@@ -326,7 +350,7 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 			for (var k = 0; k < AvgNum; k++)
 			{
 				ECDC_VB_Measure(CurrentValues[j], 20000);
-				sleep(5000);
+				sleep(2000);
 			}
 			
 			ECDC_VB_Print = cal_print_copy;
@@ -338,7 +362,7 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 
 			// Scope data
 			sleep(1000);
-			var IdSc = (CAL_Measure(cal_chMeasureId, "6") * 1000000 / cal_Rload ).toFixed(4);
+			var IdSc = (CAL_Measure(cal_chMeasureId, "6") * 1000000 / cal_Rload ).toFixed(2);
 			cal_IdlvSc.push(IdSc);
 			print("Idtek, uA: " + IdSc);
 
@@ -363,7 +387,7 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 	var AvgNum;
 	if (cal_UseAvg)
 	{
-		AvgNum = 10;
+		AvgNum = 3;
 		TEK_AcquireAvg(AvgNum);
 	}
 	else
@@ -372,6 +396,7 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
+	TEK_Horizontal("100e-6", "10e-3");
 	CAL_TekMeasurement(cal_chMeasureUd);
 	TEK_TriggerPulseExtendedInit(cal_chMeasureUd, 1, "hfrej", "5e-3", "positive", "outside");
 	sleep(1000);
@@ -384,7 +409,7 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 			print("-- target " + VoltageValues[j]);
 			//
 			CAL_TekScale(cal_chMeasureUd, VoltageValues[j]/1000);
-			TEK_TriggerLevelF((VoltageValues[j] / 1000) * 0.35);
+			TEK_TriggerLevelF((VoltageValues[j] / 1000) * 0.5);
 			sleep(1500);
 
 			//
@@ -393,8 +418,19 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				ECDC_VB_Measure(60000, VoltageValues[j]);
-				sleep(5000);
+				if(cal_VoltageRange < 3)
+				{
+					ECDC_VB_Measure(100000, VoltageValues[j]);
+					sleep(5000);
+				}
+				else
+				{
+					dev.c(63);
+					sleep(4000);
+					dev.c(64);
+					ECDC_VB_Measure(80000, VoltageValues[j]);
+					sleep(1500);
+				}
 			}
 			
 			ECDC_VB_Print = cal_print_copy;
@@ -430,7 +466,7 @@ function CAL_IdHvCollect(CurrentValues, IterationsCount)
 	var AvgNum;
 	if (cal_UseAvg)
 	{
-		AvgNum = 10;
+		AvgNum = 3;
 		TEK_AcquireAvg(AvgNum);
 	}
 	else
@@ -438,7 +474,9 @@ function CAL_IdHvCollect(CurrentValues, IterationsCount)
 		AvgNum = 1;
 		TEK_AcquireSample();
 	}
-	TEK_TriggerPulseInit(cal_chMeasureId, "2");
+	
+	CAL_TekMeasurement(cal_chMeasureId);
+	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "5e-3", "positive", "outside");
 	sleep(1000);
 	
 	for (var i = 0; i < IterationsCount; i++)
@@ -446,9 +484,10 @@ function CAL_IdHvCollect(CurrentValues, IterationsCount)
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+			print("-- target " + (CurrentValues[j]).toFixed(0));
 			//
-			CAL_TekScale(cal_chMeasureId, CurrentValues[j]* cal_Rload / 1000);
-			TEK_TriggerLevelF((CurrentValues[j]* cal_Rload / 1000) / 2);
+			CAL_TekScale(cal_chMeasureId, CurrentValues[j]* cal_Rshunt / 1000000);
+			TEK_TriggerLevelF((CurrentValues[j]* cal_Rshunt / 1000000) * 0.4);
 			sleep(1500);
 
 			//
@@ -457,7 +496,11 @@ function CAL_IdHvCollect(CurrentValues, IterationsCount)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				ECDC_VB_Measure(CurrentValues[j]* cal_Rload / 1000, CurrentValues[j]);
+				dev.c(63);
+				sleep(4000);
+				dev.c(64);
+				ECDC_VB_Measure(cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv], (CurrentValues[j] * (cal_Rload * cal_HvDev) / 1000).toFixed(2));
+				print("-- voltage " + (CurrentValues[j] * (cal_Rload * cal_HvDev) / 1000).toFixed(2));
 				sleep(1000);
 			}
 			
@@ -469,13 +512,13 @@ function CAL_IdHvCollect(CurrentValues, IterationsCount)
 			print("Idread, uA: " + IdRead);
 
 			// Scope data
-			var IdSc = (CAL_Measure(cal_chMeasureId) / cal_Rshunt * 1000000).toFixed(2);
+			var IdSc = (CAL_Measure(cal_chMeasureId, "6") / cal_Rshunt * 1000000).toFixed(2);
 			cal_IdhvSc.push(IdSc);
 			print("Idtek, uA: " + IdSc);
 
 			// Relative error
 			var IdErr = ((IdRead - IdSc) / IdSc * 100).toFixed(2);
-			cal_IddvErr.push(IdErr);
+			cal_IdhvErr.push(IdErr);
 			print("Iderr, %: " + IdErr);
 			print("--------------------");
 			
@@ -697,33 +740,33 @@ function CAL_PrintCoefUd()
 	{
 		case 0:
 		{
-			print("Id 0 P0			: " + dev.rs(66));
-			print("Id 0 P1 x1000	: " + dev.rs(65));
-			print("Id 0 P2 x1e6		: " + dev.rs(64));
+			print("Ud 0 P0			: " + dev.rs(66));
+			print("Ud 0 P1 x1000	: " + dev.rs(65));
+			print("Ud 0 P2 x1e6		: " + dev.rs(64));
 		}
 		break;
 		
 		case 1:
 		{
-			print("Id 1 P0			: " + dev.rs(72));
-			print("Id 1 P1 x1000	: " + dev.rs(71));
-			print("Id 1 P2 x1e6		: " + dev.rs(70));
+			print("Ud 1 P0			: " + dev.rs(72));
+			print("Ud 1 P1 x1000	: " + dev.rs(71));
+			print("Ud 1 P2 x1e6		: " + dev.rs(70));
 		}
 		break;
 		
 		case 2:
 		{
-			print("Id 2 P0			: " + dev.rs(78));
-			print("Id 2 P1 x1000	: " + dev.rs(77));
-			print("Id 2 P2 x1e6		: " + dev.rs(76));
+			print("Ud 2 P0			: " + dev.rs(78));
+			print("Ud 2 P1 x1000	: " + dev.rs(77));
+			print("Ud 2 P2 x1e6		: " + dev.rs(76));
 		}
 		break;
 		
 		case 3:
 		{
-			print("Id 3 P0			: " + dev.rs(84));
-			print("Id 3 P1 x1000	: " + dev.rs(83));
-			print("Id 3 P2 x1e6		: " + dev.rs(82));
+			print("Ud 3 P0			: " + dev.rs(84));
+			print("Ud 3 P1 x1000	: " + dev.rs(83));
+			print("Ud 3 P2 x1e6		: " + dev.rs(82));
 		}
 		break;
 	}

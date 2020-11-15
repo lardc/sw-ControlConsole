@@ -218,6 +218,23 @@ function FWU_RestoreECControlBoard()
 }
 //------------------------
 
+// EC DCCurrentBoard
+function FWU_ECDCCurrentBoard()
+{
+	FWUpdateSTM("../../hw-ECDCCurrentBoard/Firmware/Release/ECDCCurrentBoard.binary");
+}
+
+function FWU_DumpECDCCurrentBoard()
+{
+	dev.Dump("../../hw-ECDCCurrentBoard/Firmware/ECDCCurrentBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreECDCCurrentBoard()
+{
+	dev.Restore("../../hw-ECDCCurrentBoard/Firmware/ECDCCurrentBoard.regdump");
+}
+//------------------------
+
 // EC ACVoltageBoard
 function FWU_ECACVoltageBoard()
 {
