@@ -251,3 +251,20 @@ function FWU_RestoreECDCVoltageBoard()
 	dev.Restore("../../hw-ECDCVoltageBoard/Firmware/ECDCVoltageBoard.regdump");
 }
 //------------------------
+
+// EC DCHighVoltageBoard
+function FWU_ECDCHighVoltageBoard()
+{
+	FWUpdateSTM("../../hw-ECDCHighVoltageBoard/Firmware/Release/ECDCHighVoltageBoard.binary");
+}
+
+function FWU_DumpECDCHighVoltageBoard()
+{
+	dev.Dump("../../hw-ECDCHighVoltageBoard/Firmware/ECDCHighVoltageBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreECDCHighVoltageBoard()
+{
+	dev.Restore("../../hw-ECDCHighVoltageBoard/Firmware/ECDCHighVoltageBoard.regdump");
+}
+//------------------------
