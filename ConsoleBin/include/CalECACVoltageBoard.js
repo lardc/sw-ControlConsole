@@ -434,7 +434,7 @@ function CAL_PrintCoefId()
 		
 		case 2:
 		{
-			print("Id range I3 P0 x1000: " + dev.rs(55));
+			print("Id range I3 P0: " + dev.rs(55));
 			print("Id range I3 P1 x1000 : " + dev.rs(54));
 			print("Id range I3 P2 x1e6 : " + dev.rs(53));
 		}
@@ -500,7 +500,7 @@ function CAL_SetCoefId(P2, P1, P0)
 		
 		case 2:
 		{
-			dev.ws(55, Math.round(P0 * 1000));
+			dev.ws(55, Math.round(P0));
 			dev.w(54, Math.round(P1 * 1000));
 			dev.ws(53, Math.round(P2 * 1e6));
 		}
