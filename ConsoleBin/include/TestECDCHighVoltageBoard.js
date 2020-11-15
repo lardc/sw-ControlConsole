@@ -36,3 +36,9 @@ function ECDC_HV_Measure(Voltage, Current)
 	}
 }
 //--------------------
+
+function ECDC_HV_ExcessCurrentControl(Enable)
+{
+	Enable ? dev.w(11,0) : dev.w(11,1);
+}
+//--------------------

@@ -5,14 +5,14 @@ include("CalGeneral.js")
 // Calibration setup parameters
 cal_Points = 10;
 
-cal_Rshunt = 21800;
-cal_Rload = 4313800;
+cal_Rshunt = 99900;
+cal_Rload = 40100000;
 
 cal_UdMax  = 1400;
 cal_UdMin = 5;
 cal_UdStp = (cal_UdMax - cal_UdMin) / cal_Points;
 
-cal_CurrentRange = 1;
+cal_CurrentRange = 0;
 
 cal_CurrentRangeArrayMin = [3, 25, 250, 2000];	
 cal_CurrentRangeArrayMax = [24.9, 249.9, 1999.9, 20000];
@@ -87,6 +87,8 @@ function CAL_CalibrateUd()
 	CAL_ResetA();
 	CAL_ResetUdCal();
 	
+	ECDC_HV_ExcessCurrentControl(false);
+	
 	// Tektronix init
 	CAL_TekInitUd();
 	
@@ -105,6 +107,8 @@ function CAL_CalibrateUd()
 		CAL_SetCoefUd(cal_UdCorr[0], cal_UdCorr[1], cal_UdCorr[2]);
 		CAL_PrintCoefUd();
 	}
+	
+	ECDC_HV_ExcessCurrentControl(true);
 }
 //--------------------
 
@@ -112,6 +116,8 @@ function CAL_CalibrateId()
 {		
 	CAL_ResetA();
 	CAL_ResetIdCal();
+	
+	ECDC_HV_ExcessCurrentControl(false);
 	
 	// Tektronix init
 	CAL_TekInitId(cal_chMeasureId);
@@ -131,12 +137,16 @@ function CAL_CalibrateId()
 		CAL_SetCoefId(cal_IdCorr[0], cal_IdCorr[1], cal_IdCorr[2]);
 		CAL_PrintCoefId();
 	}
+	
+	ECDC_HV_ExcessCurrentControl(true);
 }
 //--------------------
 
 function CAL_VerifyUd()
 {
 	CAL_ResetA();
+	
+	ECDC_HV_ExcessCurrentControl(false);
 	
 	// Tektronix init
 	CAL_TekInitUd();
@@ -151,12 +161,16 @@ function CAL_VerifyUd()
 		// Plot relative error distribution
 		scattern(cal_UdSc, cal_UdErr, "Voltage (in V)", "Error (in %)", "Voltage relative error");
 	}
+	
+	ECDC_HV_ExcessCurrentControl(true);
 }
 //--------------------
 
 function CAL_VerifyId()
 {		
 	CAL_ResetA();
+	
+	ECDC_HV_ExcessCurrentControl(false);
 	
 	// Tektronix init
 	CAL_TekInitId();
@@ -171,6 +185,8 @@ function CAL_VerifyId()
 		// Plot relative error distribution
 		scattern(cal_IdSc, cal_IdErr, "Current (in uA)", "Error (in %)", "Current relative error");
 	}
+	
+	ECDC_HV_ExcessCurrentControl(true);
 }
 //--------------------
 
