@@ -5,13 +5,20 @@ include("CalGeneral.js")
 // Global definitions
 DEV_STATE_INPROCESS = 4
 DEV_STATE_INREADY = 3
+DEV_STATE_NON = 0
+DEV_STATE_DISABLED = 2
+
+// Registers
+REG_CURRENT_RANGE1_SAFETY_LIMIT = 181;
+REG_CURRENT_RANGE2_SAFETY_LIMIT = 182;
+REG_CURRENT_RANGE3_SAFETY_LIMIT = 183;
 
 // Input params
 cal_VoltageRangeArrayMin = [5000, 46000];				// Min mV values for ranges
 cal_VoltageRangeArrayMax = [45000, 330000];				// Max mV values for ranges
 
 cal_CurrentRangeArrayMin = [10, 301, 5001];				// Min uA values for ranges
-cal_CurrentRangeArrayMax = [300, 5000, 110000];			// Max uA values for ranges
+cal_CurrentRangeArrayMax = [300, 5000, 100000];			// Max uA values for ranges
 
 cal_VoltageRange  = 0;		
 cal_CurrentRange  = 0;	
@@ -19,13 +26,16 @@ cal_OutLine = 1;	// 0 - nothing line, 1 - POW, 2 - ctrl
 cal_Rload = 1;	
 cal_Rshunt = 1;
 
-AvgNum_L = 16;
-AvgNum_H = 128;
-AvgNum = AvgNum_L;
+cal_AvgNum_L = 16;
+cal_AvgNum_H = 128;
+cal_AvgNum = cal_AvgNum_L;
 	
 // Counters
 cal_cntTotal = 0;
 cal_cntDone = 0;
+
+// ID plate. №1 - 105, №2 - 106
+cal_Nid = 105;
 
 // Iterations
 cal_Iterations = 3;
@@ -78,6 +88,14 @@ function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd)
 	dev.Disconnect();
 	dev.Connect(portDevice);
 	
+	var DeviceState = dev.r(192);
+	if((DeviceState==DEV_STATE_NON)||(DeviceState==DEV_STATE_DISABLED))
+	{
+		dev.nid(cal_Nid);
+		dev.c(1);
+		sleep(1000);
+	}
+	
 	// Init Tektronix
 	TEK_PortInit(portTek);
 	
@@ -95,10 +113,6 @@ function CAL_CalibrateUd()
 	var ud_min	= cal_VoltageRangeArrayMin[cal_VoltageRange];
 	var ud_max	= cal_VoltageRangeArrayMax[cal_VoltageRange];
 	var ud_stp	= (ud_max - ud_min) / cal_NumberOfMeasurements;
-	
-	TEK_ChannelInit(cal_chMeasureUd, "100", "1");
-	TEK_Send("ch" + cal_chMeasureUd + ":position 0");
-	TEK_ChannelOff(cal_chMeasureId);
 	
 	CAL_ResetA();
 	CAL_ResetUdCal();
@@ -126,17 +140,10 @@ function CAL_CalibrateId()
 	var ud_min = Math.round((cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload) / 1000);
 	var ud_stp = Math.round((ud_max - ud_min) / cal_NumberOfMeasurements);
 	
-	TEK_ChannelOn(cal_chMeasureId);
-	TEK_ChannelOn(cal_chMeasureUd);
-	
-	TEK_ChannelInit(cal_chMeasureUd, "100", "1");
-	TEK_Send("ch" + cal_chMeasureUd + ":position 1");
-	
-	TEK_ChannelInit(cal_chMeasureId, "1", "1");
-	TEK_Send("ch" + cal_chMeasureId + ":position -1");
-	
 	CAL_ResetA();
 	CAL_ResetIdCal();
+	
+	CAL_WideCurrentRangeEnable();
 	
 	var VoltageArray = CGEN_GetRange(ud_min, ud_max, ud_stp);
 	
@@ -151,7 +158,9 @@ function CAL_CalibrateId()
 		cal_id_corr = CGEN_GetCorrection2("ECACVoltageBoard_id");
 		CAL_SetCoefId(cal_id_corr[0], cal_id_corr[1], cal_id_corr[2]);
 		CAL_PrintCoefId();
-	}		
+	}
+	
+	CAL_WideCurrentRangeDisable();
 }
 //------------------------
 
@@ -160,10 +169,6 @@ function CAL_VerifyUd()
 	var ud_min	= cal_VoltageRangeArrayMin[cal_VoltageRange];
 	var ud_max	= cal_VoltageRangeArrayMax[cal_VoltageRange];
 	var ud_stp	= (ud_max - ud_min) / cal_NumberOfMeasurements;
-	
-	TEK_ChannelInit(cal_chMeasureUd, "100", "1");
-	TEK_Send("ch" + cal_chMeasureUd + ":position 1");
-	TEK_ChannelOff(cal_chMeasureId);
 	
 	// Collect data
 	CAL_ResetA();
@@ -187,18 +192,11 @@ function CAL_VerifyId()
 	var ud_min = Math.round((cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload) / 1000);
 	var ud_stp = Math.round((ud_max - ud_min) / cal_NumberOfMeasurements);
 	
-	TEK_ChannelOn(cal_chMeasureId);
-	TEK_ChannelOn(cal_chMeasureUd);
-	
-	TEK_ChannelInit(cal_chMeasureUd, "100", "1");
-	TEK_Send("ch" + cal_chMeasureUd + ":position 1");
-	
-	TEK_ChannelInit(cal_chMeasureId, "1", "1");
-	TEK_Send("ch" + cal_chMeasureId + ":position -1");
-		
 	// Collect data
 	CAL_ResetA();
 
+	CAL_WideCurrentRangeEnable();
+	
 	// Reload values
 	var VoltageArray = CGEN_GetRange(ud_min, ud_max, ud_stp);
 
@@ -209,6 +207,8 @@ function CAL_VerifyId()
 		// Plot relative error distribution
 		scattern(cal_id_sc, cal_id_err, "Current (in uA)", "Error (in %)", "Current relative error");
 	}
+	
+	CAL_WideCurrentRangeDisable();
 }
 //------------------------
 
@@ -217,17 +217,13 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 	cal_cntTotal = IterationsCount * VoltageValues.length;
 	cal_cntDone = 1;
 		
-	// Init measurement
-	CAL_TekMeasurement(cal_chMeasureUd);
-	CAL_TekMeasurement(cal_chMeasureId);
-	
 	// Horizontal settings
 	TEK_Horizontal("1e-2", 0);
 	
-	// Init trigger
-	TEK_TriggerInit(cal_chMeasureUd, "5");
+	// Init measurement and set trigger
+	if(CAL_SetMeasuringChanellAndTrigger(PrintMode)) return 0;	
 
-	sleep(500);
+	CAL_MessageAboutParams(PrintMode);
 	
 	for (var i = 0; i < IterationsCount; i++)
 	{
@@ -252,16 +248,9 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 			{
 				CAL_WaitReadyVoltage();
 				
-				if(cal_CurrentRange>0)
-				{
-					AvgNum = AvgNum_L;
-				}
-				else
-				{
-					AvgNum = AvgNum_H;
-				}
+				CAL_SetAvg();
 				
-				TEK_AcquireAvg(AvgNum);
+				TEK_AcquireAvg(cal_AvgNum);
 				
 				sleep(500);
 				
@@ -325,10 +314,11 @@ function CAL_Probe(PrintMode)
 }
 //------------------------
 
-function CAL_TekMeasurement(Channel)
+function CAL_TekMeasurement(Channel, TriggerLevel)
 {
 	TEK_Send("measurement:meas" + Channel + ":source ch" + Channel);
 	TEK_Send("measurement:meas" + Channel + ":type crms");
+	TEK_TriggerInit(Channel, TriggerLevel);
 }
 //------------------------
 
@@ -434,7 +424,7 @@ function CAL_PrintCoefId()
 		
 		case 2:
 		{
-			print("Id range I3 P0 x1000: " + dev.rs(55));
+			print("Id range I3 P0: " + dev.rs(55));
 			print("Id range I3 P1 x1000 : " + dev.rs(54));
 			print("Id range I3 P2 x1e6 : " + dev.rs(53));
 		}
@@ -500,7 +490,7 @@ function CAL_SetCoefId(P2, P1, P0)
 		
 		case 2:
 		{
-			dev.ws(55, Math.round(P0 * 1000));
+			dev.ws(55, Math.round(P0));
 			dev.w(54, Math.round(P1 * 1000));
 			dev.ws(53, Math.round(P2 * 1e6));
 		}
@@ -527,6 +517,21 @@ function CAL_WaitReadyVoltage()
 	}
 }
 //------------------------
+function CAL_WideCurrentRangeEnable()
+{
+	dev.w(REG_CURRENT_RANGE1_SAFETY_LIMIT, 10);
+	dev.w(REG_CURRENT_RANGE2_SAFETY_LIMIT, 10);
+	dev.w(REG_CURRENT_RANGE3_SAFETY_LIMIT, 10);
+}
+//------------------------
+
+function CAL_WideCurrentRangeDisable()
+{
+	dev.w(REG_CURRENT_RANGE1_SAFETY_LIMIT, 0);
+	dev.w(REG_CURRENT_RANGE2_SAFETY_LIMIT, 0);
+	dev.w(REG_CURRENT_RANGE3_SAFETY_LIMIT, 0);
+}
+//------------------------
 
 function CAL_IsRedyVoltage()
 {
@@ -548,4 +553,96 @@ function CAL_WaitCollect()
 	{
 		sleep(1000);
 	}
+}
+//------------------------
+
+function CAL_SetMeasuringChanellAndTrigger(PrintMode)
+{
+	if(PrintMode == cal_PrintModeU)
+	{	
+		TEK_ChannelOff(cal_chMeasureId);
+		TEK_ChannelOn(cal_chMeasureUd);
+		TEK_ChannelInit(cal_chMeasureUd, "100", "1");
+		TEK_Send("ch" + cal_chMeasureUd + ":position 1");
+		CAL_TekMeasurement(cal_chMeasureUd, "5");
+		if(CAL_WaitUserAction("To measure Voltage, connect HV voltage probe (x100) to chanell " + cal_chMeasureUd + " oscilloscope.")) return 0;
+	}
+	
+	if(PrintMode == cal_PrintModeI)
+	{	
+		TEK_ChannelOff(cal_chMeasureUd);
+		TEK_ChannelOn(cal_chMeasureId);
+		if(cal_CurrentRange == 0)
+		{
+			TEK_ChannelInit(cal_chMeasureId, "100", "1");
+			TEK_Send("ch" + cal_chMeasureId + ":position -1");
+			CAL_TekMeasurement(cal_chMeasureId, "1");
+			if(CAL_WaitUserAction("To measure Current in LOW range, connect HV voltage probe (x100) to chanell " + cal_chMeasureId + " oscilloscope.")) return 0;
+		}
+		else
+		{
+			TEK_ChannelInit(cal_chMeasureId, "1", "1");
+			TEK_Send("ch" + cal_chMeasureId + ":position -1");
+			CAL_TekMeasurement(cal_chMeasureId, "0.05");
+			if(CAL_WaitUserAction("To measure Current in MIDDLE or HIGH, connect voltage probe (x1) to chanell " + cal_chMeasureId + " oscilloscope.")) return 0;
+		}
+	}
+	
+	sleep(500);
+	
+	return 1;
+}
+//------------------------
+
+function CAL_MessageAboutParams(PrintMode)
+{
+	if(PrintMode == cal_PrintModeU)
+	{		
+		p("Voltage range " + cal_VoltageRangeArrayMin[cal_VoltageRange] + " ... " + cal_VoltageRangeArrayMax[cal_VoltageRange] + " mV");
+	}
+	
+	if(PrintMode == cal_PrintModeI)
+	{	
+		p("Current range " + cal_CurrentRangeArrayMin[cal_CurrentRange] + " ... " + cal_CurrentRangeArrayMax[cal_CurrentRange] + " uA");
+		p("Rload = " + cal_Rload + " Ohm");
+		p("Rshunt = " + cal_Rshunt + " Ohm");
+	}
+	sleep(250);
+}
+//------------------------
+
+function CAL_WaitUserAction(TextMessage)
+{
+	p("Attention !!!");
+	p(TextMessage);
+	p("Press key 'y' to start measure, exit pressing 'n'.");
+	
+	var key = 0;
+	do
+	{
+		key = readkey();
+	}
+	while (key != "y" && key != "n")
+	
+	if (key == "n")
+	{
+		print("Measuring is stopped!");
+		return 0;
+	}
+	return 1;
+}
+//------------------------
+
+function CAL_SetAvg()
+{
+	if(cal_CurrentRange>0)
+	{
+		cal_AvgNum = cal_AvgNum_L;
+	}
+	else
+	{
+		cal_AvgNum = cal_AvgNum_H;
+	}
+	
+	TEK_AcquireAvg(cal_AvgNum);
 }
