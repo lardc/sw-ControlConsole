@@ -251,6 +251,8 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 
 	sleep(500);
 	
+	CAL_MessageAboutParams(PrintMode);
+	
 	for (var i = 0; i < IterationsCount; i++)
 	{
 		for (var j = 0; j < VoltageValues.length; j++)
@@ -585,4 +587,21 @@ function CAL_WaitCollect()
 	{
 		sleep(1000);
 	}
+}
+//------------------------
+
+function CAL_MessageAboutParams(PrintMode)
+{
+	if(PrintMode == cal_PrintModeU)
+	{		
+		p("Voltage range " + cal_VoltageRangeArrayMin[cal_VoltageRange] + " ... " + cal_VoltageRangeArrayMax[cal_VoltageRange] + " mV");
+	}
+	
+	if(PrintMode == cal_PrintModeI)
+	{	
+		p("Current range " + cal_CurrentRangeArrayMin[cal_CurrentRange] + " ... " + cal_CurrentRangeArrayMax[cal_CurrentRange] + " uA");
+		p("Rload = " + cal_Rload + " Ohm");
+		p("Rshunt = " + cal_Rshunt + " Ohm");
+	}
+	sleep(250);
 }
