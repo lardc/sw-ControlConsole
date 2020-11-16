@@ -561,11 +561,11 @@ function CAL_SetMeasuringChanellAndTrigger(PrintMode)
 	{	
 		TEK_ChannelOff(cal_chMeasureId);
 		TEK_ChannelOn(cal_chMeasureUd);
-		
 		TEK_ChannelInit(cal_chMeasureUd, "100", "1");
 		TEK_Send("ch" + cal_chMeasureUd + ":position 1");
-		
 		CAL_TekMeasurement(cal_chMeasureUd, "5");
+		
+		if(CAL_WaitUserAction("To measure Voltage, connect HV voltage probe (x100) to chanell " + cal_chMeasureUd + " oscilloscope.")) return 0;
 	}
 	
 	if(PrintMode == cal_PrintModeI)
@@ -578,12 +578,16 @@ function CAL_SetMeasuringChanellAndTrigger(PrintMode)
 			TEK_ChannelInit(cal_chMeasureId, "100", "1");
 			TEK_Send("ch" + cal_chMeasureId + ":position -1");
 			CAL_TekMeasurement(cal_chMeasureId, "1");
+			
+			if(CAL_WaitUserAction("To measure Current in LOW range, connect HV voltage probe (x100) to chanell " + cal_chMeasureId + " oscilloscope.")) return 0;
 		}
 		else
 		{
 			TEK_ChannelInit(cal_chMeasureId, "1", "1");
 			TEK_Send("ch" + cal_chMeasureId + ":position -1");
 			CAL_TekMeasurement(cal_chMeasureId, "0.05");
+			
+			if(CAL_WaitUserAction("To measure Current in MIDDLE or HIGH, connect voltage probe (x1) to chanell " + cal_chMeasureId + " oscilloscope.")) return 0;
 		}
 	}
 	
@@ -607,6 +611,28 @@ function CAL_MessageAboutParams(PrintMode)
 		p("Rshunt = " + cal_Rshunt + " Ohm");
 	}
 	sleep(250);
+}
+//------------------------
+
+function CAL_WaitUserAction(TextMessage)
+{
+	p("Attention !!!");
+	p(TextMessage);
+	p("Press key 'y' to start measure, exit pressing 'n'.");
+	
+	var key = 0;
+	do
+	{
+		key = readkey();
+	}
+	while (key != "y" && key != "n")
+	
+	if (key == "n")
+	{
+		print("Measuring is stopped!");
+		return 0;
+	}
+	return 1;
 }
 //------------------------
 
