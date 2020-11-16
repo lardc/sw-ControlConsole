@@ -8,6 +8,11 @@ DEV_STATE_INREADY = 3
 DEV_STATE_NON = 0
 DEV_STATE_DISABLED = 2
 
+// Registers
+REG_CURRENT_RANGE1_SAFETY_LIMIT = 181;
+REG_CURRENT_RANGE2_SAFETY_LIMIT = 182;
+REG_CURRENT_RANGE3_SAFETY_LIMIT = 183;
+
 // Input params
 cal_VoltageRangeArrayMin = [5000, 46000];				// Min mV values for ranges
 cal_VoltageRangeArrayMax = [45000, 330000];				// Max mV values for ranges
@@ -147,6 +152,8 @@ function CAL_CalibrateId()
 	CAL_ResetA();
 	CAL_ResetIdCal();
 	
+	CAL_WideCurrentRangeEnable();
+	
 	var VoltageArray = CGEN_GetRange(ud_min, ud_max, ud_stp);
 	
 	if (CAL_Collect(VoltageArray, cal_Iterations, cal_PrintModeI))
@@ -160,7 +167,9 @@ function CAL_CalibrateId()
 		cal_id_corr = CGEN_GetCorrection2("ECACVoltageBoard_id");
 		CAL_SetCoefId(cal_id_corr[0], cal_id_corr[1], cal_id_corr[2]);
 		CAL_PrintCoefId();
-	}		
+	}
+	
+	CAL_WideCurrentRangeDisable();
 }
 //------------------------
 
@@ -204,7 +213,9 @@ function CAL_VerifyId()
 	
 	TEK_ChannelInit(cal_chMeasureId, "1", "1");
 	TEK_Send("ch" + cal_chMeasureId + ":position -1");
-		
+	
+	CAL_WideCurrentRangeEnable();
+	
 	// Collect data
 	CAL_ResetA();
 
@@ -218,6 +229,8 @@ function CAL_VerifyId()
 		// Plot relative error distribution
 		scattern(cal_id_sc, cal_id_err, "Current (in uA)", "Error (in %)", "Current relative error");
 	}
+	
+	CAL_WideCurrentRangeDisable();
 }
 //------------------------
 
@@ -534,6 +547,21 @@ function CAL_WaitReadyVoltage()
 	{
 		p("Voltage ready is time out!");
 	}
+}
+//------------------------
+function CAL_WideCurrentRangeEnable()
+{
+	dev.w(REG_CURRENT_RANGE1_SAFETY_LIMIT, 10);
+	dev.w(REG_CURRENT_RANGE2_SAFETY_LIMIT, 10);
+	dev.w(REG_CURRENT_RANGE3_SAFETY_LIMIT, 10);
+}
+//------------------------
+
+function CAL_WideCurrentRangeDisable()
+{
+	dev.w(REG_CURRENT_RANGE1_SAFETY_LIMIT, 0);
+	dev.w(REG_CURRENT_RANGE2_SAFETY_LIMIT, 0);
+	dev.w(REG_CURRENT_RANGE3_SAFETY_LIMIT, 0);
 }
 //------------------------
 
