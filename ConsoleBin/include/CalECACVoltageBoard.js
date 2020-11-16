@@ -26,9 +26,9 @@ cal_OutLine = 1;	// 0 - nothing line, 1 - POW, 2 - ctrl
 cal_Rload = 1;	
 cal_Rshunt = 1;
 
-AvgNum_L = 16;
-AvgNum_H = 128;
-AvgNum = AvgNum_L;
+cal_AvgNum_L = 16;
+cal_AvgNum_H = 128;
+cal_AvgNum = cal_AvgNum_L;
 	
 // Counters
 cal_cntTotal = 0;
@@ -276,14 +276,7 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 			{
 				CAL_WaitReadyVoltage();
 				
-				if(cal_CurrentRange>0)
-				{
-					AvgNum = AvgNum_L;
-				}
-				else
-				{
-					AvgNum = AvgNum_H;
-				}
+				CAL_SetAvg();
 				
 				TEK_AcquireAvg(AvgNum);
 				
@@ -604,4 +597,19 @@ function CAL_MessageAboutParams(PrintMode)
 		p("Rshunt = " + cal_Rshunt + " Ohm");
 	}
 	sleep(250);
+}
+//------------------------
+
+function CAL_SetAvg()
+{
+	if(cal_CurrentRange>0)
+	{
+		cal_AvgNum = cal_AvgNum_L;
+	}
+	else
+	{
+		cal_AvgNum = cal_AvgNum_H;
+	}
+	
+	TEK_AcquireAvg(cal_AvgNum);
 }
