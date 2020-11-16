@@ -198,6 +198,14 @@ function ECCB_PrintNodeSetting(Name, Index)
 	p(Name + ',\tnid[' + Index + ']: ' + dev.r(Index) + ',\tem[' + (Index + 10) + ']: ' + dev.r(Index + 10))
 }
 
+function ECCBM_ExecAndWait(Command)
+{
+	dev.c(Command)
+	
+	while(dev.r(192) == 4 && !anykey())
+		sleep(100)
+}
+
 function ECCBM_Leak(Voltage, Current, ControlVoltage, ControlCurrent, ControlMode, LeakMode)
 {
 	dev.w(128, 1)
@@ -285,24 +293,28 @@ function ECCBM_Control(ControlVoltage, ControlCurrent, ControlMode)
 
 function ECCBM_Calibrate(Voltage, Current, Type, Node)
 {
+	// CN_DC1 = 1
+	// CN_DC2 = 2
+	// CN_DC3 = 3
+	// CN_HVDC = 4
+	// CN_AC1 = 5
+	// CN_AC2 = 6
+	// CN_CB = 7
 	dev.w(160, Node)
 	
 	// 1 - Current, 2 - Voltage
 	dev.w(161, Type)
 	
-	// 1 - IDC, 2 - VDC, 3 - VAC
-	dev.w(131, ControlMode)
-	
 	w32(162, Voltage)
 	w32(164, Current)
 	
-	dev.c(104)
-	
-	while(dev.r(192) == 4)
-		sleep(100)
+	ECCBM_ExecAndWait(104)
 	
 	if(dev.r(192) == 3)
-		p('ok')
+	{
+		p('Vcal :\t' + r32(240))
+		p('Ical :\t' + r32(242))
+	}
 	else
 		p('Wrong state: ' + dev.r(192))
 }
