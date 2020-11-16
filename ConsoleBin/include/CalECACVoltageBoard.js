@@ -34,6 +34,9 @@ cal_AvgNum = cal_AvgNum_L;
 cal_cntTotal = 0;
 cal_cntDone = 0;
 
+// ID plate. №1 - 105, №2 - 106
+cal_Nid = 105;
+
 // Iterations
 cal_Iterations = 3;
 
@@ -88,6 +91,7 @@ function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd)
 	var DeviceState = dev.r(192);
 	if((DeviceState==DEV_STATE_NON)||(DeviceState==DEV_STATE_DISABLED))
 	{
+		dev.nid(cal_Nid);
 		dev.c(1);
 		sleep(1000);
 	}
