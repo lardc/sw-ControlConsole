@@ -5,6 +5,8 @@ include("CalGeneral.js")
 // Global definitions
 DEV_STATE_INPROCESS = 4
 DEV_STATE_INREADY = 3
+DEV_STATE_NON = 0
+DEV_STATE_DISABLED = 2
 
 // Input params
 cal_VoltageRangeArrayMin = [5000, 46000];				// Min mV values for ranges
@@ -77,6 +79,13 @@ function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd)
 	// Init ECACVoltageBoard
 	dev.Disconnect();
 	dev.Connect(portDevice);
+	
+	var DeviceState = dev.r(192);
+	if((DeviceState==DEV_STATE_NON)||(DeviceState==DEV_STATE_DISABLED))
+	{
+		dev.c(1);
+		sleep(1000);
+	}
 	
 	// Init Tektronix
 	TEK_PortInit(portTek);
