@@ -18,7 +18,7 @@ cal_VoltageRangeArrayMin = [5000, 46000];				// Min mV values for ranges
 cal_VoltageRangeArrayMax = [45000, 330000];				// Max mV values for ranges
 
 cal_CurrentRangeArrayMin = [10, 301, 5001];				// Min uA values for ranges
-cal_CurrentRangeArrayMax = [300, 5000, 110000];			// Max uA values for ranges
+cal_CurrentRangeArrayMax = [300, 5000, 100000];			// Max uA values for ranges
 
 cal_VoltageRange  = 0;		
 cal_CurrentRange  = 0;	
@@ -192,11 +192,11 @@ function CAL_VerifyId()
 	var ud_min = Math.round((cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload) / 1000);
 	var ud_stp = Math.round((ud_max - ud_min) / cal_NumberOfMeasurements);
 	
-	CAL_WideCurrentRangeEnable();
-	
 	// Collect data
 	CAL_ResetA();
 
+	CAL_WideCurrentRangeEnable();
+	
 	// Reload values
 	var VoltageArray = CGEN_GetRange(ud_min, ud_max, ud_stp);
 
@@ -250,7 +250,7 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 				
 				CAL_SetAvg();
 				
-				TEK_AcquireAvg(AvgNum);
+				TEK_AcquireAvg(cal_AvgNum);
 				
 				sleep(500);
 				
@@ -314,10 +314,11 @@ function CAL_Probe(PrintMode)
 }
 //------------------------
 
-function CAL_TekMeasurement(Channel)
+function CAL_TekMeasurement(Channel, TriggerLevel)
 {
 	TEK_Send("measurement:meas" + Channel + ":source ch" + Channel);
 	TEK_Send("measurement:meas" + Channel + ":type crms");
+	TEK_TriggerInit(Channel, TriggerLevel);
 }
 //------------------------
 
@@ -564,7 +565,6 @@ function CAL_SetMeasuringChanellAndTrigger(PrintMode)
 		TEK_ChannelInit(cal_chMeasureUd, "100", "1");
 		TEK_Send("ch" + cal_chMeasureUd + ":position 1");
 		CAL_TekMeasurement(cal_chMeasureUd, "5");
-		
 		if(CAL_WaitUserAction("To measure Voltage, connect HV voltage probe (x100) to chanell " + cal_chMeasureUd + " oscilloscope.")) return 0;
 	}
 	
@@ -572,13 +572,11 @@ function CAL_SetMeasuringChanellAndTrigger(PrintMode)
 	{	
 		TEK_ChannelOff(cal_chMeasureUd);
 		TEK_ChannelOn(cal_chMeasureId);
-				
 		if(cal_CurrentRange == 0)
 		{
 			TEK_ChannelInit(cal_chMeasureId, "100", "1");
 			TEK_Send("ch" + cal_chMeasureId + ":position -1");
 			CAL_TekMeasurement(cal_chMeasureId, "1");
-			
 			if(CAL_WaitUserAction("To measure Current in LOW range, connect HV voltage probe (x100) to chanell " + cal_chMeasureId + " oscilloscope.")) return 0;
 		}
 		else
@@ -586,7 +584,6 @@ function CAL_SetMeasuringChanellAndTrigger(PrintMode)
 			TEK_ChannelInit(cal_chMeasureId, "1", "1");
 			TEK_Send("ch" + cal_chMeasureId + ":position -1");
 			CAL_TekMeasurement(cal_chMeasureId, "0.05");
-			
 			if(CAL_WaitUserAction("To measure Current in MIDDLE or HIGH, connect voltage probe (x1) to chanell " + cal_chMeasureId + " oscilloscope.")) return 0;
 		}
 	}
