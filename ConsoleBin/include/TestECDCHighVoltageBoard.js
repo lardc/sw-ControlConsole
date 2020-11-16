@@ -1,19 +1,31 @@
 include("PrintStatus.js")
 include("Common.js")
 
-function ECDC_HV_CalCell(Voltage, CellNumder)
+ECDC_HV_print = 1;
+
+function ECDC_HV_Measure(Voltage, Current)
 {
 	if(dev.r(192) == 3)
 	{
 		dev.w(128, Voltage);
-		dev.w(151, CellNumder);
+		w32(129, Current);
 		
-		dev.c(150);
+		dev.c(100);
 		
-		sleep(1000);
+		//sleep(3000);
+		
+		while(dev.r(192) == 4){sleep(50);}
 		
 		if(dev.r(192) == 1)
 			PrintStatus();
+		
+		if(ECDC_HV_print)
+		{
+			p("");
+			p("Voltage,  V: " + (dev.r(200) / 10));
+			p("Current, uA: " + (r32(201) / 10));
+			p("------------");
+		}
 	}
 	else
 	{
@@ -23,27 +35,10 @@ function ECDC_HV_CalCell(Voltage, CellNumder)
 			PrintStatus();
 	}
 }
+//--------------------
 
-function ECDC_HV_Measure(Voltage, Current)
+function ECDC_HV_ExcessCurrentControl(Enable)
 {
-	if(dev.r(192) == 3)
-	{
-		dev.w(128, Voltage);
-		w32(129, Voltage);
-		
-		dev.c(100);
-		
-		while(dev.r(192) == 4){sleep(10);}
-		
-		if(dev.r(192) == 1)
-			PrintStatus();
-	}
-	else
-	{
-		if(dev.r(192) != 1)
-			print("Device not ready");
-		else
-			PrintStatus();
-	}
+	Enable ? dev.w(11,0) : dev.w(11,1);
 }
 //--------------------
