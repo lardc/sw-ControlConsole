@@ -114,10 +114,6 @@ function CAL_CalibrateUd()
 	var ud_max	= cal_VoltageRangeArrayMax[cal_VoltageRange];
 	var ud_stp	= (ud_max - ud_min) / cal_NumberOfMeasurements;
 	
-	TEK_ChannelInit(cal_chMeasureUd, "100", "1");
-	TEK_Send("ch" + cal_chMeasureUd + ":position 0");
-	TEK_ChannelOff(cal_chMeasureId);
-	
 	CAL_ResetA();
 	CAL_ResetUdCal();
 	
@@ -143,15 +139,6 @@ function CAL_CalibrateId()
 	var ud_max = Math.round((cal_CurrentRangeArrayMax[cal_CurrentRange] * cal_Rload) / 1000);
 	var ud_min = Math.round((cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload) / 1000);
 	var ud_stp = Math.round((ud_max - ud_min) / cal_NumberOfMeasurements);
-	
-	TEK_ChannelOn(cal_chMeasureId);
-	TEK_ChannelOn(cal_chMeasureUd);
-	
-	TEK_ChannelInit(cal_chMeasureUd, "100", "1");
-	TEK_Send("ch" + cal_chMeasureUd + ":position 1");
-	
-	TEK_ChannelInit(cal_chMeasureId, "1", "1");
-	TEK_Send("ch" + cal_chMeasureId + ":position -1");
 	
 	CAL_ResetA();
 	CAL_ResetIdCal();
@@ -183,10 +170,6 @@ function CAL_VerifyUd()
 	var ud_max	= cal_VoltageRangeArrayMax[cal_VoltageRange];
 	var ud_stp	= (ud_max - ud_min) / cal_NumberOfMeasurements;
 	
-	TEK_ChannelInit(cal_chMeasureUd, "100", "1");
-	TEK_Send("ch" + cal_chMeasureUd + ":position 1");
-	TEK_ChannelOff(cal_chMeasureId);
-	
 	// Collect data
 	CAL_ResetA();
 
@@ -208,15 +191,6 @@ function CAL_VerifyId()
 	var ud_max = Math.round((cal_CurrentRangeArrayMax[cal_CurrentRange] * cal_Rload) / 1000);
 	var ud_min = Math.round((cal_CurrentRangeArrayMin[cal_CurrentRange] * cal_Rload) / 1000);
 	var ud_stp = Math.round((ud_max - ud_min) / cal_NumberOfMeasurements);
-	
-	TEK_ChannelOn(cal_chMeasureId);
-	TEK_ChannelOn(cal_chMeasureUd);
-	
-	TEK_ChannelInit(cal_chMeasureUd, "100", "1");
-	TEK_Send("ch" + cal_chMeasureUd + ":position 1");
-	
-	TEK_ChannelInit(cal_chMeasureId, "1", "1");
-	TEK_Send("ch" + cal_chMeasureId + ":position -1");
 	
 	CAL_WideCurrentRangeEnable();
 	
@@ -243,18 +217,12 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 	cal_cntTotal = IterationsCount * VoltageValues.length;
 	cal_cntDone = 1;
 		
-	// Init measurement
-	CAL_TekMeasurement(cal_chMeasureUd);
-	CAL_TekMeasurement(cal_chMeasureId);
-	
 	// Horizontal settings
 	TEK_Horizontal("1e-2", 0);
 	
-	// Init trigger
-	TEK_TriggerInit(cal_chMeasureUd, "5");
+	// Init measurement and set trigger
+	if(CAL_SetMeasuringChanellAndTrigger(PrintMode)) return 0;	
 
-	sleep(500);
-	
 	CAL_MessageAboutParams(PrintMode);
 	
 	for (var i = 0; i < IterationsCount; i++)
@@ -584,6 +552,44 @@ function CAL_WaitCollect()
 	{
 		sleep(1000);
 	}
+}
+//------------------------
+
+function CAL_SetMeasuringChanellAndTrigger(PrintMode)
+{
+	if(PrintMode == cal_PrintModeU)
+	{	
+		TEK_ChannelOff(cal_chMeasureId);
+		TEK_ChannelOn(cal_chMeasureUd);
+		
+		TEK_ChannelInit(cal_chMeasureUd, "100", "1");
+		TEK_Send("ch" + cal_chMeasureUd + ":position 1");
+		
+		CAL_TekMeasurement(cal_chMeasureUd, "5");
+	}
+	
+	if(PrintMode == cal_PrintModeI)
+	{	
+		TEK_ChannelOff(cal_chMeasureUd);
+		TEK_ChannelOn(cal_chMeasureId);
+				
+		if(cal_CurrentRange == 0)
+		{
+			TEK_ChannelInit(cal_chMeasureId, "100", "1");
+			TEK_Send("ch" + cal_chMeasureId + ":position -1");
+			CAL_TekMeasurement(cal_chMeasureId, "1");
+		}
+		else
+		{
+			TEK_ChannelInit(cal_chMeasureId, "1", "1");
+			TEK_Send("ch" + cal_chMeasureId + ":position -1");
+			CAL_TekMeasurement(cal_chMeasureId, "0.05");
+		}
+	}
+	
+	sleep(500);
+	
+	return 1;
 }
 //------------------------
 
