@@ -3,26 +3,16 @@ include("Tektronix.js")
 include("CalGeneral.js")
 
 // Input params
-cal_VoltageRange   = 0;		// 0 - 30mV, 1 - 250mV, 2 - 1.5V, 3 - 11V
+cal_VoltageRange   = 0;		// 0 - 10mV, 1 - 30mV, 2 - 250mV, 3 - 1.5V, 4 - 11V
 cal_CurrentRange   = 0;		// 0 - 20mA, 1 - 200mA, 2 - 2A, 3 - 20A, 4 - 250A
+
 cal_LoadResistance = 1;		// Load resistance in Ohm
 
 // Hardware definitions
-cal_CurrentRangeArrayMin = [1000, 20001, 200001, 2000001, 20000001];				// Min current values for ranges
+cal_CurrentRangeArrayMin = [1000, 20010, 200010, 2000010, 20000010];				// Min current values for ranges
 cal_CurrentRangeArrayMax = [20000, 200000, 2000000, 20000000, 250000000];			// Max current values for ranges
-cal_VoltageRangeArrayMin = [1000, 10000, 20e3, 200e3, 1.2e6];						// Min voltage values for ranges
-cal_VoltageRangeArrayMax = [10000, 30000, 250e3, 1.5e6, 11e6];						// Max voltage values for ranges
-
-// Calibrate Id
-cal_id_min = cal_CurrentRangeArrayMin[cal_CurrentRange];
-cal_id_max = cal_CurrentRangeArrayMax[cal_CurrentRange];
-cal_id_stp = (cal_CurrentRangeArrayMax[cal_CurrentRange] - cal_CurrentRangeArrayMin[cal_CurrentRange])/20;
-cal_ud_test = cal_VoltageRangeArrayMax[3];
-
-// Calibrate Ud
-cal_ud_min = cal_VoltageRangeArrayMin[cal_VoltageRange];
-cal_ud_max = cal_VoltageRangeArrayMax[cal_VoltageRange];
-cal_ud_stp = (cal_ud_max - cal_ud_min)/10;
+cal_VoltageRangeArrayMin = [1000, 10010, 30010, 2500010, 1500010];					// Min voltage values for ranges
+cal_VoltageRangeArrayMax = [10000, 30000, 250000, 1500000, 11000000];				// Max voltage values for ranges
 
 // Counters
 cal_cntTotal = 0;
@@ -34,7 +24,6 @@ cal_Iterations = 3;
 // Channels
 cal_chMeasureId = 1;
 cal_chMeasureUd = 2;
-cal_chSync 		= 3;
 
 // Arrays
 cal_id_array = [];
@@ -69,7 +58,6 @@ function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd, chann
 	// Copy channel information
 	cal_chMeasureUd = channelMeasureUd;
 	cal_chMeasureId = channelMeasureId;
-	cal_chSync = channelSync;
 
 	// Init device port
 	dev.Disconnect();
@@ -79,9 +67,44 @@ function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd, chann
 	TEK_PortInit(portTek);
 }
 
+function CAL_TekInit(Channel)
+{
+	// Init channels
+	TEK_ChannelInit(Channel, "1", "1");
+	TEK_ChannelScale(Channel, "1");
+	// Init trigger
+	TEK_TriggerInit(Channel, "2");
+	// Horizontal settings
+	TEK_Horizontal("250e-6", "4.5e-3");
+}
+
+function CAL_TekMeasurement(Channel)
+{
+	TEK_Send("measurement:meas" + Channel + ":source ch" + Channel);
+	TEK_Send("measurement:meas" + Channel + ":type mean");
+}	
+
+function CAL_TekScale(Channel, Value)
+{
+	Value = Value / 4;
+	TEK_Send("ch" + Channel + ":scale " + Value);
+}
+
+function CAL_Measure(Channel, Resolution)
+{
+	var f = TEK_Measure(Channel);
+	if (Math.abs(f) > 2.7e+8)
+		f = 0;
+	return parseFloat(f).toFixed(Resolution);
+}
+
 function CAL_CalibrateId()
 {	
 	// Collect data
+	var IdMin = cal_CurrentRangeArrayMin[cal_CurrentRange];
+	var IdMax = cal_CurrentRangeArrayMax[cal_CurrentRange];
+	var IdStp = ((IdMax - IdMin) / 10) + 1;
+	
 	CAL_ResetA();
 	CAL_ResetIdCal();
 	
@@ -89,14 +112,14 @@ function CAL_CalibrateId()
 	CAL_TekInit(cal_chMeasureId);
 
 	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_id_min, cal_id_max, cal_id_stp);
+	var CurrentArray = CGEN_GetRange(IdMin, IdMax, IdStp);
 
 	if (CAL_IdCollect(CurrentArray, cal_Iterations))
 	{
 		CAL_SaveId("ECDCCurrentBoard_id");
 
 		// Plot relative error distribution
-		scattern(cal_id_sc, cal_id_err, "Current (in mcA)", "Error (in %)", "Current relative error");
+		scattern(cal_id_sc, cal_id_err, "Current (in uA)", "Error (in %)", "Current relative error");
 
 		// Calculate correction
 		cal_id_corr = CGEN_GetCorrection2("ECDCCurrentBoard_id");
@@ -108,6 +131,10 @@ function CAL_CalibrateId()
 function CAL_CalibrateUd()
 {	
 	// Collect data
+	var UdMin = cal_VoltageRangeArrayMin[cal_VoltageRange];
+	var UdMax = cal_VoltageRangeArrayMax[cal_VoltageRange];
+	var UdStp = ((UdMax - UdMin) / 10) + 1;	
+	
 	CAL_ResetA();
 	CAL_ResetUdCal();
 	
@@ -115,14 +142,14 @@ function CAL_CalibrateUd()
 	CAL_TekInit(cal_chMeasureUd);
 
 	// Reload values
-	var VoltageArray = CGEN_GetRange(cal_ud_min, cal_ud_max, cal_ud_stp);
+	var VoltageArray = CGEN_GetRange(UdMin, UdMax, UdStp);
 
 	if (CAL_UdCollect(VoltageArray, cal_Iterations))
 	{
 		CAL_SaveUd("ECDCCurrentBoard_ud");
 
 		// Plot relative error distribution
-		scattern(cal_ud_sc, cal_ud_err, "Voltage (in mcV)", "Error (in %)", "Voltage relative error");
+		scattern(cal_ud_sc, cal_ud_err, "Voltage (in uV)", "Error (in %)", "Voltage relative error");
 
 		// Calculate correction
 		cal_ud_corr = CGEN_GetCorrection2("ECDCCurrentBoard_ud");
@@ -131,87 +158,52 @@ function CAL_CalibrateUd()
 	}
 }
 
-
 function CAL_VerifyId()
-{
+{	
 	// Collect data
+	var IdMin = cal_CurrentRangeArrayMin[cal_CurrentRange];
+	var IdMax = cal_CurrentRangeArrayMax[cal_CurrentRange];
+	var IdStp = ((IdMax - IdMin) / 10) + 1;
+	
 	CAL_ResetA();
 	
 	// Tektronix init
 	CAL_TekInit(cal_chMeasureId);
 
 	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_id_min, cal_id_max, cal_id_stp);
+	var CurrentArray = CGEN_GetRange(IdMin, IdMax, IdStp);
 
 	if (CAL_IdCollect(CurrentArray, cal_Iterations))
 	{
 		CAL_SaveId("ECDCCurrentBoard_id_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_id_sc, cal_id_err, "Current (in mA)", "Error (in %)", "Current relative error");
+		scattern(cal_id_sc, cal_id_err, "Current (in uA)", "Error (in %)", "Current relative error");
 	}
 }
 
 function CAL_VerifyUd()
 {	
 	// Collect data
+	var UdMin = cal_VoltageRangeArrayMin[cal_VoltageRange];
+	var UdMax = cal_VoltageRangeArrayMax[cal_VoltageRange];
+	var UdStp = ((UdMax - UdMin) / 10) + 1;		
+
 	CAL_ResetA();
 	
 	// Tektronix init
 	CAL_TekInit(cal_chMeasureUd);
 
 	// Reload values
-	var VoltageArray = CGEN_GetRange(cal_ud_min, cal_ud_max, cal_ud_stp);
+	var VoltageArray = CGEN_GetRange(UdMin, UdMax, UdStp);
 
 	if (CAL_UdCollect(VoltageArray, cal_Iterations))
 	{
 		CAL_SaveUd("ECDCCurrentBoard_ud_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_ud_sc, cal_ud_err, "Voltage (in mV)", "Error (in %)", "Voltage relative error");
+		scattern(cal_ud_sc, cal_ud_err, "Voltage (in uV)", "Error (in %)", "Voltage relative error");
 	}
-}
-
-function CAL_TekInit(Channel)
-{
-	// Init channels
-	TEK_ChannelInit(Channel, "1", "1");
-	TEK_ChannelInit(cal_chSync, "1", "1");
-	TEK_ChannelScale(Channel, "1");
-	// Init trigger
-	TEK_TriggerInit(cal_chSync, "2");
-	// Horizontal settings
-	TEK_Horizontal("2.5e-3", "0");
-	
-		// Display channels
-	for (var i = 1; i <= 4; i++)
-	{
-		if (i == Channel || i == cal_chSync)
-			TEK_ChannelOn(i);
-		else
-			TEK_ChannelOff(i);
-	}
-
-	CAL_TekCursor(Channel);
-}
-
-function CAL_TekCursor(Channel)
-{
-	TEK_Send("cursor:select:source ch" + Channel);
-	TEK_Send("cursor:function vbars");
-	TEK_Send("cursor:vbars:position1 5e-3");
-	TEK_Send("cursor:vbars:position2 9e-3");
-}
-
-function CAL_Measure(Channel, Resolution)
-{
-	TEK_Send("cursor:select:source ch" + Channel);
-	sleep(500);
-
-	var f = TEK_Exec("cursor:vbars:hpos2?");
-	if (Math.abs(f) > 2.7e+8)
-		f = 0;
-	return parseFloat(f).toFixed(Resolution);
 }
 
 function CAL_IdCollect(CurrentValues, IterationsCount)
@@ -231,16 +223,20 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
+	CAL_TekMeasurement(cal_chMeasureId);
+	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "5e-3", "positive", "outside");
+	sleep(1000);
+	
 	for (var i = 0; i < IterationsCount; i++)
 	{
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
 			print("-- result " + cal_cntDone++ + " of " + cal_cntTotal + " --");
 			
-			print("IdTarget, mcA: " + CurrentValues[j]);
+			print("IdTarget, uA: " + CurrentValues[j]);
 			
 			CAL_TekScale(cal_chMeasureId, (CurrentValues[j] * cal_LoadResistance / 1000000));
-			TEK_TriggerInit(cal_chSync, 2);
+			TEK_TriggerLevelF((CurrentValues[j]* cal_LoadResistance / 1000000) * 0.30);
 			sleep(1500);
 
 			//
@@ -249,8 +245,8 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 
 			for (var k = 0; k < AvgNum; k++)
 			{
-				ECDC_CB_Measure(CurrentValues[j], cal_ud_test);
-				sleep(1000);
+				ECDC_CB_Measure(CurrentValues[j], 1000);
+				sleep(3500);
 			}
 			
 			ECDC_CB_Print = cal_print_copy;
@@ -258,12 +254,12 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 			// Unit data
 			var id_read = r32(250);
 			cal_id.push(id_read);
-			print("Idread, mcA: " + id_read);
+			print("Idread, uA: " + id_read);
 
 			// Scope data
 			var id_sc = (CAL_Measure(cal_chMeasureId, "6") / cal_LoadResistance * 1000000).toFixed(2);
 			cal_id_sc.push(id_sc);
-			print("Idtek, mcA: " + id_sc);
+			print("Idtek, uA: " + id_sc);
 
 			// Relative error
 			var id_err = ((id_read - id_sc) / id_sc * 100).toFixed(2);
@@ -286,7 +282,14 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 	var AvgNum;
 	if (cal_UseAvg)
 	{
-		AvgNum = 16;
+		if(cal_VoltageRange == 0)
+		{
+			AvgNum = 16;
+		}
+		else
+		{
+			AvgNum = 4;
+		}
 		TEK_AcquireAvg(AvgNum);
 	}
 	else
@@ -295,15 +298,19 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
+	CAL_TekMeasurement(cal_chMeasureUd);
+	TEK_TriggerPulseExtendedInit(cal_chMeasureUd, 1, "hfrej", "5e-3", "positive", "outside");
+	sleep(1000);
+	
 	for (var i = 0; i < IterationsCount; i++)
 	{
 		for (var j = 0; j < VoltageValues.length; j++)
 		{
 			print("-- result " + cal_cntDone++ + " of " + cal_cntTotal + " --");
 			
-			CAL_TekScale(cal_chMeasureUd, VoltageValues[j] / 1000000);
-			TEK_TriggerInit(cal_chSync, 2);
-			sleep(4000);
+			CAL_TekScale(cal_chMeasureUd, VoltageValues[j] / 1000000););
+			TEK_TriggerLevelF((VoltageValues[j] / 1000000) * 0.5);
+			sleep(1500);
 
 			//
 			var cal_print_copy = ECDC_CB_Print;
@@ -320,13 +327,13 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 			// Unit data
 			var ud_read = r32(252);
 			cal_ud.push(ud_read);
-			print("Udread, mcV: " + ud_read);
+			print("Udread, uV: " + ud_read);
 
 			// Scope data
 			var ud_sc = (CAL_Measure(cal_chMeasureUd, "6") * 1000000).toFixed(2);
 			
 			cal_ud_sc.push(ud_sc);
-			print("Udtek, mcV: " + ud_sc);
+			print("Udtek, uV: " + ud_sc);
 
 			// Relative error
 			var ud_err = ((ud_read - ud_sc) / ud_sc * 100).toFixed(2);
@@ -339,17 +346,6 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 	}
 
 	return 1;
-}
-
-function CAL_TekScale(Channel, Value)
-{
-	Value = Value / 4;
-	TEK_Send("ch" + Channel + ":scale " + Value);
-}
-
-function CAL_TekVerticalUnits()
-{
-	return(TEK_Send("cursor:hbars:units?"));
 }
 
 function CAL_ResetA()
