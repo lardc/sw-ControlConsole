@@ -11,7 +11,7 @@ cal_LoadResistance = 1;		// Load resistance in Ohm
 // Hardware definitions
 cal_CurrentRangeArrayMin = [1000, 20010, 200010, 2000010, 20000010];				// Min current values for ranges
 cal_CurrentRangeArrayMax = [20000, 200000, 2000000, 20000000, 250000000];			// Max current values for ranges
-cal_VoltageRangeArrayMin = [1000, 10010, 30010, 2500010, 1500010];					// Min voltage values for ranges
+cal_VoltageRangeArrayMin = [1000, 10010, 30010, 250010, 1500010];					// Min voltage values for ranges
 cal_VoltageRangeArrayMax = [10000, 30000, 250000, 1500000, 11000000];				// Max voltage values for ranges
 
 // Counters
@@ -47,7 +47,7 @@ cal_ud_corr = [];
 
 cal_UseAvg = 1;
 
-function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd, channelSync)
+function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd)
 {
 	if (channelMeasureId < 1 || channelMeasureId > 4)
 	{
@@ -75,7 +75,7 @@ function CAL_TekInit(Channel)
 	// Init trigger
 	TEK_TriggerInit(Channel, "2");
 	// Horizontal settings
-	TEK_Horizontal("250e-6", "4.5e-3");
+	TEK_Horizontal("250e-6", "3.2e-3");
 }
 
 function CAL_TekMeasurement(Channel)
@@ -214,7 +214,7 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 	var AvgNum;
 	if (cal_UseAvg)
 	{
-		AvgNum = 6;
+		AvgNum = 4;
 		TEK_AcquireAvg(AvgNum);
 	}
 	else
@@ -236,7 +236,7 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 			print("IdTarget, uA: " + CurrentValues[j]);
 			
 			CAL_TekScale(cal_chMeasureId, (CurrentValues[j] * cal_LoadResistance / 1000000));
-			TEK_TriggerLevelF((CurrentValues[j]* cal_LoadResistance / 1000000) * 0.30);
+			TEK_TriggerLevelF((CurrentValues[j]* cal_LoadResistance / 1000000) * 0.35);
 			sleep(1500);
 
 			//
@@ -246,7 +246,7 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 			for (var k = 0; k < AvgNum; k++)
 			{
 				ECDC_CB_Measure(CurrentValues[j], 1000);
-				sleep(3500);
+				sleep(6500);
 			}
 			
 			ECDC_CB_Print = cal_print_copy;
@@ -308,8 +308,8 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 		{
 			print("-- result " + cal_cntDone++ + " of " + cal_cntTotal + " --");
 			
-			CAL_TekScale(cal_chMeasureUd, VoltageValues[j] / 1000000););
-			TEK_TriggerLevelF((VoltageValues[j] / 1000000) * 0.5);
+			CAL_TekScale(cal_chMeasureUd, VoltageValues[j] / 1000000);
+			TEK_TriggerLevelF((VoltageValues[j] / 1000000) * 0.35);
 			sleep(1500);
 
 			//
@@ -319,7 +319,7 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 			for (var k = 0; k < AvgNum; k++)
 			{
 				ECDC_CB_Measure(VoltageValues[j] / cal_LoadResistance, cal_VoltageRangeArrayMax[cal_VoltageRange]);
-				sleep(1000);
+				sleep(6000);
 			}
 			
 			ECDC_CB_Print = cal_print_copy;
