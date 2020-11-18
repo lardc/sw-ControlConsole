@@ -198,111 +198,113 @@ function ECCB_PrintNodeSetting(Name, Index)
 	p(Name + ',\tnid[' + Index + ']: ' + dev.r(Index) + ',\tem[' + (Index + 10) + ']: ' + dev.r(Index + 10))
 }
 
-function ECCBM_Leak(Voltage, Current, ControlVoltage, ControlCurrent, ControlMode, LeakMode)
+function ECCBM_ExecAndWait(Command)
+{
+	dev.c(Command)
+	
+	while(dev.r(192) == 4 && !anykey())
+		sleep(100)
+}
+
+function ECCBM_Config(CaseType, ControlType, ControlVoltage, ControlCurrent)
+{
+	dev.w(129, CaseType)
+	
+	// 1 - IDC, 2 - VDC, 3 - VAC
+	dev.w(131, ControlType)
+	
+	w32d(132, 150, ControlVoltage)
+	w32d(133, 151, ControlCurrent)
+}
+
+function ECCBM_PrintCommon()
+{
+	if(dev.r(192) == 3)
+	{
+		if(dev.r(197) == 1)
+		{
+			p('Vctrl:\t' + r32d(201, 233))
+			p('Ictrl:\t' + r32d(200, 232) + '\n')
+			p('Ips1:\t' + dev.r(203))
+			p('Ips2:\t' + dev.r(204) + '\n')
+			
+			return true
+		}
+		else
+			p('Bad operation result')
+	}
+	else
+		p('Wrong state: ' + dev.r(192))
+	
+	return false
+}
+
+function ECCBM_Leak(Voltage, Current, LeakageType)
 {
 	dev.w(128, 1)
 	
-	// 1 - IDC, 2 - VDC, 3 - VAC
-	dev.w(131, ControlMode)
-	
-	w32d(132, 150, ControlVoltage)
-	w32d(133, 151, ControlCurrent)
-	
 	// 1 - DC, 2 - AC
-	dev.w(134, LeakMode)
+	dev.w(134, LeakageType)
 	
 	w32d(139, 153, Voltage)
 	w32d(138, 152, Current)
 	
-	dev.c(100)
+	ECCBM_ExecAndWait(100)
 	
-	while(dev.r(192) == 4)
-		sleep(100)
-	
-	if(dev.r(192) == 3)
+	if(ECCBM_PrintCommon())
 	{
-		p('Vd :\t' + r32d(199, 231))
-		p('Id :\t' + r32(208))
-		p('Vctrl :\t' + r32d(201, 233))
-		p('Ictrl :\t' + r32d(200, 232))
+		p('Vd:\t' + r32d(199, 231))
+		p('Id:\t' + r32(208))
 	}
-	else
-		p('Wrong state: ' + dev.r(192))
 }
 
-function ECCBM_OnState(Voltage, Current, ControlVoltage, ControlCurrent, ControlMode)
+function ECCBM_OnState(Voltage, Current)
 {
 	dev.w(128, 2)
 	
-	// 1 - IDC, 2 - VDC, 3 - VAC
-	dev.w(131, ControlMode)
-	
-	w32d(132, 150, ControlVoltage)
-	w32d(133, 151, ControlCurrent)
-	
 	w32d(139, 153, Voltage)
 	w32d(138, 152, Current)
 	
-	dev.c(100)
+	ECCBM_ExecAndWait(100)
 	
-	while(dev.r(192) == 4)
-		sleep(100)
-	
-	if(dev.r(192) == 3)
+	if(ECCBM_PrintCommon())
 	{
-		p('Vt :\t' + r32d(199, 231))
-		p('It :\t' + r32(208))
-		p('Vctrl :\t' + r32d(201, 233))
-		p('Ictrl :\t' + r32d(200, 232))
+		p('Vt:\t' + r32d(199, 231))
+		p('It:\t' + r32(208))
 	}
-	else
-		p('Wrong state: ' + dev.r(192))
 }
 
 function ECCBM_Control(ControlVoltage, ControlCurrent, ControlMode)
 {
 	dev.w(128, 3)
 	
-	// 1 - IDC, 2 - VDC, 3 - VAC
-	dev.w(131, ControlMode)
+	ECCBM_ExecAndWait(100)
 	
-	w32d(132, 150, ControlVoltage)
-	w32d(133, 151, ControlCurrent)
-	
-	dev.c(100)
-	
-	while(dev.r(192) == 4)
-		sleep(100)
-	
-	if(dev.r(192) == 3)
-	{
-		p('Vctrl :\t' + r32d(201, 233))
-		p('Ictrl :\t' + r32d(200, 232))
-	}
-	else
-		p('Wrong state: ' + dev.r(192))
+	ECCBM_PrintCommon()
 }
 
 function ECCBM_Calibrate(Voltage, Current, Type, Node)
 {
+	// CN_DC1 = 1
+	// CN_DC2 = 2
+	// CN_DC3 = 3
+	// CN_HVDC = 4
+	// CN_AC1 = 5
+	// CN_AC2 = 6
+	// CN_CB = 7
 	dev.w(160, Node)
 	
 	// 1 - Current, 2 - Voltage
 	dev.w(161, Type)
 	
-	// 1 - IDC, 2 - VDC, 3 - VAC
-	dev.w(131, ControlMode)
-	
 	w32(162, Voltage)
 	w32(164, Current)
 	
-	dev.c(104)
+	ECCBM_ExecAndWait(104)
 	
-	while(dev.r(192) == 4)
-		sleep(100)
-	
-	if(dev.r(192) == 3)
-		p('ok')
-	else
-		p('Wrong state: ' + dev.r(192))
+	if(ECCBM_PrintCommon())
+	{
+		p('Vcal:\t' + r32(240))
+		p('Ical:\t' + r32(242))
+	}
 }
