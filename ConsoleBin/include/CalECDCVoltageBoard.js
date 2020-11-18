@@ -702,33 +702,33 @@ function CAL_PrintCoefIdLv()
 	{
 		case 0:
 		{
-			print("Id 0 P0			: " + dev.rs(42));
-			print("Id 0 P1 x1000	: " + dev.rs(41));
-			print("Id 0 P2 x1e6		: " + dev.rs(40));
+			print("Id 0 P0		: " + dev.rs(42));
+			print("Id 0 P1 x1000	: " + dev.r(41));
+			print("Id 0 P2 x1e6	: " + dev.rs(40));
 		}
 		break;
 		
 		case 1:
 		{
-			print("Id 1 P0			: " + dev.rs(48));
-			print("Id 1 P1 x1000	: " + dev.rs(47));
-			print("Id 1 P2 x1e6		: " + dev.rs(46));
+			print("Id 1 P0		: " + dev.rs(48));
+			print("Id 1 P1 x1000	: " + dev.r(47));
+			print("Id 1 P2 x1e6	: " + dev.rs(46));
 		}
 		break;
 		
 		case 2:
 		{
-			print("Id 2 P0			: " + dev.rs(54));
-			print("Id 2 P1 x1000	: " + dev.rs(53));
-			print("Id 2 P2 x1e6		: " + dev.rs(52));
+			print("Id 2 P0		: " + dev.rs(54));
+			print("Id 2 P1 x1000	: " + dev.r(53));
+			print("Id 2 P2 x1e6	: " + dev.rs(52));
 		}
 		break;
 		
 		case 3:
 		{
-			print("Id 3 P0			: " + dev.rs(60));
-			print("Id 3 P1 x1000	: " + dev.rs(59));
-			print("Id 3 P2 x1e6		: " + dev.rs(58));
+			print("Id 3 P0		: " + dev.rs(60));
+			print("Id 3 P1 x1000	: " + dev.r(59));
+			print("Id 3 P2 x1e6	: " + dev.rs(58));
 		}
 		break;
 	}
@@ -740,33 +740,33 @@ function CAL_PrintCoefUd()
 	{
 		case 0:
 		{
-			print("Ud 0 P0			: " + dev.rs(66));
-			print("Ud 0 P1 x1000	: " + dev.rs(65));
-			print("Ud 0 P2 x1e6		: " + dev.rs(64));
+			print("Ud 0 P0		: " + dev.rs(66));
+			print("Ud 0 P1 x1000	: " + dev.r(65));
+			print("Ud 0 P2 x1e6	: " + dev.rs(64));
 		}
 		break;
 		
 		case 1:
 		{
-			print("Ud 1 P0			: " + dev.rs(72));
-			print("Ud 1 P1 x1000	: " + dev.rs(71));
-			print("Ud 1 P2 x1e6		: " + dev.rs(70));
+			print("Ud 1 P0		: " + dev.rs(72));
+			print("Ud 1 P1 x1000	: " + dev.r(71));
+			print("Ud 1 P2 x1e6	: " + dev.rs(70));
 		}
 		break;
 		
 		case 2:
 		{
-			print("Ud 2 P0			: " + dev.rs(78));
-			print("Ud 2 P1 x1000	: " + dev.rs(77));
-			print("Ud 2 P2 x1e6		: " + dev.rs(76));
+			print("Ud 2 P0		: " + dev.rs(78));
+			print("Ud 2 P1 x1000	: " + dev.r(77));
+			print("Ud 2 P2 x1e6	: " + dev.rs(76));
 		}
 		break;
 		
 		case 3:
 		{
-			print("Ud 3 P0			: " + dev.rs(84));
-			print("Ud 3 P1 x1000	: " + dev.rs(83));
-			print("Ud 3 P2 x1e6		: " + dev.rs(82));
+			print("Ud 3 P0		: " + dev.rs(84));
+			print("Ud 3 P1 x1000	: " + dev.r(83));
+			print("Ud 3 P2 x1e6	: " + dev.rs(82));
 		}
 		break;
 	}
@@ -778,33 +778,33 @@ function CAL_PrintCoefIdHv()
 	{
 		case 0:
 		{
-			print("Id 0 P0			: " + dev.rs(90));
-			print("Id 0 P1 x1000	: " + dev.rs(89));
-			print("Id 0 P2 x1e6		: " + dev.rs(88));
+			print("Id 0 P0		: " + dev.rs(90));
+			print("Id 0 P1 x1000	: " + dev.r(89));
+			print("Id 0 P2 x1e6	: " + dev.rs(88));
 		}
 		break;
 		
 		case 1:
 		{
-			print("Id 1 P0			: " + dev.rs(96));
-			print("Id 1 P1 x1000	: " + dev.rs(95));
-			print("Id 1 P2 x1e6		: " + dev.rs(94));
+			print("Id 1 P0		: " + dev.rs(96));
+			print("Id 1 P1 x1000	: " + dev.r(95));
+			print("Id 1 P2 x1e6	: " + dev.rs(94));
 		}
 		break;
 		
 		case 2:
 		{
-			print("Id 2 P0			: " + dev.rs(102));
-			print("Id 2 P1 x1000	: " + dev.rs(101));
-			print("Id 2 P2 x1e6		: " + dev.rs(100));
+			print("Id 2 P0		: " + dev.rs(102));
+			print("Id 2 P1 x1000	: " + dev.r(101));
+			print("Id 2 P2 x1e6	: " + dev.rs(100));
 		}
 		break;
 		
 		case 3:
 		{
-			print("Id 3 P0			: " + dev.rs(108));
-			print("Id 3 P1 x1000	: " + dev.rs(107));
-			print("Id 3 P2 x1e6		: " + dev.rs(106));
+			print("Id 3 P0		: " + dev.rs(108));
+			print("Id 3 P1 x1000	: " + dev.r(107));
+			print("Id 3 P2 x1e6	: " + dev.rs(106));
 		}
 		break;
 	}
