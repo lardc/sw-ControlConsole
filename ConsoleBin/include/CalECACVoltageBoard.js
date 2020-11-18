@@ -216,15 +216,12 @@ function CAL_Collect(VoltageValues, IterationsCount, PrintMode)
 {
 	cal_cntTotal = IterationsCount * VoltageValues.length;
 	cal_cntDone = 1;
-		
-	// Horizontal settings
-	TEK_Horizontal("1e-2", 0);
 	
-	// Init measurement and set trigger
-	if(CAL_SetMeasuringChanellAndTrigger(PrintMode)) return 0;	
-
 	CAL_MessageAboutParams(PrintMode);
 	
+	// Init measurement and set trigger	
+	if(CAL_SetMeasuringChanellAndTrigger(PrintMode)) return 0;	
+
 	for (var i = 0; i < IterationsCount; i++)
 	{
 		for (var j = 0; j < VoltageValues.length; j++)
@@ -519,9 +516,9 @@ function CAL_WaitReadyVoltage()
 //------------------------
 function CAL_WideCurrentRangeEnable()
 {
-	dev.w(REG_CURRENT_RANGE1_SAFETY_LIMIT, 10);
-	dev.w(REG_CURRENT_RANGE2_SAFETY_LIMIT, 10);
-	dev.w(REG_CURRENT_RANGE3_SAFETY_LIMIT, 10);
+	dev.w(REG_CURRENT_RANGE1_SAFETY_LIMIT, 5);
+	dev.w(REG_CURRENT_RANGE2_SAFETY_LIMIT, 5);
+	dev.w(REG_CURRENT_RANGE3_SAFETY_LIMIT, 5);
 }
 //------------------------
 
@@ -558,6 +555,9 @@ function CAL_WaitCollect()
 
 function CAL_SetMeasuringChanellAndTrigger(PrintMode)
 {
+	// Horizontal settings
+	TEK_Horizontal("1e-2", 0);
+	
 	if(PrintMode == cal_PrintModeU)
 	{	
 		TEK_ChannelOff(cal_chMeasureId);
@@ -576,14 +576,14 @@ function CAL_SetMeasuringChanellAndTrigger(PrintMode)
 		{
 			TEK_ChannelInit(cal_chMeasureId, "100", "1");
 			TEK_Send("ch" + cal_chMeasureId + ":position -1");
-			CAL_TekMeasurement(cal_chMeasureId, "1");
+			CAL_TekMeasurement(cal_chMeasureId, "0.1");
 			if(CAL_WaitUserAction("To measure Current in LOW range, connect HV voltage probe (x100) to chanell " + cal_chMeasureId + " oscilloscope.")) return 0;
 		}
 		else
 		{
 			TEK_ChannelInit(cal_chMeasureId, "1", "1");
 			TEK_Send("ch" + cal_chMeasureId + ":position -1");
-			CAL_TekMeasurement(cal_chMeasureId, "0.05");
+			CAL_TekMeasurement(cal_chMeasureId, "0.01");
 			if(CAL_WaitUserAction("To measure Current in MIDDLE or HIGH, connect voltage probe (x1) to chanell " + cal_chMeasureId + " oscilloscope.")) return 0;
 		}
 	}
@@ -596,6 +596,7 @@ function CAL_SetMeasuringChanellAndTrigger(PrintMode)
 
 function CAL_MessageAboutParams(PrintMode)
 {
+	p("Start measurement with next parameters:");
 	if(PrintMode == cal_PrintModeU)
 	{		
 		p("Voltage range " + cal_VoltageRangeArrayMin[cal_VoltageRange] + " ... " + cal_VoltageRangeArrayMax[cal_VoltageRange] + " mV");
