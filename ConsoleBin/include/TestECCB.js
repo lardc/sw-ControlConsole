@@ -217,6 +217,15 @@ function ECCBM_Config(CaseType, ControlType, ControlVoltage, ControlCurrent)
 	w32d(133, 151, ControlCurrent)
 }
 
+function ECCBM_ConfigPS(VoltagePS1, CurrentPS1, VoltagePS2, CurrentPS2)
+{
+	w32d(140, 154, VoltagePS1)
+	w32d(141, 155, CurrentPS1)
+	
+	w32d(142, 156, VoltagePS2)
+	w32d(143, 157, CurrentPS2)
+}
+
 function ECCBM_PrintCommon()
 {
 	if(dev.r(192) == 3)
@@ -274,7 +283,7 @@ function ECCBM_OnState(Voltage, Current)
 	}
 }
 
-function ECCBM_Control(ControlVoltage, ControlCurrent, ControlMode)
+function ECCBM_Control()
 {
 	dev.w(128, 3)
 	
