@@ -266,8 +266,8 @@ function ECCBM_Leak(Voltage, Current, LeakageType)
 	
 	if(ECCBM_PrintCommon())
 	{
-		p('Vd:\t' + (r32d(199, 231) / 1000))
-		p('Id:\t' + (r32(208) / 1000))
+		p('Vd:\t' + (r32(206) / 1000))
+		p('Id:\t' + (r32d(198, 230) / 1000))
 	}
 }
 
