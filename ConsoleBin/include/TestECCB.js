@@ -232,10 +232,14 @@ function ECCBM_PrintCommon()
 	{
 		if(dev.r(197) == 1)
 		{
-			p('Vctrl:\t' + r32d(201, 233))
-			p('Ictrl:\t' + r32d(200, 232) + '\n')
-			p('Ips1:\t' + dev.r(203))
-			p('Ips2:\t' + dev.r(204) + '\n')
+			p('Vctrl:\t' + (r32d(201, 233) / 1000))
+			p('Ictrl:\t' + (r32d(200, 232) / 1000) + '\n')
+			
+			p('Vps1:\t' + (r32(244) / 1000))
+			p('Ips1:\t' + (r32d(203, 235) / 1000) + '\n')
+			
+			p('Vps2:\t' + (r32(246) / 1000))
+			p('Ips2:\t' + (r32d(204, 236) / 1000) + '\n')
 			
 			return true
 		}
@@ -262,8 +266,8 @@ function ECCBM_Leak(Voltage, Current, LeakageType)
 	
 	if(ECCBM_PrintCommon())
 	{
-		p('Vd:\t' + r32d(199, 231))
-		p('Id:\t' + r32(208))
+		p('Vd:\t' + (r32d(199, 231) / 1000))
+		p('Id:\t' + (r32(208) / 1000))
 	}
 }
 
@@ -278,8 +282,8 @@ function ECCBM_OnState(Voltage, Current)
 	
 	if(ECCBM_PrintCommon())
 	{
-		p('Vt:\t' + r32d(199, 231))
-		p('It:\t' + r32(208))
+		p('Vt:\t' + (r32d(199, 231) / 1000))
+		p('It:\t' + (r32(208) / 1000))
 	}
 }
 
@@ -313,7 +317,7 @@ function ECCBM_Calibrate(Voltage, Current, Type, Node)
 	
 	if(ECCBM_PrintCommon())
 	{
-		p('Vcal:\t' + r32(240))
-		p('Ical:\t' + r32(242))
+		p('Vcal:\t' + (r32(240) / 1000))
+		p('Ical:\t' + (r32(242) / 1000))
 	}
 }
