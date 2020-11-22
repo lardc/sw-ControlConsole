@@ -198,7 +198,7 @@ function ECCB_PrintNodeSetting(Name, Index)
 	p(Name + ',\tnid[' + Index + ']: ' + dev.r(Index) + ',\tem[' + (Index + 10) + ']: ' + dev.r(Index + 10))
 }
 
-function ECCBM_ExecAndWait(Command)
+function ECCB_ExecAndWait(Command)
 {
 	dev.c(Command)
 	
@@ -206,7 +206,7 @@ function ECCBM_ExecAndWait(Command)
 		sleep(100)
 }
 
-function ECCBM_Config(CaseType, ControlType, ControlVoltage, ControlCurrent)
+function ECCB_Config(CaseType, ControlType, ControlVoltage, ControlCurrent)
 {
 	dev.w(129, CaseType)
 	
@@ -217,7 +217,7 @@ function ECCBM_Config(CaseType, ControlType, ControlVoltage, ControlCurrent)
 	w32d(133, 151, ControlCurrent)
 }
 
-function ECCBM_ConfigPS(VoltagePS1, CurrentPS1, VoltagePS2, CurrentPS2)
+function ECCB_ConfigPS(VoltagePS1, CurrentPS1, VoltagePS2, CurrentPS2)
 {
 	w32d(140, 154, VoltagePS1)
 	w32d(141, 155, CurrentPS1)
@@ -226,7 +226,7 @@ function ECCBM_ConfigPS(VoltagePS1, CurrentPS1, VoltagePS2, CurrentPS2)
 	w32d(143, 157, CurrentPS2)
 }
 
-function ECCBM_PrintCommon()
+function ECCB_PrintCommon()
 {
 	if(dev.r(192) == 3)
 	{
@@ -252,7 +252,7 @@ function ECCBM_PrintCommon()
 	return false
 }
 
-function ECCBM_Leak(Voltage, Current, LeakageType)
+function ECCB_Leak(Voltage, Current, LeakageType)
 {
 	dev.w(128, 1)
 	
@@ -262,41 +262,41 @@ function ECCBM_Leak(Voltage, Current, LeakageType)
 	w32d(139, 153, Voltage)
 	w32d(138, 152, Current)
 	
-	ECCBM_ExecAndWait(100)
+	ECCB_ExecAndWait(100)
 	
-	if(ECCBM_PrintCommon())
+	if(ECCB_PrintCommon())
 	{
 		p('Vd:\t' + (r32(206) / 1000))
 		p('Id:\t' + (r32d(198, 230) / 1000))
 	}
 }
 
-function ECCBM_OnState(Voltage, Current)
+function ECCB_OnState(Voltage, Current)
 {
 	dev.w(128, 2)
 	
 	w32d(139, 153, Voltage)
 	w32d(138, 152, Current)
 	
-	ECCBM_ExecAndWait(100)
+	ECCB_ExecAndWait(100)
 	
-	if(ECCBM_PrintCommon())
+	if(ECCB_PrintCommon())
 	{
 		p('Vt:\t' + (r32d(199, 231) / 1000))
 		p('It:\t' + (r32(208) / 1000))
 	}
 }
 
-function ECCBM_Control()
+function ECCB_Control()
 {
 	dev.w(128, 3)
 	
-	ECCBM_ExecAndWait(100)
+	ECCB_ExecAndWait(100)
 	
-	ECCBM_PrintCommon()
+	ECCB_PrintCommon()
 }
 
-function ECCBM_Calibrate(Voltage, Current, Type, Node)
+function ECCB_Calibrate(Voltage, Current, Type, Node)
 {
 	// CN_DC1 = 1
 	// CN_DC2 = 2
@@ -313,9 +313,9 @@ function ECCBM_Calibrate(Voltage, Current, Type, Node)
 	w32(162, Voltage)
 	w32(164, Current)
 	
-	ECCBM_ExecAndWait(104)
+	ECCB_ExecAndWait(104)
 	
-	if(ECCBM_PrintCommon())
+	if(ECCB_PrintCommon())
 	{
 		p('Vcal:\t' + (r32(240) / 1000))
 		p('Ical:\t' + (r32(242) / 1000))
