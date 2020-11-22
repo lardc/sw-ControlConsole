@@ -198,6 +198,12 @@ function ECCB_PrintNodeSetting(Name, Index)
 	p(Name + ',\tnid[' + Index + ']: ' + dev.r(Index) + ',\tem[' + (Index + 10) + ']: ' + dev.r(Index + 10))
 }
 
+function ECCB_EmulationAll(NewState)
+{
+	for (var i = 10; i <= 17; i++)
+		dev.w(i, NewState ? 1 : 0)
+}
+
 function ECCB_ExecAndWait(Command)
 {
 	dev.c(Command)
