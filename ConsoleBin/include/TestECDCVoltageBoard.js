@@ -26,7 +26,7 @@ function ECDC_VB_Measure(Current, Voltage)
 		{
 			if(ECDC_VB_Print)
 			{
-				print("DUT Current, uA: " + r32(200));
+				print("DUT Current, uA: " + r32(200) / 100);
 				print("DUT Voltage, mV: " + r32(202));
 				print("---------------");
 				print("");

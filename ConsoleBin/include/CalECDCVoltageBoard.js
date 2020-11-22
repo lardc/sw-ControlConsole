@@ -7,8 +7,8 @@ cal_CurrentRangeLv = 0;
 cal_VoltageRange = 0;
 cal_CurrentRangeHv = 0;
 
-cal_Rload = 1;		// Load resistance in Ohm
-cal_Rshunt = 1;		// Shunt resistance in Ohm
+cal_Rload = 2620000;		// Load resistance in Ohm
+cal_Rshunt = 50300;		// Shunt resistance in Ohm
 
 // Hardware definitions
 cal_CurrentRangeLvArrayMin = [8, 110, 1010, 10010];							// Min current values for ranges
@@ -192,7 +192,7 @@ function CAL_CalibrateIdHv()
 {	
 	// Collect data
 	var IdMin = cal_CurrentRangeHvArrayMin[cal_CurrentRangeHv];
-	var IdMax = cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv];
+	var IdMax = cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv] * cal_HvDev;
 	var IdStp = ((IdMax - IdMin) / 10) + 1;
 	
 	cal_HvDev = 0.90;
@@ -337,11 +337,11 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-			print("-- target uA " + CurrentValues[j]);
+			print("Itarget uA: " + CurrentValues[j]);
 			//
 			CAL_TekScale(cal_chMeasureId, CurrentValues[j]* cal_Rload / 1000000);
 			TEK_TriggerLevelF((CurrentValues[j]* cal_Rload / 1000000) * 0.30);
-			sleep(1500);
+			sleep(1000);
 
 			//
 			var cal_print_copy = ECDC_VB_Print;
@@ -349,28 +349,27 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				ECDC_VB_Measure(CurrentValues[j], 20000);
-				sleep(2000);
+				ECDC_VB_Measure(CurrentValues[j] * 100, 20000);
+				sleep(1000);
 			}
 			
 			ECDC_VB_Print = cal_print_copy;
 			
 			// Unit data
-			var IdRead = r32(200);
+			var IdRead = r32(200) / 100;
 			cal_Idlv.push(IdRead);
 			print("Idread, uA: " + IdRead);
 
 			// Scope data
-			sleep(1000);
 			var IdSc = (CAL_Measure(cal_chMeasureId, "6") * 1000000 / cal_Rload ).toFixed(2);
 			cal_IdlvSc.push(IdSc);
-			print("Idtek, uA: " + IdSc);
+			print("Idtek, uA : " + IdSc);
 
 			// Relative error
 			var IdErr = ((IdRead - IdSc) / IdSc * 100).toFixed(2);
 			cal_IdlvErr.push(IdErr);
-			print("Iderr, %: " + IdErr);
-			print("--------------------");
+			print("Iderr, %  : " + IdErr);
+			print("");
 			
 			if (anykey()) return 0;
 		}
@@ -406,11 +405,11 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 		for (var j = 0; j < VoltageValues.length; j++)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-			print("-- target " + VoltageValues[j]);
+			print("Utarget, V: " + VoltageValues[j]);
 			//
 			CAL_TekScale(cal_chMeasureUd, VoltageValues[j]/1000);
 			TEK_TriggerLevelF((VoltageValues[j] / 1000) * 0.5);
-			sleep(1500);
+			sleep(1000);
 
 			//
 			var cal_print_copy = ECDC_VB_Print;
@@ -421,15 +420,12 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 				if(cal_VoltageRange < 3)
 				{
 					ECDC_VB_Measure(100000, VoltageValues[j]);
-					sleep(5000);
+					sleep(2000);
 				}
 				else
 				{
-					dev.c(63);
-					sleep(4000);
-					dev.c(64);
 					ECDC_VB_Measure(80000, VoltageValues[j]);
-					sleep(1500);
+					sleep(2000);
 				}
 			}
 			
@@ -443,13 +439,13 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 			// Scope data
 			var UdSc = (CAL_Measure(cal_chMeasureUd, "3") * 1000).toFixed(2);
 			cal_UdSc.push(UdSc);
-			print("Udtek, mV: " + UdSc);
+			print("Udtek, mV : " + UdSc);
 
 			// Relative error
 			var UdErr = ((UdRead - UdSc) / UdSc * 100).toFixed(2);
 			cal_UdErr.push(UdErr);
-			print("Uderr, %: " + UdErr);
-			print("--------------------");
+			print("Uderr, %  : " + UdErr);
+			print("");
 			
 			if (anykey()) return 0;
 		}
@@ -484,11 +480,11 @@ function CAL_IdHvCollect(CurrentValues, IterationsCount)
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-			print("-- target " + (CurrentValues[j]).toFixed(0));
+			print("Itarget, uA    : " + (CurrentValues[j]).toFixed(0));
 			//
 			CAL_TekScale(cal_chMeasureId, CurrentValues[j]* cal_Rshunt / 1000000);
 			TEK_TriggerLevelF((CurrentValues[j]* cal_Rshunt / 1000000) * 0.4);
-			sleep(1500);
+			sleep(1000);
 
 			//
 			var cal_print_copy = ECDC_VB_Print;
@@ -496,30 +492,30 @@ function CAL_IdHvCollect(CurrentValues, IterationsCount)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				dev.c(63);
-				sleep(4000);
-				dev.c(64);
-				ECDC_VB_Measure(cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv], (CurrentValues[j] * (cal_Rload * cal_HvDev) / 1000).toFixed(2));
-				print("-- voltage " + (CurrentValues[j] * (cal_Rload * cal_HvDev) / 1000).toFixed(2));
+				ECDC_VB_Measure(cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv], (CurrentValues[j] * cal_Rload / 1000).toFixed(2));
+				
+				if(!k)
+					print("Test voltage, V: " + (CurrentValues[j] * cal_Rload / 1000).toFixed(2));
+				
 				sleep(1000);
 			}
 			
 			ECDC_VB_Print = cal_print_copy;
 			
 			// Unit data
-			var IdRead = r32(200);
+			var IdRead = r32(200) / 100;
 			cal_Idhv.push(IdRead);
-			print("Idread, uA: " + IdRead);
+			print("Idread, uA     : " + IdRead);
 
 			// Scope data
 			var IdSc = (CAL_Measure(cal_chMeasureId, "6") / cal_Rshunt * 1000000).toFixed(2);
 			cal_IdhvSc.push(IdSc);
-			print("Idtek, uA: " + IdSc);
+			print("Idtek, uA      : " + IdSc);
 
 			// Relative error
 			var IdErr = ((IdRead - IdSc) / IdSc * 100).toFixed(2);
 			cal_IdhvErr.push(IdErr);
-			print("Iderr, %: " + IdErr);
+			print("Iderr, %       : " + IdErr);
 			print("--------------------");
 			
 			if (anykey()) return 0;
