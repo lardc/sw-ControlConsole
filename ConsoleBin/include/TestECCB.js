@@ -212,9 +212,25 @@ function ECCB_ExecAndWait(Command)
 		sleep(100)
 }
 
-function ECCB_Config(CaseType, ControlType, ControlVoltage, ControlCurrent)
+function ECCB_Config(CaseType, Position, ControlType, ControlVoltage, ControlCurrent)
 {
+	// A1 = 1,
+	// I1 = 2,
+	// I6 = 3,
+	// B1 = 4,
+	// B2 = 5,
+	// B5 = 6,
+	// V1 = 7,
+	// V2 = 8,
+	// V104 = 9,
+	// V108 = 10,
+	// L1 = 11,
+	// L2 = 12,
+	// D1 = 13,
+	// D2 = 14,
+	// D192 = 15
 	dev.w(129, CaseType)
+	dev.w(130, Position)
 	
 	// 1 - IDC, 2 - VDC, 3 - VAC
 	dev.w(131, ControlType)
