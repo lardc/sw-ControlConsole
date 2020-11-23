@@ -248,7 +248,7 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 			print("IdTarget, uA: " + CurrentValues[j]);
 			
 			CAL_TekScale(cal_chMeasureId, (CurrentValues[j] * cal_LoadResistance / 1000000));
-			TEK_TriggerLevelF((CurrentValues[j]* cal_LoadResistance / 1000000) * 0.35);
+			((CurrentValues[j]* cal_LoadResistance / 1000000) * 0.35);
 			sleep(1500);
 
 			//
@@ -331,7 +331,7 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 			print("-- result " + cal_cntDone++ + " of " + cal_cntTotal + " --");
 			
 			CAL_TekScale(cal_chMeasureId, (VoltageValues[j] / 1000000));
-			TEK_TriggerLevelF((VoltageValues[j] / 1000000) * 0.35);
+			TEK_TriggerLevelF((VoltageValues[j] / 1000000) * 0.5);
 			CAL_TekScale(cal_chMeasureUd, (VoltageValues[j] / 1000000));
 			
 			sleep(1000);
