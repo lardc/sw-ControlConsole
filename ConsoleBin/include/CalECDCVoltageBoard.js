@@ -7,8 +7,8 @@ cal_CurrentRangeLv = 0;
 cal_VoltageRange = 0;
 cal_CurrentRangeHv = 0;
 
-cal_Rload = 2620000;		// Load resistance in Ohm
-cal_Rshunt = 50300;		// Shunt resistance in Ohm
+cal_Rload = 1;		// Load resistance in Ohm
+cal_Rshunt = 1;		// Shunt resistance in Ohm
 
 // Hardware definitions
 cal_CurrentRangeLvArrayMin = [8, 110, 1010, 10010];							// Min current values for ranges
@@ -312,7 +312,7 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 	{
 		if(cal_CurrentRangeLv == 0)
 		{
-			AvgNum = 20;
+			AvgNum = 10;
 		}
 		else
 		{
@@ -326,9 +326,9 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
-	TEK_Horizontal("200e-6", "20e-3");
+	TEK_Horizontal("5e-3", "30e-3");
 	CAL_TekMeasurement(cal_chMeasureId);
-	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "5e-3", "positive", "outside");
+	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "20e-3", "positive", "outside");
 	sleep(1000);
 	
 	
@@ -349,7 +349,7 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				ECDC_VB_Measure(CurrentValues[j] * 100, 20000);
+				ECDC_VB_Measure(CurrentValues[j], 20000);
 				sleep(1000);
 			}
 			
@@ -471,8 +471,9 @@ function CAL_IdHvCollect(CurrentValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
+	TEK_Horizontal("5e-3", "30e-3");
 	CAL_TekMeasurement(cal_chMeasureId);
-	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "5e-3", "positive", "outside");
+	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "20e-3", "positive", "outside");
 	sleep(1000);
 	
 	for (var i = 0; i < IterationsCount; i++)
