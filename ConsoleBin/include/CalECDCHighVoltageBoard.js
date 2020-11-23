@@ -5,18 +5,19 @@ include("CalGeneral.js")
 // Calibration setup parameters
 cal_Points = 10;
 
-cal_Rshunt = 99900;
-cal_Rload = 40100000;
+cal_Rshunt = 233.8;
+cal_Rload = 195600;
 
-cal_UdMax  = 1400;
-cal_UdMin = 5;
-cal_UdStp = (cal_UdMax - cal_UdMin) / cal_Points;
+cal_CurrentRange = 2;	// 0 = 6 - 25uA; 1 = 25 - 250uA; 2 = 250 - 2000uA; 3 = 2 - 20mA;
+cal_VoltageRange = 1;	// 0 = 25 - 100V; 1 = 100 - 2000V;
 
-cal_CurrentRange = 0;
+cal_UdMax = [100, 2000];	
+cal_UdMin = [25, 99.9];
+cal_UdStp = (cal_UdMax[cal_VoltageRange] - cal_UdMin[cal_VoltageRange]) / cal_Points;
 
-cal_CurrentRangeArrayMin = [3, 25, 250, 2000];	
-cal_CurrentRangeArrayMax = [24.9, 249.9, 1999.9, 20000];
-cal_IdStp = (cal_CurrentRangeArrayMax[cal_CurrentRange] - cal_CurrentRangeArrayMin[cal_CurrentRange]) / cal_Points;
+cal_IdMin = [6, 24.9, 249.9, 1999.9];	
+cal_IdMax = [25, 250, 2000, 20000];
+cal_IdStp = (cal_IdMax[cal_CurrentRange] - cal_IdMin[cal_CurrentRange]) / cal_Points;
 
 cal_Iterations = 3;
 cal_UseAvg = 1;
@@ -77,7 +78,6 @@ function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd, chann
 	}
 	TEK_ChannelInit(cal_chSync, "1", "1");
 	TEK_TriggerInit(cal_chSync, "2");
-	TEK_Send("trigger:main:edge:slope fall");
 	TEK_Horizontal("2.5e-3", "-5e-3");
 }
 //--------------------
@@ -93,7 +93,7 @@ function CAL_CalibrateUd()
 	CAL_TekInitUd();
 	
 	// Reload values
-	var VoltageArray = CGEN_GetRange(cal_UdMin, cal_UdMax, cal_UdStp);
+	var VoltageArray = CGEN_GetRange(cal_UdMin[cal_VoltageRange], cal_UdMax[cal_VoltageRange], cal_UdStp);
 	
 	if (CAL_CollectUd(VoltageArray, cal_Iterations))
 	{
@@ -123,7 +123,7 @@ function CAL_CalibrateId()
 	CAL_TekInitId(cal_chMeasureId);
 
 	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_CurrentRangeArrayMin[cal_CurrentRange], cal_CurrentRangeArrayMax[cal_CurrentRange], cal_IdStp);
+	var CurrentArray = CGEN_GetRange(cal_IdMin[cal_CurrentRange], cal_IdMax[cal_CurrentRange], cal_IdStp);
 
 	if (CAL_CollectId(CurrentArray, cal_Iterations))
 	{
@@ -152,7 +152,7 @@ function CAL_VerifyUd()
 	CAL_TekInitUd();
 	
 	// Reload values
-	var VoltageArray = CGEN_GetRange(cal_UdMin, cal_UdMax, cal_UdStp);
+	var VoltageArray = CGEN_GetRange(cal_UdMin[cal_VoltageRange], cal_UdMax[cal_VoltageRange], cal_UdStp);
 
 	if (CAL_CollectUd(VoltageArray, cal_Iterations))
 	{
@@ -176,7 +176,7 @@ function CAL_VerifyId()
 	CAL_TekInitId();
 
 	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_CurrentRangeArrayMin[cal_CurrentRange], cal_CurrentRangeArrayMax[cal_CurrentRange], cal_IdStp);
+	var CurrentArray = CGEN_GetRange(cal_IdMin[cal_CurrentRange], cal_IdMax[cal_CurrentRange], cal_IdStp);
 
 	if (CAL_CollectId(CurrentArray, cal_Iterations))
 	{
@@ -216,7 +216,6 @@ function CAL_CollectUd(VoltageValues, IterationsCount)
 			
 			ECDC_HV_TekScale(cal_chMeasureUd, VoltageValues[j]);
 			TEK_TriggerInit(cal_chSync, 2);
-			TEK_Send("trigger:main:edge:slope fall");
 			sleep(1000);
 			
 			var PrintTemp = ECDC_HV_print;
@@ -224,7 +223,8 @@ function CAL_CollectUd(VoltageValues, IterationsCount)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				ECDC_HV_Measure(VoltageValues[j] * 10, cal_CurrentRangeArrayMax[cal_CurrentRange] * 100);
+				if(!ECDC_HV_Measure(VoltageValues[j] * 10, cal_IdMax[3] * 100))
+					return 0;
 			}
 			
 			ECDC_HV_print = PrintTemp;
@@ -235,7 +235,7 @@ function CAL_CollectUd(VoltageValues, IterationsCount)
 			print("Udread, V: " + UdRead);
 
 			// Scope data
-			var UdSc = CAL_Measure(cal_chMeasureUd, 2);
+			var UdSc = CAL_Measure(cal_chMeasureUd).toFixed(1);
 			cal_UdSc.push(UdSc);
 			print("Udtek,  V: " + UdSc);
 
@@ -278,7 +278,6 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 			//
 			ECDC_HV_TekScale(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
 			TEK_TriggerInit(cal_chSync, 2);
-			TEK_Send("trigger:main:edge:slope fall");
 			sleep(1000);
 			
 			var PrintTemp = ECDC_HV_print;
@@ -286,7 +285,8 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				ECDC_HV_Measure(CurrentValues[j] * cal_Rload / 100000, cal_CurrentRangeArrayMax[cal_CurrentRange] * 100);
+				if(!ECDC_HV_Measure(CurrentValues[j] * cal_Rload / 100000, cal_IdMax[cal_CurrentRange] * 100))
+					return 0;
 			}
 			
 			ECDC_HV_print = PrintTemp;
@@ -297,7 +297,7 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 			print("Idread, uA: " + IdRead);
 
 			// Scope data
-			var IdSc = (CAL_Measure(cal_chMeasureId, 4) / cal_Rshunt * 1000000).toFixed(2);
+			var IdSc = (CAL_Measure(cal_chMeasureId) / cal_Rshunt * 1000000).toFixed(2);
 			cal_IdSc.push(IdSc);
 			print("Idtek, uA: " + IdSc);
 
@@ -352,7 +352,7 @@ function CAL_TekScale(Channel, Value)
 }
 //--------------------
 
-function CAL_Measure(Channel, Resolution)
+function CAL_Measure(Channel)
 {
 	TEK_Send("cursor:select:source ch" + Channel);
 	sleep(500);
@@ -360,7 +360,7 @@ function CAL_Measure(Channel, Resolution)
 	var f = TEK_Exec("cursor:vbars:hpos2?");
 	if (Math.abs(f) > 2.7e+8)
 		f = 0;
-	return parseFloat(f).toFixed(Resolution);
+	return parseFloat(f);
 }
 //--------------------
 
@@ -410,9 +410,24 @@ function CAL_ResetIdCal()
 
 function CAL_SetCoefUd(P2, P1, P0)
 {
-	dev.ws(46, Math.round(P2 * 1e6));
-	dev.w(47, Math.round(P1 * 1000));
-	dev.ws(48, Math.round(P0 * 10));
+	switch(cal_VoltageRange)
+	{
+		case 0:
+		{
+			dev.ws(41, Math.round(P2 * 1e6));
+			dev.w(42, Math.round(P1 * 1000));
+			dev.ws(43, Math.round(P0 * 10));
+		}
+		break;
+		
+		case 1:
+		{
+			dev.ws(46, Math.round(P2 * 1e6));
+			dev.w(47, Math.round(P1 * 1000));
+			dev.ws(48, Math.round(P0 * 10));
+		}
+		break;
+	}
 }
 //--------------------
 
@@ -457,9 +472,26 @@ function CAL_SetCoefId(P2, P1, P0)
 
 function CAL_PrintCoefUd()
 {
-	print("Ud  P2 x1e6  : " + dev.rs(46));
-	print("Ud  P1 x1000 : " + dev.rs(47));
-	print("Ud  P0 x10	    : " + dev.rs(48));
+	switch(cal_VoltageRange)
+	{
+		case 0:
+		{
+			print("Range 0:")
+			print("Ud  P2 x1e6  : " + dev.rs(41));
+			print("Ud  P1 x1000 : " + dev.rs(42));
+			print("Ud  P0 x10	    : " + dev.rs(43));
+		}
+		break;
+		
+		case 1:
+		{
+			print("Range 1:")
+			print("Ud  P2 x1e6  : " + dev.rs(46));
+			print("Ud  P1 x1000 : " + dev.rs(47));
+			print("Ud  P0 x10	    : " + dev.rs(48));
+		}
+		break;
+	}
 }
 //--------------------
 

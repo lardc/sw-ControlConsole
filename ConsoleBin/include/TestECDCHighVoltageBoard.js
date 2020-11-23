@@ -4,7 +4,7 @@ include("Common.js")
 ECDC_HV_print = 1;
 
 function ECDC_HV_Measure(Voltage, Current)
-{
+{	
 	if(dev.r(192) == 3)
 	{
 		dev.w(128, Voltage);
@@ -12,7 +12,13 @@ function ECDC_HV_Measure(Voltage, Current)
 		
 		dev.c(100);
 		
-		//sleep(3000);
+		sleep(1300);
+		
+		//while(dev.r(192) != 5){sleep(50);}
+		
+		dev.c(102);
+		
+		sleep(3000);
 		
 		while(dev.r(192) == 4){sleep(50);}
 		
@@ -23,9 +29,11 @@ function ECDC_HV_Measure(Voltage, Current)
 		{
 			p("");
 			p("Voltage,  V: " + (dev.r(200) / 10));
-			p("Current, uA: " + (r32(201) / 10));
+			p("Current, uA: " + (r32(201) / 100));
 			p("------------");
 		}
+		
+		return 1;
 	}
 	else
 	{
@@ -33,6 +41,8 @@ function ECDC_HV_Measure(Voltage, Current)
 			print("Device not ready");
 		else
 			PrintStatus();
+		
+		return 0;
 	}
 }
 //--------------------
