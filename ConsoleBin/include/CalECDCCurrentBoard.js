@@ -12,11 +12,13 @@ cal_LoadResistance = 1;		// Load resistance in Ohm
 cal_CurrentRangeArrayMin = [1000, 20010, 200010, 2000010, 20000010];				// Min current values for ranges
 cal_CurrentRangeArrayMax = [20000, 200000, 2000000, 20000000, 250000000];			// Max current values for ranges
 cal_VoltageRangeArrayMin = [1000, 10010, 30010, 250010, 1500010];					// Min voltage values for ranges
-cal_VoltageRangeArrayMax = [10000, 30000, 250000, 1500000, 11000000];				// Max voltage values for ranges
+cal_VoltageRangeArrayMax = [10000, 30000, 250000, 1500000, 10000000];				// Max voltage values for ranges
 
 // Counters
 cal_cntTotal = 0;
 cal_cntDone = 0;
+
+cal_dev = 1;
 
 // Iterations
 cal_Iterations = 3;
@@ -75,7 +77,7 @@ function CAL_TekInit(Channel)
 	// Init trigger
 	TEK_TriggerInit(Channel, "2");
 	// Horizontal settings
-	TEK_Horizontal("250e-6", "3.2e-3");
+	TEK_Horizontal("250e-6", "0");
 }
 
 function CAL_TekMeasurement(Channel)
@@ -210,11 +212,21 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 {
 	cal_cntTotal = IterationsCount * CurrentValues.length;
 	cal_cntDone = 1;
+	var Dev = 1;
+	
+	if( cal_CurrentRange > 1)
+	{
+		Dev = 1000;
+	}
+	else
+	{
+		Dev = 1;
+	}
 
 	var AvgNum;
 	if (cal_UseAvg)
 	{
-		AvgNum = 4;
+		AvgNum = 3;
 		TEK_AcquireAvg(AvgNum);
 	}
 	else
@@ -245,19 +257,19 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 
 			for (var k = 0; k < AvgNum; k++)
 			{
-				ECDC_CB_Measure(CurrentValues[j], 1000);
-				sleep(6500);
+				ECDC_CB_Measure(CurrentValues[j], 11000000);
+				sleep(4000);
 			}
 			
 			ECDC_CB_Print = cal_print_copy;
 			
 			// Unit data
-			var id_read = r32(250);
+			var id_read = (r32(250) / Dev).toFixed(2);
 			cal_id.push(id_read);
 			print("Idread, uA: " + id_read);
 
 			// Scope data
-			var id_sc = (CAL_Measure(cal_chMeasureId, "6") / cal_LoadResistance * 1000000).toFixed(2);
+			var id_sc = (CAL_Measure(cal_chMeasureId, "3") / cal_LoadResistance * 1000).toFixed(2);
 			cal_id_sc.push(id_sc);
 			print("Idtek, uA: " + id_sc);
 
@@ -278,17 +290,27 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 {
 	cal_cntTotal = IterationsCount * VoltageValues.length;
 	cal_cntDone = 1;
+	var Dev = 1;
+	
+	if( cal_VoltageRange >= 3)
+	{
+		Dev = 1000;
+	}
+	else
+	{
+		Dev = 1;
+	}
 
 	var AvgNum;
 	if (cal_UseAvg)
 	{
 		if(cal_VoltageRange == 0)
 		{
-			AvgNum = 16;
+			AvgNum = 10;
 		}
 		else
 		{
-			AvgNum = 4;
+			AvgNum = 3;
 		}
 		TEK_AcquireAvg(AvgNum);
 	}
@@ -299,7 +321,7 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 	}
 	
 	CAL_TekMeasurement(cal_chMeasureUd);
-	TEK_TriggerPulseExtendedInit(cal_chMeasureUd, 1, "hfrej", "5e-3", "positive", "outside");
+	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "5e-3", "positive", "outside");
 	sleep(1000);
 	
 	for (var i = 0; i < IterationsCount; i++)
@@ -308,9 +330,11 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 		{
 			print("-- result " + cal_cntDone++ + " of " + cal_cntTotal + " --");
 			
-			CAL_TekScale(cal_chMeasureUd, VoltageValues[j] / 1000000);
+			CAL_TekScale(cal_chMeasureId, (VoltageValues[j] / 1000000));
 			TEK_TriggerLevelF((VoltageValues[j] / 1000000) * 0.35);
-			sleep(1500);
+			CAL_TekScale(cal_chMeasureUd, (VoltageValues[j] / 1000000));
+			
+			sleep(1000);
 
 			//
 			var cal_print_copy = ECDC_CB_Print;
@@ -319,21 +343,29 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 			for (var k = 0; k < AvgNum; k++)
 			{
 				ECDC_CB_Measure(VoltageValues[j] / cal_LoadResistance, cal_VoltageRangeArrayMax[cal_VoltageRange]);
-				sleep(6000);
+				sleep(3000);
 			}
 			
 			ECDC_CB_Print = cal_print_copy;
 			
 			// Unit data
-			var ud_read = r32(252);
+			var ud_read = (r32(252) / Dev).toFixed(2);
 			cal_ud.push(ud_read);
 			print("Udread, uV: " + ud_read);
 
 			// Scope data
-			var ud_sc = (CAL_Measure(cal_chMeasureUd, "6") * 1000000).toFixed(2);
-			
-			cal_ud_sc.push(ud_sc);
-			print("Udtek, uV: " + ud_sc);
+			if (cal_VoltageRange >= 3)
+			{
+				var ud_sc = (CAL_Measure(cal_chMeasureUd, "3") * 1000).toFixed(2);		
+				cal_ud_sc.push(ud_sc);
+				print("Udtek, uV: " + ud_sc);
+			}
+			else
+			{
+				var ud_sc = (CAL_Measure(cal_chMeasureUd, "6") * 1000000).toFixed(2);		
+				cal_ud_sc.push(ud_sc);
+				print("Udtek, uV: " + ud_sc);
+			}
 
 			// Relative error
 			var ud_err = ((ud_read - ud_sc) / ud_sc * 100).toFixed(2);
