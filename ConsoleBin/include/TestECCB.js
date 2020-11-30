@@ -309,13 +309,31 @@ function ECCB_OnState(Voltage, Current)
 	}
 }
 
-function ECCB_Control()
+function ECCB_Control(Voltage, Current)
 {
+	var Override = Voltage && Current
+	var VoltageCopy, CurrentCopy
+	
+	if(Override)
+	{
+		VoltageCopy = r32d(132, 150)
+		CurrentCopy = r32d(133, 151)
+		
+		w32d(132, 150, Voltage)
+		w32d(133, 151, Current)
+	}
+	
 	dev.w(128, 3)
 	
 	ECCB_ExecAndWait(100)
 	
 	ECCB_PrintCommon()
+	
+	if(Override)
+	{
+		w32d(132, 150, VoltageCopy)
+		w32d(133, 151, CurrentCopy)
+	}
 }
 
 function ECCB_Calibrate(Voltage, Current, Type, Node)
