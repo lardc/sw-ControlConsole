@@ -309,6 +309,22 @@ function ECCB_OnState(Voltage, Current)
 	}
 }
 
+function ECCB_Res(Voltage, Current)
+{
+	dev.w(128, 2)
+	dev.w(144, 1)
+	
+	w32d(139, 153, Voltage)
+	w32d(138, 152, Current)
+	
+	ECCB_ExecAndWait(100)
+	
+	if(ECCB_PrintCommon())
+		p('R:\t' + (r32d(205, 237) / 1000))
+	
+	dev.w(144, 0)
+}
+
 function ECCB_Control(Voltage, Current)
 {
 	var Override = Voltage && Current
