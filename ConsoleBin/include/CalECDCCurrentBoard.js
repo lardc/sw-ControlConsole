@@ -26,6 +26,7 @@ cal_Iterations = 3;
 // Channels
 cal_chMeasureId = 1;
 cal_chMeasureUd = 2;
+cal_chTrigg = 3;
 
 // Arrays
 cal_id_array = [];
@@ -49,7 +50,7 @@ cal_ud_corr = [];
 
 cal_UseAvg = 1;
 
-function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd)
+function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd, channelTrigg)
 {
 	if (channelMeasureId < 1 || channelMeasureId > 4)
 	{
@@ -60,6 +61,7 @@ function CAL_Init(portDevice, portTek, channelMeasureId, channelMeasureUd)
 	// Copy channel information
 	cal_chMeasureUd = channelMeasureUd;
 	cal_chMeasureId = channelMeasureId;
+	cal_chTrigg = channelTrigg;
 
 	// Init device port
 	dev.Disconnect();
@@ -75,9 +77,10 @@ function CAL_TekInit(Channel)
 	TEK_ChannelInit(Channel, "1", "1");
 	TEK_ChannelScale(Channel, "1");
 	// Init trigger
-	TEK_TriggerInit(Channel, "2");
+	TEK_TriggerInit(cal_chTrigg, "2");
+	TEK_Send("trigger:main:edge:slope fall");
 	// Horizontal settings
-	TEK_Horizontal("250e-6", "0");
+	TEK_Horizontal("100e-6", "5.5e-3");
 }
 
 function CAL_TekMeasurement(Channel)
@@ -214,7 +217,7 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 	cal_cntDone = 1;
 	var Dev = 1;
 	
-	if( cal_CurrentRange > 1)
+	if( cal_CurrentRange >= 2)
 	{
 		Dev = 1000;
 	}
@@ -235,8 +238,10 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
+	TEK_TriggerInit(cal_chTrigg, "2");
+	TEK_Send("trigger:main:edge:slope fall");
 	CAL_TekMeasurement(cal_chMeasureId);
-	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "5e-3", "positive", "outside");
+	
 	sleep(1000);
 	
 	for (var i = 0; i < IterationsCount; i++)
@@ -248,7 +253,6 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 			print("IdTarget, uA: " + CurrentValues[j]);
 			
 			CAL_TekScale(cal_chMeasureId, (CurrentValues[j] * cal_LoadResistance / 1000000));
-			((CurrentValues[j]* cal_LoadResistance / 1000000) * 0.35);
 			sleep(1500);
 
 			//
@@ -258,7 +262,7 @@ function CAL_IdCollect(CurrentValues, IterationsCount)
 			for (var k = 0; k < AvgNum; k++)
 			{
 				ECDC_CB_Measure(CurrentValues[j], 11000000);
-				sleep(4000);
+				sleep(3000);
 			}
 			
 			ECDC_CB_Print = cal_print_copy;
@@ -320,8 +324,10 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
+	
+	TEK_TriggerInit(cal_chTrigg, "2");
+	TEK_Send("trigger:main:edge:slope fall");
 	CAL_TekMeasurement(cal_chMeasureUd);
-	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "5e-3", "positive", "outside");
 	sleep(1000);
 	
 	for (var i = 0; i < IterationsCount; i++)
@@ -329,9 +335,6 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 		for (var j = 0; j < VoltageValues.length; j++)
 		{
 			print("-- result " + cal_cntDone++ + " of " + cal_cntTotal + " --");
-			
-			CAL_TekScale(cal_chMeasureId, (VoltageValues[j] / 1000000));
-			TEK_TriggerLevelF((VoltageValues[j] / 1000000) * 0.5);
 			CAL_TekScale(cal_chMeasureUd, (VoltageValues[j] / 1000000));
 			
 			sleep(1000);
