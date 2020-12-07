@@ -14,9 +14,11 @@ cal_Rshunt = 1;		// Shunt resistance in Ohm
 cal_CurrentRangeLvArrayMin = [8, 110, 1010, 10010];							// Min current values for ranges
 cal_CurrentRangeLvArrayMax = [100, 1000, 10000, 99900];					// Max current values for ranges
 cal_CurrentRangeHvArrayMin = [8, 110, 1010, 10010];							// Min current values for ranges
-cal_CurrentRangeHvArrayMax = [100, 1000, 10000, 99900];					// Max current values for ranges
+cal_CurrentRangeHvArrayMax = [100, 1000, 10000, 100000];					// Max current values for ranges
 cal_VoltageRangeArrayMin = [40, 210, 2010, 20010];							// Min voltage values for ranges
 cal_VoltageRangeArrayMax = [200, 2000, 20000, 270000];						// Max voltage values for ranges
+
+cal_RshuntHvIn = [26241, 2242, 241, 21];
 
 // Counters
 cal_CntTotal = 0;
@@ -191,11 +193,11 @@ function CAL_CalibrateUd()
 function CAL_CalibrateIdHv()
 {	
 	// Collect data
+	cal_HvDev = 0.90;
+	
 	var IdMin = cal_CurrentRangeHvArrayMin[cal_CurrentRangeHv];
 	var IdMax = cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv] * cal_HvDev;
 	var IdStp = ((IdMax - IdMin) / 10) + 1;
-	
-	cal_HvDev = 0.90;
 		
 	CAL_ResetA();
 	CAL_ResetIdHvCal();
@@ -279,11 +281,11 @@ function CAL_VerifyUd()
 function CAL_VerifyIdHv()
 {	
 	// Collect data
-	var IdMin = cal_CurrentRangeHvArrayMin[cal_CurrentRangeHv];
-	var IdMax = cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv];
-	var IdStp = ((IdMax - IdMin) / 10) + 1;
-	
 	cal_HvDev = 0.97;
+	
+	var IdMin = cal_CurrentRangeHvArrayMin[cal_CurrentRangeHv];
+	var IdMax = cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv] * cal_HvDev;
+	var IdStp = ((IdMax - IdMin) / 10) + 1;
 		
 	CAL_ResetA();
 	
@@ -310,14 +312,7 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 	var AvgNum;
 	if (cal_UseAvg)
 	{
-		if(cal_CurrentRangeLv == 0)
-		{
-			AvgNum = 10;
-		}
-		else
-		{
-			AvgNum = 4;
-		}
+		AvgNum = 3;
 		TEK_AcquireAvg(AvgNum);
 	}
 	else
@@ -326,9 +321,9 @@ function CAL_IdLvCollect(CurrentValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
-	TEK_Horizontal("5e-3", "30e-3");
+	TEK_Horizontal("50e-3", "1.5");
 	CAL_TekMeasurement(cal_chMeasureId);
-	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "20e-3", "positive", "outside");
+	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "5e-3", "positive", "outside");
 	sleep(1000);
 	
 	
@@ -382,6 +377,8 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 {
 	cal_CntTotal = IterationsCount * VoltageValues.length;
 	cal_CntDone = 1;
+	
+	var CurRange = 0;
 
 	var AvgNum;
 	if (cal_UseAvg)
@@ -395,7 +392,7 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
-	TEK_Horizontal("100e-6", "10e-3");
+	TEK_Horizontal("50e-3", "1.5");
 	CAL_TekMeasurement(cal_chMeasureUd);
 	TEK_TriggerPulseExtendedInit(cal_chMeasureUd, 1, "hfrej", "5e-3", "positive", "outside");
 	sleep(1000);
@@ -417,16 +414,17 @@ function CAL_UdCollect(VoltageValues, IterationsCount)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				if(cal_VoltageRange < 3)
+				if(cal_VoltageRange != 3)
 				{
-					ECDC_VB_Measure(100000, VoltageValues[j]);
-					sleep(2000);
+					 CurRange = cal_VoltageRange + 1;
 				}
 				else
 				{
-					ECDC_VB_Measure(80000, VoltageValues[j]);
-					sleep(2000);
+					 CurRange = 3;
 				}
+					
+				ECDC_VB_Measure(cal_CurrentRangeLvArrayMax[CurRange], VoltageValues[j]);
+				sleep(2000);
 			}
 			
 			ECDC_VB_Print = cal_print_copy;
@@ -471,9 +469,9 @@ function CAL_IdHvCollect(CurrentValues, IterationsCount)
 		TEK_AcquireSample();
 	}
 	
-	TEK_Horizontal("5e-3", "30e-3");
+	TEK_Horizontal("50e-3", "1.5");
 	CAL_TekMeasurement(cal_chMeasureId);
-	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "20e-3", "positive", "outside");
+	TEK_TriggerPulseExtendedInit(cal_chMeasureId, 1, "hfrej", "5e-3", "positive", "outside");
 	sleep(1000);
 	
 	for (var i = 0; i < IterationsCount; i++)
@@ -493,7 +491,7 @@ function CAL_IdHvCollect(CurrentValues, IterationsCount)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				ECDC_VB_Measure(cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv], (CurrentValues[j] * cal_Rload / 1000).toFixed(2));
+				ECDC_VB_Measure(cal_CurrentRangeHvArrayMax[cal_CurrentRangeHv], (CurrentValues[j] * (cal_Rload + cal_RshuntHvIn[cal_CurrentRangeHv])/ 1000).toFixed(2));
 				
 				if(!k)
 					print("Test voltage, V: " + (CurrentValues[j] * cal_Rload / 1000).toFixed(2));
