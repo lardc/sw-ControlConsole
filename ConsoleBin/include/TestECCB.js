@@ -358,9 +358,9 @@ function ECCB_Calibrate(Voltage, Current, Type, Node)
 	// CN_DC1 = 1
 	// CN_DC2 = 2
 	// CN_DC3 = 3
-	// CN_HVDC = 4
-	// CN_AC1 = 5
-	// CN_AC2 = 6
+	// CN_AC1 = 4
+	// CN_AC2 = 5
+	// CN_HVDC = 6
 	// CN_CB = 7
 	dev.w(160, Node)
 	
