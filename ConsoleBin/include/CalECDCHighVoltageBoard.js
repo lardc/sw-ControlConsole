@@ -5,10 +5,10 @@ include("CalGeneral.js")
 // Calibration setup parameters
 cal_Points = 10;
 
-cal_Rshunt = 233.8;
-cal_Rload = 195600;
+cal_Rshunt = 50000;
+cal_Rload = 5000000;
 
-cal_CurrentRange = 2;	// 0 = 6 - 25uA; 1 = 25 - 250uA; 2 = 250 - 2000uA; 3 = 2 - 20mA;
+cal_CurrentRange = 0;	// 0 = 6 - 25uA; 1 = 25 - 250uA; 2 = 250 - 2000uA; 3 = 2 - 20mA;
 cal_VoltageRange = 1;	// 0 = 25 - 100V; 1 = 100 - 2000V;
 
 cal_UdMax = [100, 2000];	
@@ -19,7 +19,7 @@ cal_IdMin = [6, 24.9, 249.9, 1999.9];
 cal_IdMax = [25, 250, 2000, 20000];
 cal_IdStp = (cal_IdMax[cal_CurrentRange] - cal_IdMin[cal_CurrentRange]) / cal_Points;
 
-cal_Iterations = 3;
+cal_Iterations = 1;
 cal_UseAvg = 1;
 //		
 
@@ -509,25 +509,25 @@ function CAL_PrintCoefId()
 		
 		case 1:
 		{
-			print("Id 0 P2 x1e6		: " + dev.rs(57));
-			print("Id 0 P1 x1000	: " + dev.rs(58));
-			print("Id 0 P0 x100		: " + dev.rs(59));
+			print("Id 1 P2 x1e6		: " + dev.rs(57));
+			print("Id 1 P1 x1000	: " + dev.rs(58));
+			print("Id 1 P0 x100		: " + dev.rs(59));
 		}
 		break;
 		
 		case 2:
 		{
-			print("Id 0 P2 x1e6		: " + dev.rs(63));
-			print("Id 0 P1 x1000	: " + dev.rs(64));
-			print("Id 0 P0 x100		: " + dev.rs(65));
+			print("Id 2 P2 x1e6		: " + dev.rs(63));
+			print("Id 2 P1 x1000	: " + dev.rs(64));
+			print("Id 2 P0 x100		: " + dev.rs(65));
 		}
 		break;
 		
 		case 3:
 		{
-			print("Id 0 P2 x1e6		: " + dev.rs(69));
-			print("Id 0 P1 x1000	: " + dev.rs(70));
-			print("Id 0 P0 x100		: " + dev.rs(71));
+			print("Id 3 P2 x1e6		: " + dev.rs(69));
+			print("Id 3 P1 x1000	: " + dev.rs(70));
+			print("Id 3 P0 x100		: " + dev.rs(71));
 		}
 		break;
 	}

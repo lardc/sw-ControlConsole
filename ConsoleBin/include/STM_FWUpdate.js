@@ -184,6 +184,23 @@ function FWU_RestoreLSLH()
 }
 //------------------------
 
+// LSLPC
+function FWU_LSLPC()
+{
+	FWUpdateSTM("../../hw-LSLPowerCell/Firmware/Release/LSLPowerCell.binary");
+}
+
+function FWU_DumpLSLPC()
+{
+	dev.Dump("../../hw-LSLPowerCell/Firmware/lslpc.regdump", 0, 126);
+}
+
+function FWU_RestoreLSLPC()
+{
+	dev.Restore("../../hw-LSLPowerCell/Firmware/lslpc.regdump");
+}
+//------------------------
+
 // EC Multiplexer
 function FWU_Multiplexer()
 {
