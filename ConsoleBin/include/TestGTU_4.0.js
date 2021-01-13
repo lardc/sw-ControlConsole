@@ -404,3 +404,29 @@ function GTU_PulseIg(Current)
 	dev.w(131, Current);
 	dev.c(111);
 }
+
+function GTU_ChekExtOSC()
+{
+	var State = 0;
+	var NewState = 0;
+	
+	dev.w(160,0);
+	dev.c(18);
+	
+	dev.c(21);
+	State = dev.r(165);
+	
+	dev.w(160,1);
+	dev.c(18);
+	
+	dev.c(21);
+	NewState = dev.r(165);	
+	
+	dev.w(160,0);
+	dev.c(18);
+	
+	if((State == 0) && (NewState == 1))
+		p("State external OSC is Ok");
+	else
+		p("State external OSC is Error");
+}
