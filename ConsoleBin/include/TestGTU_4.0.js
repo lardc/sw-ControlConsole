@@ -381,8 +381,26 @@ function GTU_HeatingTest(Voltage, Current)
 	}
 }
 
+function GTU_PulseVd(Voltage)
+{
+	dev.w(128, Voltage);
+	dev.c(112);
+}
 
+function GTU_PulseId(Current)
+{
+	dev.w(129, Current);
+	dev.c(113);
+}
 
+function GTU_PulseVg(Voltage)
+{
+	dev.w(130, Voltage);
+	dev.c(110);
+}
 
-
-
+function GTU_PulseIg(Current)
+{
+	dev.w(131, Current);
+	dev.c(111);
+}
