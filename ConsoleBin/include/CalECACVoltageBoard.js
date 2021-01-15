@@ -516,9 +516,9 @@ function CAL_WaitReadyVoltage()
 //------------------------
 function CAL_WideCurrentRangeEnable()
 {
-	dev.w(REG_CURRENT_RANGE1_SAFETY_LIMIT, 5);
-	dev.w(REG_CURRENT_RANGE2_SAFETY_LIMIT, 5);
-	dev.w(REG_CURRENT_RANGE3_SAFETY_LIMIT, 5);
+	dev.w(REG_CURRENT_RANGE1_SAFETY_LIMIT, 15);
+	dev.w(REG_CURRENT_RANGE2_SAFETY_LIMIT, 15);
+	dev.w(REG_CURRENT_RANGE3_SAFETY_LIMIT, 15);
 }
 //------------------------
 
@@ -556,7 +556,7 @@ function CAL_WaitCollect()
 function CAL_SetMeasuringChanellAndTrigger(PrintMode)
 {
 	// Horizontal settings
-	TEK_Horizontal("1e-2", 0);
+	TEK_Horizontal("5e-3", 0);
 	
 	if(PrintMode == cal_PrintModeU)
 	{	
