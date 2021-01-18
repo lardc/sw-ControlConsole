@@ -169,7 +169,10 @@ function LSLPC_Start(Current)
 		sleep(50);
 		
 		if(dev.r(192) == 1)
+		{
 			PrintStatus();
+			return false;
+		}
 	}
 	
 	dev.c(101);
@@ -181,8 +184,13 @@ function LSLPC_Start(Current)
 		sleep(50);
 		
 		if(dev.r(192) == 1)
+		{
 			PrintStatus();
+			return false;
+		}
 	}
+	
+	return true;
 }
 //--------------------------
 
