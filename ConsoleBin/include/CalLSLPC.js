@@ -13,7 +13,7 @@ cal_IdMin = [100, 1000.1];
 cal_IdMax = [1000, 6500];
 cal_IdStp = (cal_IdMax[cal_CurrentRange] - cal_IdMin[cal_CurrentRange]) / cal_Points;
 
-cal_Iterations = 1;
+cal_Iterations = 3;
 cal_UseAvg = 1;
 //		
 
@@ -82,7 +82,7 @@ function CAL_CalibrateId()
 		CAL_SaveId("LSLPC_Id");
 
 		// Plot relative error distribution
-		scattern(cal_IdSc, cal_IdErr, "Current (in uA)", "Error (in %)", "Current relative error");
+		scattern(cal_IdSc, cal_IdErr, "Current (in A)", "Error (in %)", "Current relative error");
 
 		// Calculate correction
 		cal_IdCorr = CGEN_GetCorrection2("LSLPC_Id");
@@ -107,7 +107,7 @@ function CAL_VerifyId()
 		CAL_SaveId("LSLPC_Id_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_IdSc, cal_IdErr, "Current (in uA)", "Error (in %)", "Current relative error");
+		scattern(cal_IdSc, cal_IdErr, "Current (in A)", "Error (in %)", "Current relative error");
 	}
 }
 //--------------------
