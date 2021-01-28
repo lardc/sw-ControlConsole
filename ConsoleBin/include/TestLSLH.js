@@ -1,4 +1,59 @@
-﻿//----------------------------------------------------------------------------------
+﻿include("PrintStatus.js")
+
+GatePulseTime 	= 100;		// us
+GateVoltage 	= 10000;	// mV
+GateCurrent 	= 1000;		// mA
+GatePulseDelay	= 500;		// uS
+//
+LSLH_Print = 1;
+
+function LSLH_StartMeasure(Current)
+{
+	dev.w(150, GatePulseTime);
+	dev.w(151, GateVoltage);
+	dev.w(152, GateCurrent);
+	dev.w(153, GatePulseDelay);
+	
+	if(dev.r(192) == 4)
+	{
+		dev.c(100);
+		sleep(50);
+		while(dev.r(192) != 4){sleep(50);}
+		
+		if(LSLH_Print)
+		{
+			print("LSLH DutVoltage, mV:  " + dev.r(198));
+			print("LSLH DutCurrent, mV:  " + dev.r(206));
+			print("LSLH GateVoltage, mV: " + dev.r(202));
+			print("LSLH GateCurrent, mV: " + dev.r(203));
+			print("---------------------------");
+		}
+	}
+	else
+		PrintStatus();
+}
+//--------------------------
+
+function LSLH_GD_Pulse(Current, Voltage, Tpulse)
+{
+	dev.w(150, Tpulse);
+	
+	dev.w(151, Voltage);
+	dev.c(14);
+	
+	dev.w(152, Current);
+	dev.c(15);
+	
+	dev.c(12);
+}
+//--------------------------
+
+
+
+
+
+// Устаревшие функции
+//----------------------------------------------------------------------------------
 function LVTM_Pulse(CurrentValue)
 {	
 	//Variables
