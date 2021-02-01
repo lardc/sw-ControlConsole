@@ -13,6 +13,7 @@ function LSLH_StartMeasure(Current)
 	dev.w(151, GateVoltage);
 	dev.w(152, GateCurrent);
 	dev.w(153, GatePulseDelay);
+	dev.w(140, Current);
 	
 	if(dev.r(192) == 4)
 	{
@@ -22,15 +23,32 @@ function LSLH_StartMeasure(Current)
 		
 		if(LSLH_Print)
 		{
-			print("LSLH DutVoltage, mV:  " + dev.r(198));
-			print("LSLH DutCurrent, mV:  " + dev.r(206));
-			print("LSLH GateVoltage, mV: " + dev.r(202));
-			print("LSLH GateCurrent, mV: " + dev.r(203));
+			print("DutVoltage, mV:  " + dev.r(198));
+			print("DutCurrent, mV:  " + dev.r(206));
+			print("GateVoltage, mV: " + dev.r(202));
+			print("GateCurrent, mV: " + dev.r(203));
 			print("---------------------------");
 		}
+		
+		return 1;
 	}
 	else
 		PrintStatus();
+	
+	return 0;
+}
+//--------------------------
+
+function LSLH_ResourceTest(N)
+{
+	for(i = 0; i < N; i++)
+	{
+		print("#" + i);
+		LSLH_StartMeasure(6000);
+		
+		if(anykey())
+			break;
+	}
 }
 //--------------------------
 
