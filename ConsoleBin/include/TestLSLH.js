@@ -19,14 +19,14 @@ function LSLH_StartMeasure(Current)
 	{
 		dev.c(100);
 		sleep(50);
-		while(dev.r(192) != 4){sleep(50);}
+		while(dev.r(192) != 4){sleep(500);}
 		
 		if(LSLH_Print)
 		{
 			print("DutVoltage, mV:  " + dev.r(198));
-			print("DutCurrent, mV:  " + dev.r(206));
+			print("DutCurrent, A:  " + dev.r(206));
 			print("GateVoltage, mV: " + dev.r(202));
-			print("GateCurrent, mV: " + dev.r(203));
+			print("GateCurrent, mA: " + dev.r(203));
 			print("---------------------------");
 		}
 		
