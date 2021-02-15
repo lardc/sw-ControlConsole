@@ -7,7 +7,7 @@ cal_Points = 10;
 
 cal_Rshunt = 250;	// uOhm
 
-cal_CurrentRange = 1;
+cal_CurrentRange = 0;
 
 cal_IdMin = [100, 1000.1];	
 cal_IdMax = [1000, 6500];
@@ -183,7 +183,8 @@ function CAL_TekInit()
 	TEK_ChannelInit(cal_chMeasureId, "1", "0.01");
 	TEK_TriggerPulseInit(cal_chMeasureId, "0.04");
 	TEK_Horizontal("0.5e-3", "-2e-3");
-	TEK_Send("MEASurement:MEAS" + cal_chMeasureId + ":TYPe MAXImum");
+	TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
+	TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
 }
 //--------------------
 
