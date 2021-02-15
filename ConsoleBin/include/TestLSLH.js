@@ -22,9 +22,11 @@ function LSLH_StartMeasure(Current)
 		while(dev.r(192) != 4){sleep(500);}
 		
 		if(LSLH_Print)
-		{
-			print("DutVoltage, mV:  " + dev.r(198));
-			print("DutCurrent, A:  " + dev.r(206));
+		{			
+			var Current = dev.r(206) + dev.r(205) / 10;
+			
+			print("DutVoltage, mV : " + dev.r(198));
+			print("DutCurrent, A  : " + Current);
 			print("GateVoltage, mV: " + dev.r(202));
 			print("GateCurrent, mA: " + dev.r(203));
 			print("---------------------------");
