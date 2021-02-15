@@ -199,7 +199,10 @@ function LSLPC_Pulses(Current, N)
 	for(i = 0; i < N; i++)
 	{
 		print("#" + i);
-		LSLPC_Pulse(Current);
+		LSLPC_Start(Current);
+		
+		if(anykey())
+			break;
 	}
 }
 //--------------------------
