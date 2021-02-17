@@ -201,6 +201,23 @@ function FWU_RestoreLSLPC()
 }
 //------------------------
 
+// DRCU
+function FWU_DRCU()
+{
+	FWUpdateSTM("../../hw-DRCUControlBoard/Firmware/Release/DRCUControlBoard.binary");
+}
+
+function FWU_DumpDRCU()
+{
+	dev.Dump("../../hw-DRCUControlBoard/Firmware/DRCUControlBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreDRCU()
+{
+	dev.Restore("../../hw-DRCUControlBoard/Firmware/DRCUControlBoard.regdump");
+}
+//------------------------
+
 // EC Multiplexer
 function FWU_Multiplexer()
 {
