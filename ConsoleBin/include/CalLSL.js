@@ -5,10 +5,12 @@ include("CalGeneral.js")
 // Calibration setup parameters
 cal_Points = 10;
 
-cal_Rshunt = 250;		// мкОм
-cal_Rload = 1000;		// мкОм
+cal_Rshunt = 250;			// мкОм
+cal_Rload = 1000;			// мкОм
+cal_GateRshunt = 100;		// мОм
+cal_GatePulseWidth = 100;	// мкс
 
-cal_CurrentRange = 1;	// 0 = 100 - 1000A; 1 = 1000 - 6500A;
+cal_CurrentRange = 0;	// 0 = 100 - 1000A; 1 = 1000 - 6500A;
 
 cal_UtmMin = 500;		// мВ
 cal_UtmMax = 5000;		// мВ
@@ -22,6 +24,14 @@ cal_IsetMin = 100;
 cal_IsetMax = 6000;
 cal_IsetStp = (cal_IsetMax - cal_IsetMin) / cal_Points;
 
+cal_IgMin = 100;	
+cal_IgMax = 1000;
+cal_IgStp = (cal_IgMax - cal_IgMin) / cal_Points;
+
+cal_UgMin = 1000;	
+cal_UgMax = 10000;
+cal_UgStp = (cal_UgMax - cal_UgMin) / cal_Points;
+
 cal_Iterations = 1;
 cal_UseAvg = 1;
 //		
@@ -31,41 +41,49 @@ cal_CntTotal = 0;
 cal_CntDone = 0;
 
 // Channels
-cal_chMeasureItm = 1;
-cal_chMeasureUtm = 2;
+cal_chMeasureI = 1;
+cal_chMeasureU = 2;
 cal_chSync = 3;
 
 // Results storage
 cal_Utm = [];
 cal_Itm = [];
 cal_Iset = [];
+cal_Ig = [];
+cal_Ug = [];
 
 // Tektronix data
 cal_UtmSc = [];
 cal_ItmSc = [];
 cal_IsetSc = [];
+cal_IgSc = [];
+cal_UgSc = [];
 
 // Relative error
 cal_UtmErr = [];
 cal_ItmErr = [];
 cal_IsetErr = [];
+cal_IgErr = [];
+cal_UgErr = [];
 
 // Correction
 cal_UtmCorr = [];
 cal_ItmCorr = [];
 cal_IsetCorr = [];
+cal_IgCorr = [];
+cal_UgCorr = [];
 
-function CAL_Init(portDevice, portTek, channelMeasureItm, channelMeasureUtm, channelSync)
+function CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU, channelSync)
 {
-	if (channelMeasureItm < 1 || channelMeasureItm > 4)
+	if (channelMeasureI < 1 || channelMeasureI > 4)
 	{
 		print("Wrong channel numbers");
 		return;
 	}
 
 	// Copy channel information
-	cal_chMeasureUtm = channelMeasureUtm;
-	cal_chMeasureItm = channelMeasureItm;
+	cal_chMeasureU = channelMeasureU;
+	cal_chMeasureI = channelMeasureI;
 	cal_chSync = channelSync;
 
 	// Init device port
@@ -78,14 +96,14 @@ function CAL_Init(portDevice, portTek, channelMeasureItm, channelMeasureUtm, cha
 	// Tektronix init
 	for (var i = 1; i <= 4; i++)
 	{
-		if ((i == cal_chMeasureUtm) || (i == channelMeasureItm) || (i == cal_chSync))
+		if ((i == cal_chMeasureU) || (i == channelMeasureI) || (i == cal_chSync))
 			TEK_ChannelOn(i);
 		else
 			TEK_ChannelOff(i);
 	}
+	
 	TEK_ChannelInit(cal_chSync, "1", "1");
 	LSL_TriggerInit(cal_chSync, "2");
-	TEK_Horizontal("1e-3", "0");
 }
 //--------------------
 
@@ -97,7 +115,7 @@ function CAL_CalibrateUtm()
 	OverShootCurrentReset();
 	
 	// Tektronix init
-	CAL_TekInit(cal_chMeasureUtm);
+	CAL_TekInit(cal_chMeasureU);
 	
 	// Reload values
 	var VoltageArray = CGEN_GetRange(cal_UtmMin, cal_UtmMax, cal_UtmStp);
@@ -127,7 +145,7 @@ function CAL_CalibrateItm()
 	OverShootCurrentReset();
 	
 	// Tektronix init
-	CAL_TekInit(cal_chMeasureItm);
+	CAL_TekInit(cal_chMeasureI);
 
 	// Reload values
 	var CurrentArray = CGEN_GetRange(cal_ItmMin[cal_CurrentRange], cal_ItmMax[cal_CurrentRange], cal_ItmStp);
@@ -157,7 +175,7 @@ function CAL_CalibrateIset()
 	OverShootCurrentReset();
 	
 	// Tektronix init
-	CAL_TekInit(cal_chMeasureItm);
+	CAL_TekInit(cal_chMeasureI);
 
 	// Reload values
 	var CurrentArray = CGEN_GetRange(cal_IsetMin, cal_IsetMax, cal_IsetStp);
@@ -179,6 +197,58 @@ function CAL_CalibrateIset()
 }
 //--------------------
 
+function CAL_CalibrateIg()
+{		
+	CAL_ResetA();
+	CAL_ResetIgCal();
+	
+	// Tektronix init
+	CAL_GateTekInit(cal_chMeasureI);
+
+	// Reload values
+	var CurrentArray = CGEN_GetRange(cal_IgMin, cal_IgMax, cal_IgStp);
+
+	if (CAL_CollectIg(CurrentArray, cal_Iterations))
+	{
+		CAL_SaveIg("LSL_Ig");
+
+		// Plot relative error distribution
+		scattern(cal_IgSc, cal_IgErr, "Current (in mA)", "Error (in %)", "Current relative error");
+
+		// Calculate correction
+		cal_IgCorr = CGEN_GetCorrection2("LSL_Ig");
+		CAL_SetCoefIg(cal_IgCorr[0], cal_IgCorr[1], cal_IgCorr[2]);
+		CAL_PrintCoefIg();
+	}
+}
+//--------------------
+
+function CAL_CalibrateUg()
+{
+	CAL_ResetA();
+	CAL_ResetUgCal();
+	
+	// Tektronix init
+	CAL_GateTekInit(cal_chMeasureU);
+	
+	// Reload values
+	var VoltageArray = CGEN_GetRange(cal_UgMin, cal_UgMax, cal_UgStp);
+	
+	if (CAL_CollectUg(VoltageArray, cal_Iterations))
+	{
+		CAL_SaveUg("LSL_Ug");
+
+		// Plot relative error distribution
+		scattern(cal_UgSc, cal_UgErr, "Voltage (in mV)", "Error (in %)", "Voltage relative error");
+
+		// Calculate correction
+		cal_UgCorr = CGEN_GetCorrection2("LSL_Ug");
+		CAL_SetCoefUg(cal_UgCorr[0], cal_UgCorr[1], cal_UgCorr[2]);
+		CAL_PrintCoefUg();
+	}
+}
+//--------------------
+
 function CAL_VerifyUtm()
 {
 	CAL_ResetA();
@@ -186,7 +256,7 @@ function CAL_VerifyUtm()
 	OverShootCurrentReset();
 	
 	// Tektronix init
-	CAL_TekInit(cal_chMeasureUtm);
+	CAL_TekInit(cal_chMeasureU);
 	
 	// Reload values
 	var VoltageArray = CGEN_GetRange(cal_UtmMin, cal_UtmMax, cal_UtmStp);
@@ -210,7 +280,7 @@ function CAL_VerifyItm()
 	OverShootCurrentReset();
 	
 	// Tektronix init
-	CAL_TekInit(cal_chMeasureItm);
+	CAL_TekInit(cal_chMeasureI);
 
 	// Reload values
 	var CurrentArray = CGEN_GetRange(cal_ItmMin[cal_CurrentRange], cal_ItmMax[cal_CurrentRange], cal_ItmStp);
@@ -234,7 +304,7 @@ function CAL_VerifyIset()
 	OverShootCurrentReset();
 	
 	// Tektronix init
-	CAL_TekInit(cal_chMeasureItm);
+	CAL_TekInit(cal_chMeasureI);
 
 	// Reload values
 	var CurrentArray = CGEN_GetRange(cal_IsetMin, cal_IsetMax, cal_IsetStp);
@@ -248,6 +318,46 @@ function CAL_VerifyIset()
 	}
 	
 	OverShootCurrentRestore();
+}
+//--------------------
+
+function CAL_VerifyIg()
+{		
+	CAL_ResetA();
+	
+	// Tektronix init
+	CAL_GateTekInit(cal_chMeasureI);
+
+	// Reload values
+	var CurrentArray = CGEN_GetRange(cal_IgMin, cal_IgMax, cal_IgStp);
+
+	if (CAL_CollectIg(CurrentArray, cal_Iterations))
+	{
+		CAL_SaveIg("LSL_Ig_fixed");
+
+		// Plot relative error distribution
+		scattern(cal_IgSc, cal_IgErr, "Current (in mA)", "Error (in %)", "Current relative error");
+	}
+}
+//--------------------
+
+function CAL_VerifyUg()
+{
+	CAL_ResetA();
+	
+	// Tektronix init
+	CAL_GateTekInit(cal_chMeasureU);
+	
+	// Reload values
+	var VoltageArray = CGEN_GetRange(cal_UgMin, cal_UgMax, cal_UgStp);
+
+	if (CAL_CollectUg(VoltageArray, cal_Iterations))
+	{
+		CAL_SaveUg("LSL_Ug_fixed");
+
+		// Plot relative error distribution
+		scattern(cal_UgSc, cal_UgErr, "Voltage (in mV)", "Error (in %)", "Voltage relative error");
+	}
 }
 //--------------------
 
@@ -275,7 +385,7 @@ function CAL_CollectUtm(VoltageValues, IterationsCount)
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
 			
-			LSL_TekScale(cal_chMeasureUtm, VoltageValues[j] / 1000);
+			LSL_TekScale(cal_chMeasureU, VoltageValues[j] / 1000);
 			LSL_TriggerInit(cal_chSync)
 			
 			var PrintTemp = LSLH_Print;
@@ -295,7 +405,7 @@ function CAL_CollectUtm(VoltageValues, IterationsCount)
 			print("Utmread, mV: " + UtmRead);
 
 			// Scope data
-			var UtmSc = CAL_Measure(cal_chMeasureUtm).toFixed(3) * 1000;
+			var UtmSc = CAL_Measure(cal_chMeasureU).toFixed(3) * 1000;
 			cal_UtmSc.push(UtmSc);
 			print("Utmtek,  mV: " + UtmSc);
 
@@ -336,7 +446,7 @@ function CAL_CollectItm(CurrentValues, IterationsCount)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
-			LSL_TekScale(cal_chMeasureItm, CurrentValues[j] * cal_Rshunt / 1000000);
+			LSL_TekScale(cal_chMeasureI, CurrentValues[j] * cal_Rshunt / 1000000);
 			LSL_TriggerInit(cal_chSync, 2);
 			
 			var PrintTemp = LSLH_Print;
@@ -356,7 +466,7 @@ function CAL_CollectItm(CurrentValues, IterationsCount)
 			print("Itmread, A: " + ItmRead);
 
 			// Scope data
-			var ItmSc = (CAL_Measure(cal_chMeasureItm) / cal_Rshunt * 1000000).toFixed(2);
+			var ItmSc = (CAL_Measure(cal_chMeasureI) / cal_Rshunt * 1000000).toFixed(2);
 			cal_ItmSc.push(ItmSc);
 			print("Itmtek, A: " + ItmSc);
 
@@ -397,7 +507,7 @@ function CAL_CollectIset(CurrentValues, IterationsCount)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
-			LSL_TekScale(cal_chMeasureItm, CurrentValues[j] * cal_Rshunt / 1000000);
+			LSL_TekScale(cal_chMeasureI, CurrentValues[j] * cal_Rshunt / 1000000);
 			LSL_TriggerInit(cal_chSync, 2);
 			
 			var PrintTemp = LSLH_Print;
@@ -417,7 +527,7 @@ function CAL_CollectIset(CurrentValues, IterationsCount)
 			print("Iset, A: " + Iset);
 
 			// Scope data
-			var IsetSc = (CAL_Measure(cal_chMeasureItm) / cal_Rshunt * 1000000).toFixed(2);
+			var IsetSc = (CAL_Measure(cal_chMeasureI) / cal_Rshunt * 1000000).toFixed(2);
 			cal_IsetSc.push(IsetSc);
 			print("Itmtek, A: " + IsetSc);
 
@@ -425,6 +535,119 @@ function CAL_CollectIset(CurrentValues, IterationsCount)
 			var IsetErr = ((Iset - IsetSc) / IsetSc * 100).toFixed(2);
 			cal_IsetErr.push(IsetErr);
 			print("Iseterr, %: " + IsetErr);
+			print("--------------------");
+			
+			if (anykey()) return 0;
+		}
+	}
+
+	return 1;
+}
+//--------------------
+
+function CAL_CollectIg(CurrentValues, IterationsCount)
+{
+	cal_CntTotal = IterationsCount * CurrentValues.length;
+	cal_CntDone = 1;
+
+	var AvgNum;
+	if (cal_UseAvg)
+	{
+		AvgNum = 4;
+		TEK_AcquireAvg(AvgNum);
+	}
+	else
+	{
+		AvgNum = 1;
+		TEK_AcquireSample();
+	}
+	
+	for (var i = 0; i < IterationsCount; i++)
+	{
+		for (var j = 0; j < CurrentValues.length; j++)
+		{
+			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+			//
+			LSL_TekScale(cal_chMeasureI, CurrentValues[j] * cal_GateRshunt / 1000000);
+			LSL_TriggerInit(cal_chSync, 2);
+			
+			for (var k = 0; k < AvgNum; k++)
+			{
+				if(!LSLH_GD_Pulse(CurrentValues[j], cal_UgMax, cal_GatePulseWidth))
+				sleep(500);
+			}
+			
+			// Unit data
+			var IgSet = CurrentValues[j];
+			cal_Ig.push(IgSet);
+			print("IgSet, mA: " + IgSet);
+
+			// Scope data
+			var IgSc = (CAL_Measure(cal_chMeasureI) / cal_GateRshunt * 1000000).toFixed(2);
+			cal_IgSc.push(IgSc);
+			print("Igtek, mA: " + IgSc);
+
+			// Relative error
+			var IgErr = ((IgSet - IgSc) / IgSc * 100).toFixed(2);
+			cal_IgErr.push(IgErr);
+			print("Igerr, %: " + IgErr);
+			print("--------------------");
+			
+			if (anykey()) return 0;
+		}
+	}
+
+	return 1;
+}
+//--------------------
+
+function CAL_CollectUg(VoltageValues, IterationsCount)
+{
+	cal_CntTotal = IterationsCount * VoltageValues.length;
+	cal_CntDone = 1;
+
+	var AvgNum;
+	if (cal_UseAvg)
+	{
+		AvgNum = 4;
+		TEK_AcquireAvg(AvgNum);
+	}
+	else
+	{
+		AvgNum = 1;
+		TEK_AcquireSample();
+	}
+	
+	for (var i = 0; i < IterationsCount; i++)
+	{
+		for (var j = 0; j < VoltageValues.length; j++)
+		{
+			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+			//
+			
+			LSL_TekScale(cal_chMeasureU, VoltageValues[j] / 1000);
+			LSL_TriggerInit(cal_chSync)
+			
+			for (var k = 0; k < AvgNum; k++)
+			{
+				if(!LSLH_GD_Pulse(cal_IgMax, VoltageValues[j], cal_GatePulseWidth))
+				sleep(500);
+			}
+			
+			// Unit data
+			var UgSet = VoltageValues[j];
+			cal_Ug.push(UgSet);
+			print("UgSet, mV: " + UgSet);
+
+			// Scope data
+			var UgSc = CAL_Measure(cal_chMeasureU).toFixed(3) * 1000;
+			cal_UgSc.push(UgSc);
+			print("Ugtek,  mV: " + UgSc);
+
+			// Relative error
+			var UgErr = ((UgSet - UgSc) / UgSc * 100).toFixed(2);
+			cal_UgErr.push(UgErr);
+			print("Ugerr,  %: " + UgErr);
 			print("--------------------");
 			
 			if (anykey()) return 0;
@@ -452,6 +675,15 @@ function LSL_TekScale(Channel, Value)
 
 function CAL_TekInit(Channel)
 {
+	TEK_Horizontal("1e-3", "0");
+	TEK_ChannelInit(Channel, "1", "2");
+	CAL_TekCursor(Channel);
+}
+//--------------------
+
+function CAL_GateTekInit(Channel)
+{
+	TEK_Horizontal("25e-6", "0");
 	TEK_ChannelInit(Channel, "1", "2");
 	CAL_TekCursor(Channel);
 }
@@ -491,21 +723,29 @@ function CAL_ResetA()
 	cal_Utm = [];
 	cal_Itm = [];
 	cal_Iset = [];
+	cal_Ig = [];
+	cal_Ug = [];
 
 	// Tektronix data
 	cal_UtmSc = [];
 	cal_ItmSc = [];
 	cal_IsetSc = [];
+	cal_IgSc = [];
+	cal_UgSc = [];
 
 	// Relative error
 	cal_UtmErr = [];
 	cal_ItmErr = [];
 	cal_IsetErr = [];
+	cal_IgErr = [];
+	cal_UgErr = [];
 
 	// Correction
 	cal_UtmCorr = [];
 	cal_ItmCorr = [];
 	cal_IsetCorr = [];
+	cal_IgCorr = [];
+	cal_UgCorr = [];
 }
 //--------------------
 
@@ -515,9 +755,21 @@ function CAL_SaveUtm(NameUtm)
 }
 //--------------------
 
+function CAL_SaveUg(NameUg)
+{
+	CGEN_SaveArrays(NameUg, cal_UgSc, cal_Ug, cal_UgErr);
+}
+//--------------------
+
 function CAL_SaveItm(NameItm)
 {
 	CGEN_SaveArrays(NameItm, cal_Itm, cal_ItmSc, cal_ItmErr);
+}
+//--------------------
+
+function CAL_SaveIg(NameIg)
+{
+	CGEN_SaveArrays(NameIg, cal_IgSc, cal_Ig, cal_IgErr);
 }
 //--------------------
 
@@ -533,9 +785,21 @@ function CAL_ResetUtmCal()
 }
 //--------------------
 
+function CAL_ResetUgCal()
+{
+	CAL_SetCoefUg(0, 1, 0);
+}
+//--------------------
+
 function CAL_ResetItmCal()
 {
 	CAL_SetCoefItm(0, 1, 0);
+}
+//--------------------
+
+function CAL_ResetIgCal()
+{
+	CAL_SetCoefIg(0, 1, 0);
 }
 //--------------------
 
@@ -553,11 +817,27 @@ function CAL_SetCoefUtm(P2, P1, P0)
 }
 //--------------------
 
+function CAL_SetCoefUg(P2, P1, P0)
+{
+	dev.ws(54, Math.round(P2 * 1e6));
+	dev.w(53, Math.round(P1 * 1000));
+	dev.ws(52, Math.round(P0));
+}
+//--------------------
+
 function CAL_SetCoefIset(P2, P1, P0)
 {
 	dev.ws(43, Math.round(P2 * 1e6));
 	dev.w(42, Math.round(P1 * 1000));
 	dev.ws(41, Math.round(P0));
+}
+//--------------------
+
+function CAL_SetCoefIg(P2, P1, P0)
+{
+	dev.ws(59, Math.round(P2 * 1e6));
+	dev.w(58, Math.round(P1 * 1000));
+	dev.ws(57, Math.round(P0));
 }
 //--------------------
 
@@ -592,6 +872,14 @@ function CAL_PrintCoefUtm()
 }
 //--------------------
 
+function CAL_PrintCoefUg()
+{
+	print("Ug  P2 x1e6		: " + dev.rs(54));
+	print("Ug  P1 x1000		: " + dev.rs(53));
+	print("Ug  P0			: " + dev.rs(52));
+}
+//--------------------
+
 function CAL_PrintCoefItm()
 {
 	switch(cal_CurrentRange)
@@ -620,6 +908,14 @@ function CAL_PrintCoefIset()
 	print("Itm 1 P2 x1e6	: " + dev.rs(43));
 	print("Itm 1 P1 x1000	: " + dev.rs(42));
 	print("Itm 1 P0			: " + dev.rs(41));
+}
+//--------------------
+
+function CAL_PrintCoefIg()
+{
+	print("Ig P2 x1e6	: " + dev.rs(59));
+	print("Ig P1 x1000	: " + dev.rs(58));
+	print("Ig P0		: " + dev.rs(57));
 }
 //--------------------
 

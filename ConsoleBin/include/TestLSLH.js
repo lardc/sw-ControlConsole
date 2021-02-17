@@ -41,12 +41,12 @@ function LSLH_StartMeasure(Current)
 }
 //--------------------------
 
-function LSLH_ResourceTest(N)
+function LSLH_ResourceTest(Current, N)
 {
 	for(i = 0; i < N; i++)
 	{
 		print("#" + i);
-		LSLH_StartMeasure(6000);
+		LSLH_StartMeasure(Current);
 		
 		if(anykey())
 			break;
