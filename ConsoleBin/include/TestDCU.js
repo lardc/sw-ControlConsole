@@ -27,12 +27,12 @@ function DRCU_Pulse(RiseRate, FallRate, Amplitude, Range)
 	dev.c(16);
 	
 	sleep(100);
-	dev.c(21);
-	sleep(1);
+	dev.c(26);
+	sleep(5);
 	dev.c(17);
 	
 	sleep(10);
-	dev.c(22);
+	dev.c(25);
 	
 	// Reset to default
 	dev.w(0,1000);
