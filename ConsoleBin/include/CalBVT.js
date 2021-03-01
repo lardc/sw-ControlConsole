@@ -366,7 +366,7 @@ function CBVT_Collect(VoltageValues, IterationsCount, PrintMode)
 	dev.w(130, CBVT_GetILim() * 10);											// Current limit
 	dev.w(132, bvt_test_time);													// Plate time
 	dev.w(133, 30);																// Rise rate
-	dev.w(134, 500);															// Start voltage
+	dev.w(134, bvt_start_v);													// Start voltage
 	dev.w(136, Math.round(50 / ((cbvt_MaxP == 0) ? cbvt_Freq1 : cbvt_Freq2)));	// Frequency divisor
 	
 	CBVT_TekScale(cbvt_chMeasureV, cbvt_Vmax);
