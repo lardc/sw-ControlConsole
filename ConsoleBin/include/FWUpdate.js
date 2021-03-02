@@ -322,37 +322,19 @@ function FWU_RestoreFCROVU(Version)
 //------------------------
 
 // CS
-function FWU_CS(Version)
+function FWU_CS()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../Clamping Systems/CSCU/_Common/Controller Soft/Version " + Version + "/CSControlBoard/Release/CSControlBoard.hex");
+	FWUpdate("../../hw-CSControlBoard/Firmware/Release/CSControlBoard.hex");
 }
 
-function FWU_DumpCS(Version)
+function FWU_DumpCS()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../Clamping Systems/CSCU/_Common/Controller Soft/Version " + Version + "/CSControlBoard/cs.regdump", 0, 62);
+	dev.Dump("../../hw-CSControlBoard/Firmware/CSControlBoard.regdump", 0, 62);
 }
 
-function FWU_RestoreCS(Version)
+function FWU_RestoreCS()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../Clamping Systems/CSCU/_Common/Controller Soft/Version " + Version + "/CSControlBoard/cs.regdump");
+	dev.Restore("../../hw-CSControlBoard/Firmware/CSControlBoard.regdump");
 }
 //------------------------
 
