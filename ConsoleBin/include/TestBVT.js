@@ -43,6 +43,13 @@ function BVT_StartPulse(N, Voltage, Current)
 			print("Vrrm,  V: " + Math.abs(dev.rs(198)));
 			print("Irrm, mA: " + BVT_ReadCurrent(bvt_use_microamps).toFixed(bvt_use_microamps ? 3 : 1));
 		}
+		
+		if (dev.r(195) == 404)
+		{
+			PrintStatus()
+			return
+		}
+		
 		print("-------------");
 		
 		if (bvt_direct)
