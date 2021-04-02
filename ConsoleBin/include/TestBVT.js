@@ -55,18 +55,20 @@ function BVT_StartPulse(N, Voltage, Current)
 		if (bvt_direct)
 		{
 			bvt_vdrm.push(Math.abs(dev.rs(198)));
-			bvt_idrm.push(Math.abs(dev.rs(199) / 10));
+			bvt_idrm.push(BVT_ReadCurrent(bvt_use_microamps).toFixed(bvt_use_microamps ? 3 : 1));
 		}
 		else
 		{
 			bvt_vrrm.push(Math.abs(dev.rs(198)));
-			bvt_irrm.push(Math.abs(dev.rs(199) / 10));
+			bvt_irrm.push(BVT_ReadCurrent(bvt_use_microamps).toFixed(bvt_use_microamps ? 3 : 1));
 		}
 		
 		if (anykey()) return;
 		
 		if ((i + 1) < N)
 			sleep(bvt_pulse_sleep);
+		
+		if (anykey()) return;
 	}
 }
 
