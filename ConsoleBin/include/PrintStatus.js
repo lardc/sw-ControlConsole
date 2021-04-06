@@ -7,6 +7,9 @@ function PrintStatus()
 	{
 		dev.Read16Silent(192);
 		
+		var reg = dev.r(96);
+		dev.Write16Silent(96, reg);
+		
 		print("Registers [192 - 196]");
 		print("Device state:	" + dev.r(192));
 		print("Fault reason:	" + dev.r(193));
