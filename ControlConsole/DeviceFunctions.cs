@@ -152,6 +152,21 @@ namespace PE.ControlConsole
             return NodeID;
         }
 
+        public void Write16Silent(int Address, int Data)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                m_Adapter.Write16((ushort)NodeID, (ushort)Address, (ushort)Data);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public void Write16(int Address, int Data)
         {
             try
@@ -197,7 +212,7 @@ namespace PE.ControlConsole
         {
             Write16S(Address, Data);
         }
-        
+
         public void Write16(int Address1, int Data1, int Address2, int Data2)
         {
             try
