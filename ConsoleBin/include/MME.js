@@ -1,7 +1,7 @@
 include("TestCS.js")
-include("TestGTU.js")
+include("TestGTU_4.0.js")
 include("TestBVT.js")
-include("TestSL.js")
+include("TestLSLH.js")
 
 mme_cs_def_force = 5;
 mme_cs_force = 25;
@@ -23,17 +23,30 @@ mme_CSMAX =		5;
 // active blocks
 mme_use_GTU = 	1;
 mme_use_SL = 	1;
-mme_use_BVT =	1;
-mme_use_CS = 	1;
+mme_use_BVT =	0;
+mme_use_CS = 	0;
+
+// NodeID
+mme_Nid_HMIU = 0;
+mme_Nid_GTU = 3;
+mme_Nid_SL = 9;
+mme_Nid_BVT = 4;
+mme_Nid_CS = 6;
+mme_Nid_CU = 1;
+mme_Nid_CROVU = 7;
+mme_Nid_SCTU = 8;
+mme_Nid_ATU = 9;
+mme_Nid_CUext = 5;
+
 
 // settings
-mme_plot = 1;		// Plot graphics
+mme_plot = 0;		// Plot graphics
 
 function MME_Units()
 {
 	var ret = 1;
 	
-	dev.nid(0);
+	dev.nid(mme_Nid_HMIU);
 	try
 	{
 		dev.Read16Silent(0);
@@ -45,7 +58,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-	dev.nid(1);
+	dev.nid(mme_Nid_CU);
 	try
 	{
 		dev.Read16Silent(0);
@@ -57,7 +70,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-	dev.nid(2);
+	dev.nid(mme_Nid_SL);
 	try
 	{
 		dev.Read16Silent(0);
@@ -69,7 +82,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-	dev.nid(3);
+	dev.nid(mme_Nid_GTU);
 	try
 	{
 		dev.Read16Silent(0);
@@ -81,7 +94,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-	dev.nid(4);
+	dev.nid(mme_Nid_BVT);
 	try
 	{
 		dev.Read16Silent(0);
@@ -93,7 +106,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-	dev.nid(5);
+	dev.nid(mme_Nid_CUext);
 	try
 	{
 		dev.Read16Silent(0);
@@ -105,7 +118,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-	dev.nid(6);
+	dev.nid(mme_Nid_CS);
 	try
 	{
 		dev.Read16Silent(0);
@@ -117,7 +130,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-	dev.nid(7);
+	dev.nid(mme_Nid_CROVU);
 	try
 	{
 		dev.Read16Silent(0);
@@ -129,7 +142,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-	dev.nid(8);
+	dev.nid(mme_Nid_SCTU);
 	try
 	{
 		dev.Read16Silent(0);
@@ -141,7 +154,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-	dev.nid(9);
+	dev.nid(mme_Nid_ATU);
 	try
 	{
 		dev.Read16Silent(0);
@@ -200,7 +213,7 @@ function MME_TestUnits(UnitArray, Num, Pause)
 function MME_IsReady()
 {
 	// cu
-	dev.nid(1);
+	dev.nid(mme_Nid_CU);
 	if (dev.r(96) == 0) dev.c(1);
 	if (dev.r(96) != 3)
 	{
@@ -211,7 +224,7 @@ function MME_IsReady()
 	// sl
 	if (mme_use_SL)
 	{
-		dev.nid(2);
+		dev.nid(mme_Nid_SL);
 		if (dev.r(192) == 0) dev.c(1);
 		while (dev.r(192) == 3) sleep(100);
 		if (dev.r(192) != 4)
@@ -224,7 +237,7 @@ function MME_IsReady()
 	// bvt
 	if (mme_use_BVT)
 	{
-		dev.nid(4);
+		dev.nid(mme_Nid_BVT);
 		if (dev.r(192) == 0) dev.c(1);
 		if (dev.r(192) != 4)
 		{
@@ -236,7 +249,7 @@ function MME_IsReady()
 	// cs
 	if (mme_use_CS)
 	{
-		dev.nid(6);
+		dev.nid(mme_Nid_CS);
 		if (dev.r(96) == 0) dev.c(100);
 		while (dev.r(96) == 5) sleep(100);
 		if (dev.r(96) != 3)
@@ -253,7 +266,7 @@ function MME_CS(Force)
 {
 	if (mme_use_CS)
 	{
-		dev.nid(6);
+		dev.nid(mme_Nid_CS);
 		if (Force == 0)
 		{
 			dev.c(104);
@@ -279,7 +292,7 @@ function MME_CS(Force)
 
 function MME_CU(CMD)
 {
-	dev.nid(1);
+	dev.nid(mme_Nid_CU);
 	dev.c(CMD);
 }
 
@@ -288,7 +301,7 @@ function MME_GTU()
 	if (mme_use_GTU)
 	{
 		gtu_plot = mme_plot;
-		dev.nid(3);
+		dev.nid(mme_Nid_GTU);
 		GTU_All(1, 0);
 	}
 }
@@ -296,7 +309,7 @@ function MME_GTU()
 function MME_GTUSL(Current, Force)
 {
 	// prepare cu
-	dev.nid(1);
+	dev.nid(mme_Nid_CU);
 	if (dev.r(96) == 0)
 	{
 		dev.c(1);
@@ -320,7 +333,7 @@ function MME_GTUSL(Current, Force)
 	}
 	
 	// prepare gtu
-	dev.nid(3);
+	dev.nid(mme_Nid_GTU);
 	if (dev.r(192) != 0)
 	{
 		print("GTU in abnormal state");
@@ -333,7 +346,7 @@ function MME_GTUSL(Current, Force)
 	}
 	
 	// prepare sl
-	dev.nid(2)
+	dev.nid(mme_Nid_SL)
 	if (dev.r(192) == 0)
 	{
 		dev.c(1);
@@ -352,7 +365,7 @@ function MME_GTUSL(Current, Force)
 	}
 	
 	// prepare clamp
-	dev.nid(6);
+	dev.nid(mme_Nid_CS);
 	if (dev.r(96) == 0)
 	{
 		dev.c(100);
@@ -387,13 +400,13 @@ function MME_GTUSL(Current, Force)
 	}
 	
 	// activate gtu
-	dev.nid(3);
+	dev.nid(mme_Nid_GTU);
 	dev.w(130, 1);
 	dev.w(151, 4)
 	dev.c(102);
 	
 	// activate sl
-	dev.nid(2);
+	dev.nid(mme_Nid_SL);
 	sl_rep = 1;
 	dev.w(162, 1);
 	dev.w(163, 1);
@@ -402,7 +415,7 @@ function MME_GTUSL(Current, Force)
 	SL_Sin(Current);
 	
 	// read gtu
-	dev.nid(3);
+	dev.nid(mme_Nid_GTU);
 	while(dev.r(192) == 5) sleep(50);
 	dev.w(130, 0);
 	if (dev.r(197) == 2) print("problem: " + dev.r(196));
@@ -413,17 +426,17 @@ function MME_GTUSL(Current, Force)
 	plot(dev.rafs(1), 1, 0);
 	
 	// recommutate
-	dev.nid(1);
+	dev.nid(mme_Nid_CU);
 	dev.c(111);
 	print("CU ok");
 	
 	// measure in ordinary way
-	dev.nid(3);
+	dev.nid(mme_Nid_GTU);
 	dev.w(130, 0);
 	GTU_Holding();
 	
 	// release clamp
-	dev.nid(6);
+	dev.nid(mme_Nid_CS);
 	dev.c(104);
 	print("CS unclamp...");
 	while(dev.r(96) == 10) sleep(50);
@@ -443,9 +456,9 @@ function MME_SL(Current)
 {
 	if (mme_use_SL)
 	{
-		dev.nid(2);
+		dev.nid(mme_Nid_SL);
 		dev.w(160, 3)
-		SL_Sin(Current);
+		LSLH_StartMeasure(Current);
 		if (mme_plot) SL_Plot();
 	}
 }
@@ -454,7 +467,7 @@ function MME_BVT()
 {
 	if (mme_use_BVT)
 	{
-		dev.nid(4);
+		dev.nid(mme_Nid_BVT);
 		BVT_StartPulse(1, mme_bvt_voltage, mme_bvt_current * 10);
 		if (mme_plot) BVT_PlotXY();
 	}
@@ -560,18 +573,18 @@ function MME_SafetyPos(Num, Pos)
 {
 	for (var i = 0; i < Num; i++)
 	{
-		dev.nid(1);
+		dev.nid(mme_Nid_CU);
 		dev.c(100);
 		dev.c(112);
 
-		dev.nid(6);
+		dev.nid(mme_Nid_CS);
 		if (!CS_Pos(3, Pos))
 		{
-			dev.nid(1);
+			dev.nid(mme_Nid_CU);
 			sleep(2000);
 			dev.c(101);
 			
-			dev.nid(6);
+			dev.nid(mme_Nid_CS);
 			dev.w(64, 0);
 			sleep(5000);
 		}
@@ -584,18 +597,18 @@ function MME_SafetyClamp(Num, Force)
 {
 	for (var i = 0; i < Num; i++)
 	{
-		dev.nid(1);
+		dev.nid(mme_Nid_CU);
 		dev.c(100);
 		dev.c(112);
 
-		dev.nid(6);
+		dev.nid(mme_Nid_CS);
 		if (!CS_Clamp(3, Force))
 		{
-			dev.nid(1);
+			dev.nid(mme_Nid_CU);
 			sleep(2000);
 			dev.c(101);
 			
-			dev.nid(6);
+			dev.nid(mme_Nid_CS);
 			dev.c(104);
 			sleep(5000);
 		}

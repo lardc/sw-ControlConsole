@@ -57,6 +57,7 @@ Types:
 		- GetNodeID() : @value
 		- SetNodeID(@value)
 		  <nid>
+		- Write16Silent(@address, @data) - write register without printing exception
 		- Write16(@address, @data)
 		  <w>
 		- Write16S(@address, @data)
