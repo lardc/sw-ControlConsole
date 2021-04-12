@@ -225,8 +225,9 @@ function BVT_PrintV()
 
 function BVT_Plot(Divisor)
 {
-	if (typeof Divisor == 'undefined')
-		Divisor = 10;
+	var CurrentDiv = 10;
+	if (typeof Divisor != 'undefined')
+		CurrentDiv = Divisor;
 	
 	var ResArray = BVT_Read();
 	
@@ -234,39 +235,62 @@ function BVT_Plot(Divisor)
 	for (var i = 0; i < ResArray.Voltage.length; i++)
 		ResArray.Voltage[i] = -ResArray.Voltage[i];
 	for (var i = 0; i < ResArray.Current.length; i++)
-		ResArray.Current[i] = -ResArray.Current[i] / Divisor;
+		ResArray.Current[i] = -ResArray.Current[i] / CurrentDiv;
 	
 	plot(ResArray.Voltage, 1, 0); sleep(200);
 	plot(ResArray.Current, 1, 0);
 	return ResArray;
 }
 
-function BVT_PlotDiag()
+function BVT_PlotDiagX(Divisor, WithPWM)
 {
-	var p1, p2, p3;
+	var curr = dev.rafs(1);
+	var vlt = dev.rafs(2);
+	var pwm = dev.rafs(3);
 	
-	p1 = dev.rafs(1);
-	p2 = dev.rafs(2);
-	p3 = dev.rafs(3);
+	if (typeof Divisor != 'undefined')
+	{
+		for (var i = 0; i < curr.length; ++i)
+			curr[i] /= Divisor;
+	}
 	
-	plot3(p1, p2, p3, 1, 0);
+	if (WithPWM)
+		plot3(vlt, curr, pwm, 1, 0);
+	else
+		plot2(vlt, curr, 1, 0);
 }
 
-function BVT_PlotXY2()
+function BVT_PlotDiag(Divisor)
 {
-	var p1, p2;
-	
-	p1 = dev.rafs(5);
-	p2 = dev.rafs(6);
-	
-	for (var i = 0; i < p1.length; ++i)
-		p1[i] /= 100;
-	
-	plotXY(p2, p1);
+	BVT_PlotDiagX(Divisor, true)
 }
 
-function BVT_PlotXY()
+function BVT_PlotDiagVI(Divisor)
 {
+	BVT_PlotDiagX(Divisor, false)
+}
+
+function BVT_PlotXY2(Divisor)
+{
+	var CurrentDiv = 10;
+	if (typeof Divisor != 'undefined')
+		CurrentDiv = Divisor;
+	
+	var curr = dev.rafs(5);
+	var vlt = dev.rafs(6);
+	
+	for (var i = 0; i < curr.length; ++i)
+		curr[i] /= CurrentDiv;
+	
+	plotXY(vlt, curr);
+}
+
+function BVT_PlotXY(Divisor)
+{
+	var CurrentDiv = 10;
+	if (typeof Divisor != 'undefined')
+		CurrentDiv = Divisor;
+	
 	dev.c(111);
 	var ResArray = BVT_Read();
 	
@@ -274,7 +298,7 @@ function BVT_PlotXY()
 	for (var i = 0; i < ResArray.Voltage.length; i++)
 		ResArray.Voltage[i] = -ResArray.Voltage[i];
 	for (var i = 0; i < ResArray.Current.length; i++)
-		ResArray.Current[i] = -ResArray.Current[i] / 10;
+		ResArray.Current[i] = -ResArray.Current[i] / CurrentDiv;
 	
 	plotXY(ResArray.Voltage, ResArray.Current);
 	return ResArray;
