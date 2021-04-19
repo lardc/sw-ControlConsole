@@ -148,6 +148,7 @@ function CAL_CalibrateItm()
 	CAL_TekInit(cal_chMeasureI);
 
 	// Reload values
+	cal_ItmStp = (cal_ItmMax[cal_CurrentRange] - cal_ItmMin[cal_CurrentRange]) / cal_Points;
 	var CurrentArray = CGEN_GetRange(cal_ItmMin[cal_CurrentRange], cal_ItmMax[cal_CurrentRange], cal_ItmStp);
 
 	if (CAL_CollectItm(CurrentArray, cal_Iterations))
@@ -283,6 +284,7 @@ function CAL_VerifyItm()
 	CAL_TekInit(cal_chMeasureI);
 
 	// Reload values
+	cal_ItmStp = (cal_ItmMax[cal_CurrentRange] - cal_ItmMin[cal_CurrentRange]) / cal_Points;
 	var CurrentArray = CGEN_GetRange(cal_ItmMin[cal_CurrentRange], cal_ItmMax[cal_CurrentRange], cal_ItmStp);
 
 	if (CAL_CollectItm(CurrentArray, cal_Iterations))
