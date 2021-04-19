@@ -807,7 +807,7 @@ function CAL_ResetIgCal()
 
 function CAL_ResetIsetCal()
 {
-	CAL_SetCoefItm(0, 1, 0);
+	CAL_SetCoefIset(0, 1, 0);
 }
 //--------------------
 
