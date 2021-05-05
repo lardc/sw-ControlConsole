@@ -4,13 +4,13 @@ include("CalGeneral.js")
 
 
 // Input params
-catu_LoadType	= 2;			// Load Type: 1-DUT; 2-Resistor;
-catu_LoadR		= 1100;			// Load Resistance (in Ohms)
-catu_Vmax		= 9000;			// Max output voltage (in V)
-catu_Power		= 75000;		// Max output power (in W)
-catu_LoadV		= 0;			// Fixed extra voltage for DUT (in V)
+catu_LoadType		= 2;				// Load Type: 1-DUT; 2-Resistor;
+catu_LoadR			= 1100;			// Load Resistance (in Ohms)
+catu_Vmax				= 9000;			// Max output voltage (in V)
+catu_Power			= 75000;		// Max output power (in W)
+catu_LoadV			= 0;				// Fixed extra voltage for DUT (in V)
 catu_preCurrent	= 150;			// Pre-current plate (in mA)
-catu_ShuntRes	= 0.05;			// Current shunt resistanse (in Ohms)
+catu_ShuntRes	  = 0.05;			// Current shunt resistanse (in Ohms)
 
 
 // Select software
@@ -307,18 +307,19 @@ function CATU_Collect(CurrentValues, IterationsCount)
 			print("Ptek,   kW: " + (p_sc / 1000).toFixed(2));
 
 			// Relative error
-			//catu_v_err.push(((UnitData.V - v_sc) / v_sc * 100).toFixed(2));
-			//catu_i_err.push(((UnitData.I - i_sc) / i_sc * 100).toFixed(2));
+			catu_v_err.push(((UnitData.V - v_sc) / v_sc * 100).toFixed(2));
+			catu_i_err.push(((UnitData.I - i_sc) / i_sc * 100).toFixed(2));
 			//catu_p_err.push(((UnitData.P - p_sc) / p_sc * 100).toFixed(2));
 			////////////////////////////////////////////////////////////////
-			catu_v_err.push(1.1 * Math.sqrt(Math.pow((UnitData.V - v_sc)/v_sc * 100, 2) + Math.pow(EUosc, 2) + Math.pow(Ediv, 2));
-			catu_i_err.push(1.1 * Math.sqrt(Math.pow((UnitData.I - i_sc)/i_sc * 100, 2) + Math.pow(EUosc, 2) + Math.pow(Esh, 2));
+			// Summary error
+			//catu_v_err.push(1.1 * Math.sqrt(Math.pow((UnitData.V - v_sc)/v_sc * 100, 2) + Math.pow(EUosc, 2) + Math.pow(Ediv, 2));
+			//catu_i_err.push(1.1 * Math.sqrt(Math.pow((UnitData.I - i_sc)/i_sc * 100, 2) + Math.pow(EUosc, 2) + Math.pow(Esh, 2));
 			////////////////////////////////////////////////////////////////
 			catu_iset_err.push(((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
 			////////////////////////////////////////////////////////////////
-			for(i=0;i<catu_p_err.length;i++)
+			for(var k = 0; k < catu_p_err.length; k++)
 			{
-				catu_p_err[i] = catu_v_err[i] + catu_i_err[i];
+				catu_p_err[k] = catu_v_err[k] + catu_i_err[k];
 			}
 			////////////////////////////////////////////////////////////////
 			print("------------------------");
