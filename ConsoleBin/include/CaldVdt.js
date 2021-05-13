@@ -212,6 +212,8 @@ function CdVdt_CellCalibrateRate(CellNumber)
 		TEK_TriggerInit(cdvdt_chMeasure, cdvdt_CalVoltage / 2);
 		sleep(500);
 		
+		CdVdt_ClearDisplay();
+		
 		// Start pulse
 		for(var CounterAverages = 0; CounterAverages < cdvdt_def_UseAverage; CounterAverages++)
 		{			
@@ -453,4 +455,12 @@ function CdVdt_ResetRateCal()
 function CdVdt_ResetVCal()
 {
 	CdVdt_CalV(1, 0);
+}
+
+function CdVdt_ClearDisplay()
+{
+	TEK_AcquireSample();
+	if(cdvdt_def_UseAverage > 1)
+		TEK_AcquireAvg(cdvdt_def_UseAverage);
+	sleep(500);
 }
