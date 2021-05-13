@@ -23,6 +23,12 @@ cdvdt_Vstp = 500;
 //
 cdvdt_collect_v = 0;
 
+// Use averages in OSC
+cdvdt_NO_AVERAGES = 1;
+cdvdt_AVERAGES_4 = 4;
+cdvdt_AVERAGES_16 = 16;
+cdvdt_def_UseAverage = cdvdt_AVERAGES_4;
+
 // Data arrays
 cdvdt_scatter = [];
 //
@@ -183,13 +189,18 @@ function CdVdt_CellCalibrateRate(CellNumber)
 	{
 		// Force triggering
 		TEK_ForceTrig();
+		TEK_TriggerInit(cdvdt_chMeasure, cdvdt_CalVoltage / 2);
 		
 		// Set gate cdvdt_CalVoltage
 		dVdt_CellSetGate(CellNumber, GateSetpointV[i]);
 		sleep(500);
 		
 		// Coarse horizontal setting
-		if (i == 0)	TEK_Horizontal("25e-6", "0");
+		if (i == 0)	
+		{ 
+			TEK_Horizontal("25e-6", "0");
+			sleep(500);
+		}
 		
 		// Start pulse
 		dev.c(114);
@@ -198,12 +209,16 @@ function CdVdt_CellCalibrateRate(CellNumber)
 		
 		// Fine horizontal setting
 		CdVdt_TekHScale(cdvdt_chMeasure, cdvdt_CalVoltage, CdVdt_MeasureRate());
+		TEK_TriggerInit(cdvdt_chMeasure, cdvdt_CalVoltage / 2);
 		sleep(500);
 		
 		// Start pulse
-		dev.c(114);
-		while(_dVdt_Active()) sleep(50);
-		sleep(1000);
+		for(var CounterAverages = 0; CounterAverages < cdvdt_def_UseAverage; CounterAverages++)
+		{			
+			dev.c(114);
+			while(_dVdt_Active()) sleep(50);
+			sleep(1500);
+		}
 		
 		var v = CdVdt_MeasureVfast();
 		var rate = CdVdt_MeasureRate();
@@ -227,8 +242,8 @@ function CdVdt_CellCalibrateRate(CellNumber)
 	}
 	
 	// Power disable cell
+	sleep(3000);
 	dVdt_CellCall(CellNumber, 2);
-	
 	return 0;
 }
 
