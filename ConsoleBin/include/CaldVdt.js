@@ -23,6 +23,9 @@ cdvdt_Vstp = 500;
 //
 cdvdt_collect_v = 0;
 
+// Voltage rate points
+cdvdt_RatePoint = [200, 500, 1000, 1600, 2000, 2500];
+
 // Use averages in OSC
 cdvdt_NO_AVERAGES = 1;
 cdvdt_AVERAGES_4 = 4;
@@ -319,6 +322,69 @@ function CdVdt_Collect(Iterations)
 	dev.c(2);
 }
 
+function CdVdt_CollectFixedRate(Repeat)
+{
+	CdVdt_ResetA();
+	
+	var VoltageArray = CGEN_GetRange(cdvdt_Vmin, cdvdt_Vmax, cdvdt_Vstp);
+	
+	var cntDone = 0;	
+	var cntTotal = VoltageArray.length * cdvdt_RatePoint.length * Repeat;
+	
+	// Re-enable power
+	dev.c(2);
+	sleep(1000);
+	dev.c(1);
+	
+	for (var counter = 0; counter < Repeat; counter++)
+	{
+		for (var k = 0; k < VoltageArray.length; k++)
+		{
+			dev.w(128, VoltageArray[k]);
+			CdVdt_TekVScale(cdvdt_chMeasure, VoltageArray[k]);
+			TEK_TriggerInit(cdvdt_chMeasure, VoltageArray[k] / 2);
+			
+			for (var i = 0; i < cdvdt_RatePoint.length; i++)
+			{
+				sleep(1000);
+				dev.w(129, cdvdt_RatePoint[i])		
+				
+				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], cdvdt_RatePoint[i]);
+				sleep(500);
+				
+				CdVdt_ClearDisplay();
+				sleep(1000);
+				
+				// Start pulse
+				for(var CounterAverages = 0; CounterAverages < cdvdt_def_UseAverage; CounterAverages++)
+				{			
+					while(_dVdt_Active()) sleep(50);
+					dev.c(100);
+					sleep(1000);
+				}
+
+				sleep(1500);
+				while(_dVdt_Active()) sleep(50);				
+				var rate = CdVdt_MeasureRate();
+				var v = CdVdt_MeasureVfast();
+				
+				print("dVdt set,  V/us: " + cdvdt_RatePoint[i]);
+				print("dV/dt osc, V/us: " + rate);
+				print("Vset,         V: " + VoltageArray[k]);
+				print("V osc,        V: " + v);
+				
+				cntDone++;
+				print("-- result " + cntDone + " of " + cntTotal + " --");
+				CdVdt_StoreVoltageAndFixRate(cdvdt_RatePoint[i], rate, VoltageArray[k], v);
+								
+				if (anykey()){ p("Stopped from user!"); return};
+			}
+		}
+	}
+	// Power disable
+	dev.c(2);
+}
+
 function CdVdt_StabCheck(CellNumber, Voltage, Gate)
 {
 	var Counter = 20;
@@ -397,6 +463,17 @@ function CdVdt_StoreVoltageAndRate(CMD, RateScope, Voltage, VoltageScope)
 	}
 	
 	cdvdt_scatter.push(RateSet + ";" + RateScope + ";" + RateErr + ";" + Voltage + ";" + VoltageScope + ";" + VoltageErr);
+}
+
+function CdVdt_StoreVoltageAndFixRate(Rate, RateScope, Voltage, VoltageScope)
+{
+	var ConfiguredRate, RateErr, RateSet;
+	var VoltageErr = ((VoltageScope - Voltage) / Voltage * 100).toFixed(1);
+	
+	RateErr = ((RateScope - Rate) / Rate * 100).toFixed(1);
+	cdvdt_scatter05.push(RateScope + ";" + RateErr + ";" + Voltage + ";" + VoltageScope + ";" + VoltageErr);
+	
+	cdvdt_scatter.push(Rate + ";" + RateScope + ";" + RateErr + ";" + Voltage + ";" + VoltageScope + ";" + VoltageErr);
 }
 
 function CdVdt_PrintSetpoints(CellNumber)
