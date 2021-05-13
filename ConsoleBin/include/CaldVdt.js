@@ -541,3 +541,47 @@ function CdVdt_ClearDisplay()
 		TEK_AcquireAvg(cdvdt_def_UseAverage);
 	sleep(500);
 }
+
+function CdVdt_ResourceTest(Repeat)
+{
+	CdVdt_ResetA();
+	
+	var VoltageArray = CGEN_GetRange(cdvdt_Vmin, cdvdt_Vmax, cdvdt_Vstp);
+	
+	var cntDone = 0;	
+	var cntTotal = VoltageArray.length * cdvdt_RatePoint.length * Repeat;
+	
+	// Re-enable power
+	dev.c(2);
+	sleep(1000);
+	dev.c(1);
+	
+	for (var counter = 0; counter < Repeat; counter++)
+	{
+		for (var k = 0; k < VoltageArray.length; k++)
+		{
+			dev.w(128, VoltageArray[k]);		
+			for (var i = 0; i < cdvdt_RatePoint.length; i++)
+			{
+				sleep(1000);
+				dev.w(129, cdvdt_RatePoint[i])		
+				sleep(1000);
+				
+				// Start pulse
+				while(_dVdt_Active()) sleep(50);
+				dev.c(100);
+				sleep(1000);
+
+				while(_dVdt_Active()) sleep(50);				
+
+				print("dVdt set,  V/us: " + cdvdt_RatePoint[i]);
+				print("Vset,         V: " + VoltageArray[k]);
+				cntDone++;
+				print("-- result " + cntDone + " of " + cntTotal + " --");
+				if (anykey()){ p("Stopped from user!"); return};
+			}
+		}
+	}
+	// Power disable
+	dev.c(2);
+}
