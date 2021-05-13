@@ -142,10 +142,21 @@ function CdVdt_CellCalibrateRateA(CellArray)
 	dev.c(112);
 	sleep(1000);
 	
+	p("Disabling all flyback.");
+			
+	for (var i = 1; i < 6; i++)
+	{
+		dVdt_CellCall(i, 2);
+		sleep(1000);
+	}	
+	
 	for (var i = 0; i < CellArray.length; i++)
 	{
 		print("CELL       : " + CellArray[i]);
-		if (CdVdt_CellCalibrateRate(CellArray[i]) == 1) return;
+		if (CdVdt_CellCalibrateRate(CellArray[i]) == 1) 
+			return;
+		else
+			sleep(1000);
 	}
 }
 
