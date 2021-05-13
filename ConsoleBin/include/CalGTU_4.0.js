@@ -188,17 +188,11 @@ function CGTU_CalibrateIPower()
 		scattern(cgtu_id_sc, cgtu_id_set_err, "Id set (in mA)", "Error (in %)", "Id set relative error");
 		
 		// Calculate correction
-		/*cgtu_id_corr = CGEN_GetCorrection2("gtu_id");
+		cgtu_id_corr = CGEN_GetCorrection2("gtu_id");
 		CGTU_CalID(cgtu_id_corr[0], cgtu_id_corr[1], cgtu_id_corr[2]);
 		
 		cgtu_id_set_corr = CGEN_GetCorrection2("gtu_id_set");
-		CGTU_CalID_SET(cgtu_id_set_corr[0], cgtu_id_set_corr[1], cgtu_id_set_corr[2]);*/
-		
-		cgtu_id_corr = CGEN_GetCorrection("gtu_id");
-		CGTU_CalID(0, cgtu_id_corr[0], cgtu_id_corr[1]);
-		
-		cgtu_id_set_corr = CGEN_GetCorrection("gtu_id_set");
-		CGTU_CalID_SET(0, cgtu_id_set_corr[0], cgtu_id_set_corr[1]);
+		CGTU_CalID_SET(cgtu_id_set_corr[0], cgtu_id_set_corr[1], cgtu_id_set_corr[2]);
 		
 		// Print correction
 		CGTU_PrintIPowerCal();

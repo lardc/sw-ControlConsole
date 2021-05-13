@@ -148,6 +148,7 @@ function CAL_CalibrateItm()
 	CAL_TekInit(cal_chMeasureI);
 
 	// Reload values
+	cal_ItmStp = (cal_ItmMax[cal_CurrentRange] - cal_ItmMin[cal_CurrentRange]) / cal_Points;
 	var CurrentArray = CGEN_GetRange(cal_ItmMin[cal_CurrentRange], cal_ItmMax[cal_CurrentRange], cal_ItmStp);
 
 	if (CAL_CollectItm(CurrentArray, cal_Iterations))
@@ -283,6 +284,7 @@ function CAL_VerifyItm()
 	CAL_TekInit(cal_chMeasureI);
 
 	// Reload values
+	cal_ItmStp = (cal_ItmMax[cal_CurrentRange] - cal_ItmMin[cal_CurrentRange]) / cal_Points;
 	var CurrentArray = CGEN_GetRange(cal_ItmMin[cal_CurrentRange], cal_ItmMax[cal_CurrentRange], cal_ItmStp);
 
 	if (CAL_CollectItm(CurrentArray, cal_Iterations))
@@ -668,8 +670,12 @@ function LSL_TriggerInit(Channel)
 
 function LSL_TekScale(Channel, Value)
 {
-	Value = Value / 7;
-	TEK_Send("ch" + Channel + ":scale " + Value);
+	if(Value <= 1.5)
+		TEK_Send("ch" + Channel + ":scale " + 0.2);
+	else if(Value <= 3.5)
+		TEK_Send("ch" + Channel + ":scale " + 0.5);
+	else
+		TEK_Send("ch" + Channel + ":scale " + 1);
 }
 //--------------------
 
@@ -805,7 +811,7 @@ function CAL_ResetIgCal()
 
 function CAL_ResetIsetCal()
 {
-	CAL_SetCoefItm(0, 1, 0);
+	CAL_SetCoefIset(0, 1, 0);
 }
 //--------------------
 

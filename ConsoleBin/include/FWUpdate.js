@@ -239,15 +239,9 @@ function FWU_RestoreBVT()
 //------------------------
 
 // ControlUnit
-function FWU_ControlUnit(Version)
+function FWU_ControlUnit()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../HMI Unit/Controllers soft/Version " + Version + "/ControlUnit/Release/ControlUnit.hex");
+	FWUpdate('../../hw-ControlUnitBoard/Firmware/Release/ControlUnitBoard.hex');
 }
 //------------------------
 
