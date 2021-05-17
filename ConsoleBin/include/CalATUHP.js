@@ -4,13 +4,13 @@ include("CalGeneral.js")
 
 
 // Input params
-catu_LoadType	= 2;			// Load Type: 1-DUT; 2-Resistor;
-catu_LoadR		= 1100;			// Load Resistance (in Ohms)
-catu_Vmax		= 9000;			// Max output voltage (in V)
-catu_Power		= 75000;		// Max output power (in W)
-catu_LoadV		= 0;			// Fixed extra voltage for DUT (in V)
+catu_LoadType		= 2;				// Load Type: 1-DUT; 2-Resistor;
+catu_LoadR			= 1100;			// Load Resistance (in Ohms)
+catu_Vmax				= 9000;			// Max output voltage (in V)
+catu_Power			= 75000;		// Max output power (in W)
+catu_LoadV			= 0;				// Fixed extra voltage for DUT (in V)
 catu_preCurrent	= 150;			// Pre-current plate (in mA)
-catu_ShuntRes	= 0.05;			// Current shunt resistanse (in Ohms)
+catu_ShuntRes	  = 0.05;			// Current shunt resistanse (in Ohms)
 
 
 // Select software
@@ -61,8 +61,8 @@ catu_p_sc = [];
 catu_v_err = [];
 catu_i_err = [];
 catu_p_err = [];
-catu_pset_err = [];
 catu_iset_err = [];
+catu_pset_err = [];
 
 // Correction
 catu_v_corr = [];
@@ -86,7 +86,7 @@ function CATU_CalibrateI()
 		CATU_SaveIset("atuhp_iset");
 
 		// Plot relative error distribution
-		scattern(catu_i_sc, catu_i_err, "Current (in A)", "Error (in %)", "Current relative error"); sleep(200);
+		scattern(catu_i_sc, catu_i_err, "Current (in mA)", "Error (in %)", "Current relative error"); sleep(200);
 		scattern(catu_i_set, catu_iset_err, "Current (in mA)", "Error (in %)", "Current setpoint relative error");
 
 		// Calculate correction
@@ -138,7 +138,7 @@ function CATU_VerifyI()
 		CATU_SaveIset("atuhp_iset_fixed");
 
 		// Plot relative error distribution
-		scattern(catu_i_sc, catu_i_err, "Current (in A)", "Error (in %)", "Current relative error"); sleep(200);
+		scattern(catu_i_sc, catu_i_err, "Current (in mA)", "Error (in %)", "Current relative error"); sleep(200);
 		scattern(catu_i_set, catu_iset_err, "Current (in mA)", "Error (in %)", "Current setpoint relative error");
 	}
 }
@@ -292,7 +292,6 @@ function CATU_Collect(CurrentValues, IterationsCount)
 			// Save unit data
 			catu_v.push(UnitData.V);
 			catu_i.push(UnitData.I);
-			catu_p.push(UnitData.P);
 			sleep(2000);
 
 			// Scope data
@@ -301,24 +300,23 @@ function CATU_Collect(CurrentValues, IterationsCount)
 			var p_sc = Math.round(v_sc * i_sc / 1000);
 			catu_v_sc.push(v_sc);
 			catu_i_sc.push(i_sc);
-			catu_p_sc.push(p_sc);
 			print("Utek,    V: " + v_sc);
 			print("Itek,   mA: " + (i_sc / 1000).toFixed(2));
 			print("Ptek,   kW: " + (p_sc / 1000).toFixed(2));
 
 			// Relative error
-			//catu_v_err.push(((UnitData.V - v_sc) / v_sc * 100).toFixed(2));
-			//catu_i_err.push(((UnitData.I - i_sc) / i_sc * 100).toFixed(2));
-			//catu_p_err.push(((UnitData.P - p_sc) / p_sc * 100).toFixed(2));
+			catu_v_err.push(((UnitData.V - v_sc) / v_sc * 100).toFixed(2));
+			catu_i_err.push(((UnitData.I - i_sc) / i_sc * 100).toFixed(2));
 			////////////////////////////////////////////////////////////////
-			catu_v_err.push(1.1 * Math.sqrt(Math.pow((UnitData.V - v_sc)/v_sc * 100, 2) + Math.pow(EUosc, 2) + Math.pow(Ediv, 2));
-			catu_i_err.push(1.1 * Math.sqrt(Math.pow((UnitData.I - i_sc)/i_sc * 100, 2) + Math.pow(EUosc, 2) + Math.pow(Esh, 2));
+			// Summary error
+			//catu_v_err.push(1.1 * Math.sqrt(Math.pow((UnitData.V - v_sc)/v_sc * 100, 2) + Math.pow(EUosc, 2) + Math.pow(Ediv, 2));
+			//catu_i_err.push(1.1 * Math.sqrt(Math.pow((UnitData.I - i_sc)/i_sc * 100, 2) + Math.pow(EUosc, 2) + Math.pow(Esh, 2));
 			////////////////////////////////////////////////////////////////
 			catu_iset_err.push(((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
 			////////////////////////////////////////////////////////////////
-			for(i=0;i<catu_p_err.length;i++)
+			for(var k = 0; k < catu_p_err.length; k++)
 			{
-				catu_p_err[i] = catu_v_err[i] + catu_i_err[i];
+				catu_p_err[k] = catu_v_err[k] + catu_i_err[k];
 			}
 			////////////////////////////////////////////////////////////////
 			print("------------------------");
@@ -429,9 +427,9 @@ function CATU_TekMeasurement(Channel)
 
 function CATU_TekScale(Channel, Value)
 {
-	// 0.7 - use 70% of full range
+	// 0.93 - use 93% of full range
 	// 7 - number of scope grids in full scale
-	var scale = (Value / (0.7 * 7)).toFixed(2);
+	var scale = (Value / (0.93 * 7)).toFixed(2);
 	TEK_Send("ch" + Channel + ":scale " + parseFloat(scale).toExponential());
 }
 
@@ -489,6 +487,7 @@ function CATU_ResetA()
 	catu_v = [];
 	catu_i = [];
 	catu_p = [];
+	catu_i_set = [];
 	catu_p_set = [];
 
 	// Tektronix data
@@ -500,6 +499,7 @@ function CATU_ResetA()
 	catu_v_err = [];
 	catu_i_err = [];
 	catu_p_err = [];
+	catu_iset_err = [];
 	catu_pset_err = [];
 
 	// Correction

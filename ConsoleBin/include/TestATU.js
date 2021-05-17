@@ -68,19 +68,6 @@ function ATU_PrintV()
 		print("Cell voltage [V]: " + (dev.r(104) / 10));
 }
 
-// Resource test by power
-function ATU_ResourseTest(PreCurrent, Power, Num, Sleep)
-{
-	for (i = 0; i < Num; i++)
-	{
-		print("#" + (i + 1));
-		ATU_StartPower(PreCurrent, Power);
-		if (anykey()) return;
-		sleep(Sleep);
-		if (anykey()) return;
-	}
-}
-
 // Plot graphs
 function ATU_Plot()
 {
@@ -131,4 +118,42 @@ function ATU_PrintWarning()
 		
 		print("Warning: " + msg);
 	}
+}
+
+// Resource test by power
+function ATU_ResourseTest(PreCurrent, Power, Num, Sleep)
+{
+	var csv_array = [];
+	
+	catu_v = [];
+	catu_i = [];
+	catu_p = [];
+	catu_p_set = [];
+
+	v_sc = [];
+	i_sc = [];
+	p_sc = [];
+
+	csv_array.push("catu_v; v_sc; catu_i; i_sc; catu_p; catu_p_set ; p_sc");
+
+	for (i = 0; i < Num; i++)
+	{
+		print("#" + (i + 1));
+		ATU_StartPower(PreCurrent, Power);
+
+		catu_v[i] = dev.r(110);
+		catu_i[i] = dev.r(111);
+		catu_p[i] = dev.r(112) * (atu_hp ? 10 : 1);
+		catu_p_set[i] = (dev.r(65) * 110).toFixed(2);
+
+		v_sc[i] = CATU_MeasureV();
+		i_sc[i] = CATU_MeasureI();
+		p_sc[i] = Math.round(v_sc[i] * i_sc[i] / 1000);
+
+		if (anykey()) return;
+		sleep(Sleep);
+		if (anykey()) return;
+	}
+	csv_array.push(catu_v + ";" + v_sc + ";" + catu_i + ";" + i_sc + ";" + catu_p + ";" + catu_p_set + ";" + p_sc);
+	save("data/ATUResourceTest.csv", csv_array);
 }
