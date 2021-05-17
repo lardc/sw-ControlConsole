@@ -1,46 +1,100 @@
-function DRCU_Pulse(RiseRate, FallRate, Amplitude, Range)
+include("PrintStatus.js")
+
+CurrentRateArray = [50, 75, 100, 250, 500, 750, 1000, 1500, 2500, 3000, 5000]; // A/us * 100
+CurrentTest = 400;	// A
+
+function DRCU_Pulse(Current, CurrentRate)
 {
-	switch (Range)
+	dev.w(128, Current);
+	dev.w(129, CurrentRate);
+	
+	if(dev.r(192) == 3)
 	{
-		case 0:
+		dev.c(100);
+		
+		while(dev.r(192) != 4)
 		{
-			dev.c(18);
-			break;
+			if(dev.r(192) == 1)
+			{
+				PrintStatus();
+				return;
+			}
 		}
-		case 1:
+		
+		dev.c(101);
+		sleep(50);
+		
+		while(dev.r(192) != 3)
+	{
+		if(dev.r(192) == 1)
 		{
-			dev.c(19);
-			break;
-		}
-		case 2:
-		{
-			dev.c(20);
-			break;
+			PrintStatus();
+			return;
 		}
 	}
-	
-	dev.w(0,RiseRate);
-	dev.c(15);
-	dev.w(0,FallRate);
-	dev.c(14);
-	dev.w(0,Amplitude);
-	dev.c(16);
-	
-	sleep(100);
-	dev.c(26);
-	sleep(5);
-	dev.c(17);
-	
-	sleep(10);
-	dev.c(25);
-	
-	// Reset to default
-	dev.w(0,1000);
-	dev.c(14);
-	dev.w(0,0);
-	dev.c(16);
-	dev.w(0,0);
-	dev.c(15);
-	
-	sleep(1000);
+	}
+	else
+		PrintStatus();
 }
+//---------------------------------------------
+
+function DRCU_Test(N)
+{
+	for (var i = 0; i < N; i++)
+	{
+		for (var j = 0; j < 11; j++)
+		{
+			p("#" + (i * 11 + j));
+			p("dI/dt = " + CurrentRateArray[j] / 100 + "A/us")
+			p("----------------");
+			p("");
+			DRCU_Pulse(CurrentTest, CurrentRateArray[j]);
+			
+			sleep(1000);
+			
+			if (anykey())
+				return;
+		}
+	}
+}
+
+function DRCU_InPsVoltageSet(CurrentRate, Voltage)
+{
+	switch(CurrentRate * 100)
+	{
+		case 50:
+			dev.w(52, Voltage * 10);
+			break;
+		case 75:
+			dev.w(53, Voltage * 10);
+			break;
+		case 100:
+			dev.w(54, Voltage * 10);
+			break;
+		case 250:
+			dev.w(55, Voltage * 10);
+			break;
+		case 500:
+			dev.w(56, Voltage * 10);
+			break;
+		case 750:
+			dev.w(57, Voltage * 10);
+			break;
+		case 1000:
+			dev.w(58, Voltage * 10);
+			break;
+		case 1500:
+			dev.w(59, Voltage * 10);
+			break;
+		case 2500:
+			dev.w(60, Voltage * 10);
+			break;
+		case 3000:
+			dev.w(61, Voltage * 10);
+			break;
+		case 5000:
+			dev.w(62, Voltage * 10);
+			break;
+	}
+}
+//---------------------------------------------
