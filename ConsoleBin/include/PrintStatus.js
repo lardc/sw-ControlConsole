@@ -60,3 +60,14 @@ function PrintFWInfo()
 		print("No firmware information.");
 	}
 }
+
+function PrintFWInfoA(Nodes)
+{
+	for (var i = 0; i < Nodes.length; i++)
+	{
+		print('Node: ' + Nodes[i])
+		dev.nid(Nodes[i])
+		PrintFWInfo()
+		print('---------')
+	}
+}
