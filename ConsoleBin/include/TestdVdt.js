@@ -99,7 +99,7 @@ function dVdt_CellReadRegs(CellID)
 		print(i + " = " + dev.r(225));
 	}
 	print("----");
-	for (i = 14; i <= 16; i++)
+	for (i = 14; i <= 15; i++)
 	{
 		dev.w(186, i);
 		dev.c(120);
