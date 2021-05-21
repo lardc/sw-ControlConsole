@@ -253,12 +253,21 @@ function FWU_CROVU()
 
 function FWU_DumpCROVU()
 {
+	// Проверка наличия расширенных регистров
+	try
+	{
+		dev.Read16Silent(320);
+		dev.Dump('../../hw-dVdtControlBoard/Firmware/dVdtControlBoardExt.regdump', 320, 511);
+	}
+	catch(e) {}
+	
 	dev.Dump('../../hw-dVdtControlBoard/Firmware/dVdtControlBoard.regdump', 0, 126);
 }
 
 function FWU_RestoreCROVU()
 {
 	dev.Restore("../../hw-dVdtControlBoard/Firmware/dVdtControlBoard.regdump");
+	dev.Restore("../../hw-dVdtControlBoard/Firmware/dVdtControlBoardExt.regdump");
 }
 //------------------------
 
