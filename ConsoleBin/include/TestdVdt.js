@@ -127,6 +127,12 @@ function dVdt_CellSetGate(CellID, Gate)
 	dVdt_CellCall(CellID, 112);
 }
 
+function dVdt_SelectRange(CellID, Range)
+{
+	dVdt_CellWriteReg(CellID, 4, Range);
+	dVdt_CellCall(CellID, 10);
+}
+
 // Basic functions
 
 function dVdt_CellReadReg(CellID, Reg)
