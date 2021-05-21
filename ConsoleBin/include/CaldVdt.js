@@ -9,12 +9,21 @@ cdvdt_chMeasure = 1;
 // colorbar;
 
 // Definition section (modification is dangerous)
-cdvdt_def_SetpointStartAddr = 30;
 cdvdt_def_SetpointCount = 7;
 cdvdt_def_VGateMin = 3000;
 cdvdt_def_VGateMax = 5000;
+// Definition range config
+cdvdt_def_RANGE_LOW = 1;
+cdvdt_def_RANGE_MID = 2;
+cdvdt_def_RANGE_HIGH = 0;
+cdvdt_def_SetpointStartAddr = {}
+cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_LOW]  = 320;
+cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_MID]  = 420;
+cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_HIGH] = 30;
 //
 cdvdt_CalVoltage = 500;
+cdvdt_SelectedRange = cdvdt_def_RANGE_HIGH;
+cdvdt_HVProbeScale = 100		// Коэффициент деления щупа
 
 // Voltage settings for unit calibration
 cdvdt_Vmin = 500;
@@ -177,6 +186,7 @@ function CdVdt_CellCalibrateRate(CellNumber)
 	dVdt_CellCall(CellNumber, 1);
 	
 	// Configure amplitude
+	dVdt_SelectRange(CellNumber, cdvdt_SelectedRange)
 	dVdt_CellSetV(CellNumber, cdvdt_CalVoltage);
 	CdVdt_TekVScale(cdvdt_chMeasure, cdvdt_CalVoltage);
 	TEK_TriggerInit(cdvdt_chMeasure, cdvdt_CalVoltage / 2);
@@ -186,7 +196,7 @@ function CdVdt_CellCalibrateRate(CellNumber)
 	sleep(1000);
 	
 	// Base DataTable address
-	var BaseDTAddress = cdvdt_def_SetpointStartAddr + (CellNumber - 1) * cdvdt_def_SetpointCount * 2;
+	var BaseDTAddress = cdvdt_def_SetpointStartAddr[cdvdt_SelectedRange] + (CellNumber - 1) * cdvdt_def_SetpointCount * 2;
 	
 	for (var i = 0; i < GateSetpointV.length; i++)
 	{
@@ -393,6 +403,7 @@ function CdVdt_StabCheck(CellNumber, Voltage, Gate)
 	dVdt_CellCall(CellNumber, 1);
 	
 	// Configure amplitude
+	dVdt_SelectRange(CellNumber, cdvdt_SelectedRange)
 	dVdt_CellSetV(CellNumber, Voltage);
 	CdVdt_TekVScale(cdvdt_chMeasure, Voltage);
 	TEK_TriggerInit(cdvdt_chMeasure, Voltage / 2);
@@ -478,8 +489,11 @@ function CdVdt_StoreVoltageAndFixRate(Rate, RateScope, Voltage, VoltageScope)
 
 function CdVdt_PrintSetpoints(CellNumber)
 {
+	print("Selected range code: " + cdvdt_SelectedRange);
+	print("-----");
+	
 	// Base DataTable address
-	var BaseDTAddress = cdvdt_def_SetpointStartAddr + (CellNumber - 1) * cdvdt_def_SetpointCount * 2;
+	var BaseDTAddress = cdvdt_def_SetpointStartAddr[cdvdt_SelectedRange] + (CellNumber - 1) * cdvdt_def_SetpointCount * 2;
 	
 	for (var i = 0; i < cdvdt_def_SetpointCount; i++)
 	{
