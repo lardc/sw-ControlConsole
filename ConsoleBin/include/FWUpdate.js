@@ -324,37 +324,20 @@ function FWU_RestoreCS()
 //------------------------
 
 // QSU
-function FWU_QSU(Version)
+function FWU_QSU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../QRR tq/QRR tq LP/QSU/Controller soft/Version " + Version + "/QrrtqSyncBoard/Release/QrrtqSyncBoard.hex");
+	FWUpdate("../../hw-Software/hw-QrrtqSyncBoard/Firmware/Release/QrrtqSyncBoard.hex");
 }
 
 function FWU_DumpQSU(Version)
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../QRR tq/QRR tq LP/QSU/Controller soft/Version " + Version + "/QrrtqSyncBoard/qsu.regdump", 0, 126);
+
+	dev.Dump("../../hw-Software/hw-QrrtqSyncBoard/qsu.regdump", 0, 126);
 }
 
 function FWU_RestoreQSU(Version)
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../QRR tq/QRR tq LP/QSU/Controller soft/Version " + Version + "/QrrtqSyncBoard/qsu.regdump");
+	dev.Restore("../../hw-Software/hw-QrrtqSyncBoard/qsu.regdump");
 }
 //------------------------
 
