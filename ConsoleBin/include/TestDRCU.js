@@ -3,6 +3,15 @@ include("PrintStatus.js")
 CurrentRateArray = [50, 75, 100, 250, 500, 750, 1000, 1500, 2500, 3000, 5000]; // A/us * 100
 CurrentTest = 400;	// A
 
+function DRCU_Debug(Current, Range)
+{
+	dev.w(150, Range);
+	dev.c(59);
+	dev.w(150, Current);
+	dev.w(151, Current);
+	dev.c(60);
+}
+
 function DRCU_Pulse(Current, CurrentRate)
 {
 	dev.w(128, Current);
@@ -17,7 +26,7 @@ function DRCU_Pulse(Current, CurrentRate)
 			if(dev.r(192) == 1)
 			{
 				PrintStatus();
-				return;
+				return 0;
 			}
 		}
 		
@@ -25,16 +34,18 @@ function DRCU_Pulse(Current, CurrentRate)
 		sleep(50);
 		
 		while(dev.r(192) != 3)
-	{
-		if(dev.r(192) == 1)
 		{
-			PrintStatus();
-			return;
+			if(dev.r(192) == 1)
+			{
+				PrintStatus();
+				return 0;
+			}
 		}
-	}
 	}
 	else
 		PrintStatus();
+	
+	return 1;
 }
 //---------------------------------------------
 
@@ -48,9 +59,9 @@ function DRCU_Test(N)
 			p("dI/dt = " + CurrentRateArray[j] / 100 + "A/us")
 			p("----------------");
 			p("");
-			DRCU_Pulse(CurrentTest, CurrentRateArray[j]);
 			
-			sleep(1000);
+			if(!DRCU_Pulse(CurrentTest, CurrentRateArray[j]))
+				return;
 			
 			if (anykey())
 				return;
