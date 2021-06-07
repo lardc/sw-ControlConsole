@@ -43,7 +43,11 @@ function DRCU_Pulse(Current, CurrentRate)
 		}
 	}
 	else
-		PrintStatus();
+		if(dev.r(192) == 1)
+		{
+			PrintStatus();
+			return 0;
+		}
 	
 	return 1;
 }

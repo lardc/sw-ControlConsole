@@ -77,7 +77,6 @@ function CAL_Init(portDevice, portTek, channelMeasureId)
 function CAL_CalibrateId()
 {		
 	CAL_ResetA();
-	CAL_ResetIdCal();
 	CAL_ResetIdsetCal();
 	
 	// Tektronix init
