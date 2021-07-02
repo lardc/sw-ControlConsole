@@ -124,7 +124,8 @@ function ATU_PrintWarning()
 function ATU_ResourseTest(PreCurrent, Power, Num, Sleep)
 {
 	var csv_array = [];
-	
+	var count_pulse = 0;
+
 	catu_v = [];
 	catu_i = [];
 	catu_p = [];
@@ -134,9 +135,9 @@ function ATU_ResourseTest(PreCurrent, Power, Num, Sleep)
 	i_sc = [];
 	p_sc = [];
 
-	csv_array.push("catu_v; v_sc; catu_i; i_sc; catu_p; catu_p_set ; p_sc");
+	csv_array.push("catu_v; v_sc; catu_i; i_sc; catu_p_set; catu_p; p_sc");
 
-	for (i = 0; i < Num; i++)
+	for (var i = 0; i < Num; i++)
 	{
 		print("#" + (i + 1));
 		ATU_StartPower(PreCurrent, Power);
@@ -144,16 +145,22 @@ function ATU_ResourseTest(PreCurrent, Power, Num, Sleep)
 		catu_v[i] = dev.r(110);
 		catu_i[i] = dev.r(111);
 		catu_p[i] = dev.r(112) * (atu_hp ? 10 : 1);
-		catu_p_set[i] = (dev.r(65) * 110).toFixed(2);
+		catu_p_set[i] = dev.r(65) * 10;
 
 		v_sc[i] = CATU_MeasureV();
 		i_sc[i] = CATU_MeasureI();
 		p_sc[i] = Math.round(v_sc[i] * i_sc[i] / 1000);
 
+		v_sc[i] = 0;
+		i_sc[i] = 0;
+		p_sc[i] = 0;
+
+		count_pulse = dev.r(105);
+
 		if (anykey()) return;
 		sleep(Sleep);
 		if (anykey()) return;
+		csv_array.push(catu_v[i] + ";" + v_sc[i] + ";" + catu_i[i] + ";" + i_sc[i] + ";" + catu_p_set[i] + ";" + catu_p[i] + ";" + p_sc[i] + ";" + count_pulse);
 	}
-	csv_array.push(catu_v + ";" + v_sc + ";" + catu_i + ";" + i_sc + ";" + catu_p + ";" + catu_p_set + ";" + p_sc);
 	save("data/ATUResourceTest.csv", csv_array);
 }

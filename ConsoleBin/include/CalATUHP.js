@@ -4,13 +4,13 @@ include("CalGeneral.js")
 
 
 // Input params
-catu_LoadType		= 2;				// Load Type: 1-DUT; 2-Resistor;
-catu_LoadR			= 1100;			// Load Resistance (in Ohms)
-catu_Vmax				= 9000;			// Max output voltage (in V)
-catu_Power			= 75000;		// Max output power (in W)
-catu_LoadV			= 0;				// Fixed extra voltage for DUT (in V)
+catu_LoadType	= 2;			// Load Type: 1-DUT; 2-Resistor;
+catu_LoadR		= 1152;			// Load Resistance (in Ohms)
+catu_Vmax		= 9000;			// Max output voltage (in V)
+catu_Power		= 75000;		// Max output power (in W)
+catu_LoadV		= 0;			// Fixed extra voltage for DUT (in V)
 catu_preCurrent	= 150;			// Pre-current plate (in mA)
-catu_ShuntRes	  = 0.05;			// Current shunt resistanse (in Ohms)
+catu_ShuntRes	= 0.05;			// Current shunt resistanse (in Ohms)
 
 
 // Select software
@@ -25,14 +25,15 @@ catu_Istp = 1000;
 // Verify P limits (in W)
 catu_Pmin = 2000;
 // catu_Pmax is equal catu_Power
-catu_Pstp = 3000;
+catu_Pstp = 7000;
 
 // Counters
 catu_cntTotal = 0;
 catu_cntDone = 0;
 
 // Iterations
-catu_Iterations = 3;
+catu_Iterations = 3
+;
 
 // Channels
 catu_chMeasureV = 1;
@@ -197,7 +198,8 @@ function CATU_GetCurrentRange()
 		// For resistor
 		var I_v = Math.round(1000 * catu_Vmax / catu_LoadR);
 		var I_p = Math.round(1000 * Math.sqrt(catu_Power / catu_LoadR));
-		catu_Imax = (I_v < I_p) ? I_v : I_p;
+		catu_Imax = (I_v < I_p) ? I_v : I_p; // Для калибровки напряжения, и верификации мощности разкоммитить
+		//catu_Imax = 45000; // Для калибровки тока разкоммитить
 	}
 	else
 	{
