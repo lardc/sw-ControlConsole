@@ -277,6 +277,15 @@ function GTU_SetKelvin(High, Low)
 
 function GTU_Plot()
 {
+	for (var i = 1; i <= 4; i++)
+	{
+		pl(dev.rafs(i))
+		sleep(200)
+	}
+}
+
+function GTU_PlotHist()
+{
 	plot(gtu_igt, 1, 0); sleep(200);
 	plot(gtu_vgt, 1, 0); sleep(200);
 	plot(gtu_res, 1, 0); sleep(200);

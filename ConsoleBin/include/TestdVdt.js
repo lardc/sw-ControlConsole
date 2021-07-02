@@ -99,7 +99,7 @@ function dVdt_CellReadRegs(CellID)
 		print(i + " = " + dev.r(225));
 	}
 	print("----");
-	for (i = 14; i <= 16; i++)
+	for (i = 14; i <= 15; i++)
 	{
 		dev.w(186, i);
 		dev.c(120);
@@ -125,6 +125,12 @@ function dVdt_CellSetGate(CellID, Gate)
 {
 	dVdt_CellWriteReg(CellID, 2, Gate);
 	dVdt_CellCall(CellID, 112);
+}
+
+function dVdt_SelectRange(CellID, Range)
+{
+	dVdt_CellWriteReg(CellID, 4, Range);
+	dVdt_CellCall(CellID, 10);
 }
 
 // Basic functions

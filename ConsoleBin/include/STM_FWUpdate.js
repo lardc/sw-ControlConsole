@@ -191,12 +191,12 @@ function FWU_LSLH()
 
 function FWU_DumpLSLH()
 {
-	dev.Dump("../../hw-LSLHControlBoard/Firmware/lslh.regdump", 0, 126);
+	dev.Dump("../../hw-LSLHControlBoard/Firmware/LSLHControlBoard.regdump", 0, 126);
 }
 
 function FWU_RestoreLSLH()
 {
-	dev.Restore("../../hw-LSLHControlBoard/Firmware/lslh.regdump");
+	dev.Restore("../../hw-LSLHControlBoard/Firmware/LSLHControlBoard.regdump");
 }
 //------------------------
 
@@ -208,12 +208,12 @@ function FWU_LSLPC()
 
 function FWU_DumpLSLPC()
 {
-	dev.Dump("../../hw-LSLPowerCell/Firmware/lslpc.regdump", 0, 126);
+	dev.Dump("../../hw-LSLPowerCell/Firmware/LSLPowerCell.regdump", 0, 126);
 }
 
 function FWU_RestoreLSLPC()
 {
-	dev.Restore("../../hw-LSLPowerCell/Firmware/lslpc.regdump");
+	dev.Restore("../../hw-LSLPowerCell/Firmware/LSLPowerCell.regdump");
 }
 //------------------------
 

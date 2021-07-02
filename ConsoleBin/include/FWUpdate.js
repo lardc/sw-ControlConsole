@@ -253,12 +253,21 @@ function FWU_CROVU()
 
 function FWU_DumpCROVU()
 {
+	// Проверка наличия расширенных регистров
+	try
+	{
+		dev.Read16Silent(320);
+		dev.Dump('../../hw-dVdtControlBoard/Firmware/dVdtControlBoardExt.regdump', 320, 511);
+	}
+	catch(e) {}
+	
 	dev.Dump('../../hw-dVdtControlBoard/Firmware/dVdtControlBoard.regdump', 0, 126);
 }
 
 function FWU_RestoreCROVU()
 {
 	dev.Restore("../../hw-dVdtControlBoard/Firmware/dVdtControlBoard.regdump");
+	dev.Restore("../../hw-dVdtControlBoard/Firmware/dVdtControlBoardExt.regdump");
 }
 //------------------------
 
@@ -315,37 +324,20 @@ function FWU_RestoreCS()
 //------------------------
 
 // QSU
-function FWU_QSU(Version)
+function FWU_QSU()
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../QRR tq/QRR tq LP/QSU/Controller soft/Version " + Version + "/QrrtqSyncBoard/Release/QrrtqSyncBoard.hex");
+	FWUpdate("../../hw-QrrtqSyncBoard/Firmware/Release/QrrtqSyncBoard.hex");
 }
 
 function FWU_DumpQSU(Version)
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../QRR tq/QRR tq LP/QSU/Controller soft/Version " + Version + "/QrrtqSyncBoard/qsu.regdump", 0, 126);
+
+	dev.Dump("../../hw-QrrtqSyncBoard/qsu.regdump", 0, 126);
 }
 
 function FWU_RestoreQSU(Version)
 {
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../QRR tq/QRR tq LP/QSU/Controller soft/Version " + Version + "/QrrtqSyncBoard/qsu.regdump");
+	dev.Restore("../../hw-QrrtqSyncBoard/qsu.regdump");
 }
 //------------------------
 
