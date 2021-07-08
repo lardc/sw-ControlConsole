@@ -1,4 +1,4 @@
-include("TestDCU.js")
+include("TestDRCU.js")
 include("Tektronix.js")
 include("CalGeneral.js")
 
@@ -10,7 +10,7 @@ cal_IdMin = 100;
 cal_IdMax = 400;
 cal_IdStp = (cal_IdMax - cal_IdMin) / cal_Points;
 
-cal_IntPsVmin = 90;	// V
+cal_IntPsVmin = 80;	// V
 cal_IntPsVmax = 125;
 
 CurrentRateTest = 0.5; // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
@@ -31,6 +31,7 @@ cal_chSync = 3;
 cal_Id = [];
 cal_Idset = [];
 cal_Irate = [];
+cal_VintPS = [];
 
 // Tektronix data
 cal_IdSc = [];
@@ -111,14 +112,24 @@ function CAL_CalibrateId()
 //--------------------
 
 function CAL_CalibrateIrate()
-{		
+{
 	CAL_ResetA();
-	CAL_ResetIrateCal();
 	
 	// Tektronix init
 	CAL_TekInitIrate();
+	
+	// Reload values
+	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
 
-	CAL_CompensationIrate();	
+	if (CAL_CompensationIrate(CurrentArray))
+	{
+		CAL_SaveVintPS("DCU_VintPS");
+
+		// Calculate correction
+		cal_IrateCorr = CGEN_GetCorrection("DCU_VintPS");
+		CAL_SetCoefIrateCompens(cal_IrateCorr[0], cal_IrateCorr[1]);
+		CAL_PrintCoefIrateCompens();
+	}	
 }
 //--------------------
 
@@ -156,7 +167,7 @@ function CAL_VerifyIrate()
 
 	if (CAL_CollectIrate(CurrentArray, cal_Iterations))
 	{
-		CAL_SaveIrate("DCU_Irate_fixed");
+		CAL_SaveVintPS("DCU_Irate_fixed");
 
 		// Plot relative error distribution
 		scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "Current rate relative error");
@@ -194,7 +205,7 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 				DRCU_Pulse(CurrentValues[j], 1500);
 			
 			// Unit data
-			var Id = dev.r(201) / 10;
+			var Id = dev.r(202) / 10;
 			cal_Id.push(Id);
 			print("Id, A: " + Id);
 			
@@ -203,7 +214,7 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 			print("Idset, A: " + IdSet);
 
 			// Scope data
-			var IdSc = (CAL_MeasureId(cal_chMeasureId) / cal_Rshunt * 1000000).toFixed(2);
+			var IdSc = (CAL_MeasureId(cal_chMeasureId) / cal_Rshunt * 1000).toFixed(2);
 			cal_IdSc.push(IdSc);
 			print("Idtek, A: " + IdSc);
 
@@ -254,12 +265,12 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				DRCU_Pulse(CurrentValues[j], CurrentRateTest * 100);
-				sleep(1000);
+				if(!DRCU_Pulse(CurrentValues[j], CurrentRateTest * 100))
+					return 0;
 			}
 
 			// Scope data
-			var IdSc = (CAL_MeasureId(cal_chMeasureId) / cal_Rshunt * 1000000).toFixed(2);
+			var IdSc = (CAL_MeasureId(cal_chMeasureId) / cal_Rshunt * 1000).toFixed(2);
 			cal_IdSc.push(IdSc);
 			print("Idtek, A: " + IdSc);
 			
@@ -281,49 +292,41 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 }
 //--------------------
 
-function CAL_CompensationIrate()
+function CAL_CompensationIrate(CurrentValues)
 {
-	var AvgNum, VoltageMin, VoltageMax, Voltage, Current;
-	var ResultVoltageMax, ResultVoltageMin;
+	var AvgNum, VoltageMin, VoltageMax, Voltage;
 	
 	if (cal_UseAvg)
 		AvgNum = 4;
 	else
 		AvgNum = 1;
 	
-	p("Current rate calibration was started");
-	
-	for (var j = 0; j < 2; j++)
+	for (var j = 0; j < CurrentValues.length; j++)
 	{	
 		VoltageMin = cal_IntPsVmin;
 		VoltageMax = cal_IntPsVmax;
-		
-		if(j == 0)
-		{
-			p("Step 1 is running...");
-			Current = cal_IdMin;
-		}
-		else
-		{
-			p("Step 2 is running...");
-			Current = cal_IdMax;
-		}
 	
-		DCU_TekScaleId(cal_chMeasureId, Current * cal_Rshunt / 1000000);
+		DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
 		
 		for (var i = 0; i < cal_Points; i++)
 		{
 			TEK_AcquireSample();
 			TEK_AcquireAvg(AvgNum);
 		
-			Voltage = VoltageMin + (VoltageMax - VoltageMin) / 2;
+			Voltage = Math.round((VoltageMin + (VoltageMax - VoltageMin) / 2) * 10) / 10;
 			
-			DRCU_InPsVoltageSet(CurrentRateTest, Voltage);
+			dev.w(130, Voltage * 10);
+			
+			p("Current, A : " + CurrentValues[j]);
+			p("VintPS max : " + VoltageMax);
+			p("VintPS,  V : " + Voltage);
+			p("VintPS min : " + VoltageMin);
+			p("-------------");
 			
 			for (var k = 0; k < AvgNum; k++)
 			{
-				DRCU_Pulse(Current, CurrentRateTest * 100);
-				sleep(1000);
+				if(!DRCU_Pulse(CurrentValues[j], CurrentRateTest * 100))
+					return 0;
 			}
 			
 			var IrateSc = CAL_MeasureIrate();
@@ -338,31 +341,19 @@ function CAL_CompensationIrate()
 					break;
 			}
 			
-			if((VoltageMin).toFixed(1) == (VoltageMax).toFixed(1))
+			if((VoltageMin + 0.2) >= VoltageMax)
 				break;
 			
 			if (anykey()) return 0;
 		}
 
-		if(j == 0)
-			ResultVoltageMax = Voltage;
-		else
-			ResultVoltageMin = Voltage;
+		cal_Idset.push(CurrentValues[j]);
+		cal_VintPS.push(Voltage * 10);
 	}
 	
-	var dI = cal_IdMax - cal_IdMin;
-	var dV = ResultVoltageMax - ResultVoltageMin;
-	var K = dV / dI * 10000;
+	dev.w(130, 0);
 	
-	if(K < 0)
-		K = 0;
-	
-	p("");
-	p("Voltage (Imin = " + cal_IdMin + ") = " + ResultVoltageMax + "V");
-	p("Voltage (Imax = " + cal_IdMax + ") = " + ResultVoltageMin + "V");
-	p("K = " + K);
-	
-	CAL_SetCoefIrate(CurrentRateTest, ResultVoltageMax, K);
+	return 1;
 }
 //--------------------
 
@@ -371,7 +362,7 @@ function DCU_TekScaleId(Channel, Value)
 	Value = Value / 7;
 	TEK_Send("ch" + Channel + ":scale " + Value);
 	
-	TEK_TriggerInit(cal_chMeasureId, Value * 3);
+	TEK_TriggerInit(cal_chMeasureId, Value * 3.5);
 	TEK_Send("trigger:main:edge:slope fall");
 }
 //--------------------
@@ -399,6 +390,12 @@ function CAL_TekInitIrate()
 	TEK_Send("measurement:meas2:source ch" + cal_chMeasureId);
 	TEK_Send("measurement:meas2:type fall");
 	
+	CAL_TekSetHorizontalScale();
+}
+//--------------------
+
+function CAL_TekSetHorizontalScale()
+{
 	switch(CurrentRateTest * 100)
 	{
 		case 50:
@@ -447,7 +444,7 @@ function CAL_TekScale(Channel, Value)
 
 function CAL_MeasureId(Channel)
 {
-	return TEK_Measure(Channel);
+	return (TEK_Exec("measurement:meas1:value?") * 1000).toFixed(1);
 }
 //--------------------
 
@@ -463,6 +460,7 @@ function CAL_ResetA()
 	cal_Id = [];
 	cal_Idset = [];
 	cal_Irateset = [];
+	cal_VintPS = [];
 
 	// Tektronix data
 	cal_IdSc = [];
@@ -493,9 +491,121 @@ function CAL_SaveIdset(NameIdset)
 }
 //--------------------
 
-function CAL_SaveIrate(NameIrate)
+function CAL_SaveVintPS(NameVintPS)
+{	
+	var csv_array = [];
+	
+	for (var i = 0; i < cal_Idset.length; i++)
+		csv_array.push(cal_Idset[i] + ";" + cal_VintPS[i]);
+	
+	save(cgen_correctionDir + "/" + NameVintPS + ".csv", csv_array);
+}
+//--------------------
+
+function CAL_SetCoefIrateCompens(K, Offset)
 {
-	CGEN_SaveArrays(NameIrate, cal_IrateSc, CurrentRateTest, cal_IrateErr);
+	K = parseFloat(K);
+	Offset = parseFloat(Offset);
+	
+	switch(CurrentRateTest * 100)
+	{
+		case 50:
+			dev.ws(41, Offset);
+			dev.ws(42, K * 1000);
+			break;
+		case 75:
+			dev.ws(43, Offset);
+			dev.ws(44, K * 1000);
+			break;
+		case 100:
+			dev.ws(45, Offset);
+			dev.ws(46, K * 1000);
+			break;
+		case 250:
+			dev.ws(47, Offset);
+			dev.ws(48, K * 1000);
+			break;
+		case 500:
+			dev.ws(49, Offset);
+			dev.ws(50, K * 1000);
+			break;
+		case 750:
+			dev.ws(51, Offset);
+			dev.ws(52, K * 1000);
+			break;
+		case 1000:
+			dev.ws(53, Offset);
+			dev.ws(54, K * 1000);
+			break;
+		case 1500:
+			dev.ws(55, Offset);
+			dev.ws(56, K * 1000);
+			break;
+		case 2500:
+			dev.ws(57, Offset);
+			dev.ws(58, K * 1000);
+			break;
+		case 3000:
+			dev.ws(59, Offset);
+			dev.ws(60, K * 1000);
+			break;
+		case 5000:
+			dev.ws(61, Offset);
+			dev.ws(62, K * 1000);
+			break;
+	}
+}
+//--------------------
+
+function CAL_PrintCoefIrateCompens()
+{
+	switch(CurrentRateTest * 100)
+	{
+		case 50:
+			print("Irate compensation Offset	: " + dev.rs(41));
+			print("Irate compensation K x1000	: " + dev.rs(42));
+			break;
+		case 75:
+			print("Irate compensation Offset	: " + dev.rs(43));
+			print("Irate compensation K x1000	: " + dev.rs(44));
+			break;
+		case 100:
+			print("Irate compensation Offset	: " + dev.rs(45));
+			print("Irate compensation K x1000	: " + dev.rs(46));
+			break;
+		case 250:
+			print("Irate compensation Offset	: " + dev.rs(47));
+			print("Irate compensation K x1000	: " + dev.rs(48));
+			break;
+		case 500:
+			print("Irate compensation Offset	: " + dev.rs(49));
+			print("Irate compensation K x1000	: " + dev.rs(50));	
+			break;
+		case 750:
+			print("Irate compensation Offset	: " + dev.rs(51));
+			print("Irate compensation K x1000	: " + dev.rs(52));	
+			break;
+		case 1000:
+			print("Irate compensation Offset	: " + dev.rs(53));
+			print("Irate compensation K x1000	: " + dev.rs(54));
+			break;
+		case 1500:
+			print("Irate compensation Offset	: " + dev.rs(55));
+			print("Irate compensation K x1000	: " + dev.rs(56));
+			break;
+		case 2500:
+			print("Irate compensation Offset	: " + dev.rs(57));
+			print("Irate compensation K x1000	: " + dev.rs(58));
+			break;
+		case 3000:
+			print("Irate compensation Offset	: " + dev.rs(59));
+			print("Irate compensation K x1000	: " + dev.rs(60));	
+			break;
+		case 5000:
+			print("Irate compensation Offset	: " + dev.rs(61));
+			print("Irate compensation K x1000	: " + dev.rs(62));
+			break;
+	}
 }
 //--------------------
 
@@ -511,92 +621,34 @@ function CAL_ResetIdsetCal()
 }
 //--------------------
 
-function CAL_ResetIrateCal()
-{
-	CAL_SetCoefIrate(CurrentRateTest, 110, 0);
-}
-//--------------------
-
-function CAL_SetCoefIrate(CurrentRate, Voltage, K)
-{
-	switch(CurrentRateTest * 100)
-	{
-		case 50:
-			dev.w(87, K);
-			dev.w(52, Voltage * 10);
-			break;
-		case 75:
-			dev.w(88, K);
-			dev.w(53, Voltage * 10);
-			break;
-		case 100:
-			dev.w(89, K);
-			dev.w(54, Voltage * 10);
-			break;
-		case 250:
-			dev.w(90, K);
-			dev.w(55, Voltage * 10);
-			break;
-		case 500:
-			dev.w(91, K);
-			dev.w(56, Voltage * 10);
-			break;
-		case 750:
-			dev.w(92, K);
-			dev.w(57, Voltage * 10);
-			break;
-		case 1000:
-			dev.w(93, K);
-			dev.w(58, Voltage * 10);
-			break;
-		case 1500:
-			dev.w(94, K);
-			dev.w(59, Voltage * 10);
-			break;
-		case 2500:
-			dev.w(95, K);
-			dev.w(60, Voltage * 10);
-			break;
-		case 3000:
-			dev.w(96, K);
-			dev.w(61, Voltage * 10);
-			break;
-		case 5000:
-			dev.w(97, K);
-			dev.w(62, Voltage * 10);
-			break;
-	}
-}
-//--------------------
-
 function CAL_SetCoefId(P2, P1, P0)
 {
-	dev.ws(14, Math.round(P2 * 1e6));
-	dev.w(13, Math.round(P1 * 1000));
-	dev.ws(12, Math.round(P0));	
+	dev.ws(8, Math.round(P2 * 1e6));
+	dev.w(7, Math.round(P1 * 1000));
+	dev.ws(6, Math.round(P0));	
 }
 //--------------------
 
 function CAL_SetCoefIdset(P2, P1, P0)
 {
-	dev.ws(19, Math.round(P2 * 1e6));
-	dev.w(18, Math.round(P1 * 1000));
-	dev.ws(17, Math.round(P0));	
+	dev.ws(124, Math.round(P2 * 1e6));
+	dev.w(123, Math.round(P1 * 1000));
+	dev.ws(122, Math.round(P0));	
 }
 //--------------------
 
 function CAL_PrintCoefId()
 {
-	print("Id P2 x1e6		: " + dev.rs(14));
-	print("Id P1 x1000		: " + dev.rs(13));
-	print("Id P0 			: " + dev.rs(12));
+	print("Id P2 x1e6		: " + dev.rs(8));
+	print("Id P1 x1000		: " + dev.rs(7));
+	print("Id P0 			: " + dev.rs(6));
 }
 //--------------------
 
 function CAL_PrintCoefIdset()
 {
-	print("Idset P2 x1e6	: " + dev.rs(19));
-	print("Idset P1 x1000	: " + dev.rs(18));
-	print("Idset P0 		: " + dev.rs(17));
+	print("Idset P2 x1e6	: " + dev.rs(124));
+	print("Idset P1 x1000	: " + dev.rs(123));
+	print("Idset P0 		: " + dev.rs(122));
 }
 //--------------------
