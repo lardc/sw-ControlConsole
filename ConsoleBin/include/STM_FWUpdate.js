@@ -133,6 +133,22 @@
 }
 //------------------------
 
+// ATU HP
+function FWU_ATUHP()
+{
+	FWUpdateSTM("../../hw-ATUControlBoard/Firmware/Release/ATUControlBoard.binary");
+}
+
+function FWU_DumpATUHP()
+{
+	dev.Dump("../../hw-ATUControlBoard/atuhp.regdump", 0, 126);
+}
+
+function FWU_RestoreATUHP()
+{
+	dev.Restore("../../hw-ATUControlBoard/atuhp.regdump");
+}
+
 // TOMU HP
 function FWU_TOMUHP()
 {
