@@ -18,8 +18,8 @@ cdvdt_def_RANGE_MID = 2;
 cdvdt_def_RANGE_HIGH = 0;
 cdvdt_def_SetpointStartAddr = {}
 cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_LOW]  = 320;
-cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_MID]  = 420;
-cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_HIGH] = 30;
+cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_MID]  = 410;
+cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_HIGH] = 40;
 //
 cdvdt_CalVoltage = 500;
 cdvdt_SelectedRange = cdvdt_def_RANGE_HIGH;
@@ -72,7 +72,7 @@ function CdVdt_Init(portdVdt, portTek, channelMeasure)
 	
 	// Tektronix init
 	// Init channels
-	TEK_ChannelInit(channelMeasure, "1000", "100");
+	TEK_ChannelInit(channelMeasure, "100", "100");
 	// Init trigger
 	TEK_TriggerInit(channelMeasure, "100");
 	// Horizontal settings
@@ -134,7 +134,8 @@ function CdVdt_MeasureVfast()
 
 function CdVdt_MeasureRate()
 {
-	return Math.round(TEK_Measure(3) * 0.8 / TEK_Exec("measurement:meas2:value?") * 1e-6);
+	var outrate = (TEK_Measure(3) * 0.8 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(2);
+	return outrate;
 }
 
 function CdVdt_TekVScale(Channel, Voltage)
@@ -251,7 +252,7 @@ function CdVdt_CellCalibrateRate(CellNumber)
 		
 		// Write to DataTable
 		dev.w(BaseDTAddress + i * 2, GateSetpointV[i]);
-		dev.w(BaseDTAddress + i * 2 + 1, rate);
+		dev.w(BaseDTAddress + i * 2 + 1, rate * 10);
 		
 		if (anykey()) return 1;
 	}
@@ -359,11 +360,12 @@ function CdVdt_CollectFixedRate(Repeat)
 				sleep(1000);
 				dev.w(129, cdvdt_RatePoint[i])		
 				
-				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], cdvdt_RatePoint[i]);
+				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], (cdvdt_RatePoint[i]) / 10);
 				sleep(500);
 				
 				CdVdt_ClearDisplay();
 				sleep(1000);
+				
 				
 				// Start pulse
 				for(var CounterAverages = 0; CounterAverages < cdvdt_def_UseAverage; CounterAverages++)
@@ -376,16 +378,17 @@ function CdVdt_CollectFixedRate(Repeat)
 				sleep(1500);
 				while(_dVdt_Active()) sleep(50);				
 				var rate = CdVdt_MeasureRate();
+				var OutRate = (rate * 10);
 				var v = CdVdt_MeasureVfast();
 				
 				print("dVdt set,  V/us: " + cdvdt_RatePoint[i]);
-				print("dV/dt osc, V/us: " + rate);
+				print("dV/dt osc, V/us: " + OutRate);
 				print("Vset,         V: " + VoltageArray[k]);
 				print("V osc,        V: " + v);
 				
 				cntDone++;
 				print("-- result " + cntDone + " of " + cntTotal + " --");
-				CdVdt_StoreVoltageAndFixRate(cdvdt_RatePoint[i], rate, VoltageArray[k], v);
+				CdVdt_StoreVoltageAndFixRate(cdvdt_RatePoint[i], OutRate, VoltageArray[k], v);
 								
 				if (anykey()){ p("Stopped from user!"); return};
 			}
