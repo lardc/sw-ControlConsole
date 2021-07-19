@@ -171,7 +171,7 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 	if (cal_UseAvg)
 	{
 		AvgNum = 4;
-		//TEK_AcquireAvg(AvgNum);
+		TEK_AcquireAvg(AvgNum);
 	}
 	else
 	{
