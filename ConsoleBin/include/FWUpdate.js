@@ -232,7 +232,7 @@ function FWU_DumpCU()
 }
 //------------------------
 
-function FWU_RestoreBVT()
+function FWU_RestoreCU()
 {
 	dev.Restore('../../hw-CUControlBoard/Firmware/CUControlBoard.regdump');
 }
