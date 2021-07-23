@@ -5,34 +5,14 @@ include("Tektronix.js")
 // Predefined variables
 qrr_idc_width = 2000;		// in us
 qrr_single = 0;
+qrr_print = 1;
 
 // QRR
 function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
-{
-	if (dev.r(192) == 1)
-	{
-		p("RCU Fault: " + QSU_ReadReg(170, 193));
-		p("DCU Fault: " + QSU_ReadReg(160, 193));
-		dev.c(3);
-		print("Clear fault");
-		sleep(500);
-	}
-	
-	if (dev.r(192) == 0)
-	{
-		print("Power up");
-		dev.c(1);
-		
-		while (dev.r(192) == 3)
-		{
-			if (anykey()) return;
-			sleep(50);
-		}
-	}
-	
+{	
 	if (dev.r(192) != 4)
 	{
-		print("Abnormal state");
+		print("Abnormal state = " + dev.r(192));
 		return;
 	}
 	
@@ -60,19 +40,23 @@ function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
 		if (pulse_counter != dev.r(199))
 		{
 			pulse_counter = dev.r(199);
-			print("Pulse #" + pulse_counter);
+			if(qrr_print)
+				print("Pulse #" + pulse_counter);
 		}
 		sleep(50);
 	}
 	
-	if (dev.r(192) != 4)
-		print("Failed");
-	
-	if (dev.r(205) != 0)
-		print("DC retries number: " + dev.r(205));
-	
-	if (dev.r(198) != 1)
-		print("Operation result: " + dev.r(198));
+	if(qrr_print)
+	{
+		if (dev.r(192) != 4)
+			print("Failed");
+		
+		if (dev.r(205) != 0)
+			print("DC retries number: " + dev.r(205));
+		
+		if (dev.r(198) != 1)
+			print("Operation result: " + dev.r(198));
+	}
 }
 
 function QRR_Status()
@@ -179,12 +163,13 @@ function QRR_Result()
 {
 	var op_result = dev.r(198);
 	print("Result " + ((op_result == 0) ? "NONE" : (op_result == 1) ? "OK" : "FAILED"));
-	print("Qrr,   uC: " + (dev.r(210) / 10));
-	print("Irr,    A: " + dev.r(211));
-	print("trr,   us: " + (dev.r(212) / 10));
-	print("tq,    us: " + (dev.r(213) / 10));
-	print("Idc,    A: " + dev.r(214));
-	print("dIdt,A/us: " + (dev.r(215) / 10));
+	print("Qrr (GOST), uC: " + (dev.r(210) / 10));
+	print("Qrr,        uC: " + (dev.r(216) / 10));
+	print("Irr,         A: " + dev.r(211));
+	print("trr,        us: " + (dev.r(212) / 10));
+	print("tq,         us: " + (dev.r(213) / 10));
+	print("Idc,         A: " + dev.r(214));
+	print("dIdt,     A/us: " + (dev.r(215) / 10));
 	
 	plot(dev.rafs(1), 1, 0);
 	sleep(200);
@@ -338,28 +323,6 @@ function QSU_Plot(Node, EndPoint)
 	plot(dev.rafs(12), 1, 0);
 }
 
-function QSU_PlotQPU()
-{
-	var CurrentSetup, Current, DAC, CurrentError;
-	
-	QSU_ReadArray(101, 1);
-	CurrentSetup = dev.raf(1);
-	
-	QSU_ReadArray(101, 2);
-	Current = dev.raf(1);
-	
-	QSU_ReadArray(101, 3);
-	DAC = dev.raf(1);
-	
-	QSU_ReadArray(101, 4);
-	CurrentError = dev.rafs(1);
-	
-	plot(CurrentSetup, 30, 0); sleep(100);
-	plot(Current, 30, 0); sleep(100);
-	plot(CurrentError, 30, 0); sleep(100);
-	plot(DAC, 30, 0); sleep(100);
-}
-
 function QSU_NodeStatus(Node, BaseReg)
 {
 	print("Registers [" + BaseReg + " - " + (BaseReg + 4) + "]");
@@ -381,73 +344,3 @@ function QSU_TestCom()
 	}
 }
 //------------------------
-
-// QPU
-function QPU_PrintV()
-{
-	print("SRC voltage set, V: 	" + (dev.r(110) / 10));
-	
-	print("SDC voltage, V: 	" + (dev.r(111) / 10));
-	print("SRC voltage, V: 	" + (dev.r(112) / 10));
-	print("Diode-clamp voltage, V: " + (dev.r(113) / 10));
-}
-
-function QPU_Start(IDC, IDCFallRate)
-{
-	if (dev.r(96) == 0)
-	{
-		dev.c(1);
-		print("Waiting for charge...");
-	}
-	
-	if (dev.r(96) == 3)
-	{
-		var State = 0;
-		do
-		{
-			State = dev.r(96);
-			switch (State)
-			{
-				case 4:
-					print("Charge ready.");
-					break;
-				case 3:
-					break;
-				default:
-					print("Charge error.");
-					return;
-			}
-			sleep(50);
-		}
-		while (State != 4);
-	}
-	else if (dev.r(96) != 4 && dev.r(96) != 9)
-	{
-		print("Device is in wrong state {" + dev.r(96) + "}");
-		return;
-	}
-	
-	dev.w(64, IDC);
-	dev.w(65, Math.round(IDCFallRate * 10));
-	dev.c(100);
-	while(dev.r(96) != 6) sleep(50);
-	print("Config ready.");
-	dev.c(101);
-	print("Direct current start.");
-	while(dev.r(96) != 9) sleep(50);
-	print("Finished.");
-	
-	if (dev.r(96) != 9)
-		PrintStatus();
-}
-
-function QPU_Plot()
-{
-	plot(dev.rafs(1), 30, 0);
-	sleep(1000);
-	plot(dev.rafs(2), 30, 0);
-	sleep(1000);
-	plot(dev.rafs(3), 30, 0);
-	sleep(1000);
-	plot(dev.rafs(4), 30, 0);
-}
