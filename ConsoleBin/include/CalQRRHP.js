@@ -4,16 +4,18 @@ include("Sic_GetData.js")
 
 // Calibration setup parameters
 cal_Rshunt = 1000;	// uOhm
-cal_Points = 10;
-//
 DirectCurrentTest = 400; // in A
+DirectVoltageTest = 1500; // in V
+DirectVoltageRateTest = 1000; // in V/us
+//
 CurrentRateTest = [1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100]; // in A/us
-CurrentRateStartTestIndex = 3;
-IrrMeasured = [15, 20, 27, 57, 100, 130, 160, 200, 250, 300, 300]; // in A
+IrrMeasured = [25, 35, 43, 83, 130, 170, 200, 248, 320, 345, 345]; // in A
+CurrentRateStartTestIndex = 0;
+CurrentRateFinishTestIndex = 10;
 //
 QrrGOST = 0;
 //
-cal_Iterations = 1;
+cal_Iterations = 3;
 //		
 
 // Counters
@@ -21,23 +23,26 @@ cal_CntTotal = 0;
 cal_CntDone = 0;
 
 // Channels
-cal_chMeasureQrr = 1;
+cal_chMeasureI = 1;
 cal_chMeasureU = 2;
 
 // Results storage
-cal_trr = [];
+cal_Trr = [];
 cal_Irr = [];
 cal_Qrr = [];
+cal_Tq = [];
 
 // Tektronix data
-cal_trrSc = [];
+cal_TrrSc = [];
 cal_IrrSc = [];
 cal_QrrSc = [];
+cal_TqSc = [];
 
 // Relative error
-cal_trrErr = [];
+cal_TrrErr = [];
 cal_IrrErr = [];
 cal_QrrErr = [];
+cal_TqErr = [];
 
 
 function CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU)
@@ -49,7 +54,7 @@ function CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU)
 	}
 
 	// Copy channel information
-	cal_chMeasureQrr = channelMeasureI;
+	cal_chMeasureI = channelMeasureI;
 	cal_chMeasureU = channelMeasureU;
 
 	// Init device port
@@ -70,6 +75,28 @@ function CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU)
 }
 //--------------------
 
+function CAL_VerifyTq()
+{		
+	CAL_ResetA();
+	
+	dev.w(153,1);
+	dev.c(110);
+	
+	// Tektronix init
+	CAL_TekInitTq();
+
+	if (CAL_CollectTq(cal_Iterations))
+	{
+		CAL_SaveTq("QSU_Tq");
+		
+		// Plot relative error distribution
+		scattern(cal_TqSc, cal_TqErr, "Tq (in us)", "Error (in %)", "Tq relative error");
+	}
+	
+	dev.c(111);
+}
+//--------------------
+
 function CAL_VerifyQrr()
 {		
 	CAL_ResetA();
@@ -83,12 +110,12 @@ function CAL_VerifyQrr()
 	if (CAL_CollectQrr(cal_Iterations))
 	{
 		CAL_SaveIrr("QSU_Irr");
-		CAL_Savetrr("QSU_trr");
+		CAL_SaveTrr("QSU_Trr");
 		CAL_SaveQrr("QSU_Qrr");
 		
 		// Plot relative error distribution
 		scattern(cal_IrrSc, cal_IrrErr, "Irr (in A)", "Error (in %)", "Irr relative error");
-		scattern(cal_trrSc, cal_trrErr, "trr (in us)", "Error (in %)", "trr relative error");
+		scattern(cal_TrrSc, cal_TrrErr, "Trr (in us)", "Error (in %)", "Trr relative error");
 		scattern(cal_QrrSc, cal_QrrErr, "Qrr (in uQ)", "Error (in %)", "Qrr relative error");
 	}
 	
@@ -96,25 +123,82 @@ function CAL_VerifyQrr()
 }
 //--------------------
 
-function CAL_CollectQrr(IterationsCount)
+function CAL_CollectTq(IterationsCount)
 {
-	cal_CntTotal = (CurrentRateTest.length - CurrentRateStartTestIndex ) * IterationsCount;
+	cal_CntTotal = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex) * IterationsCount;
 	cal_CntDone = 1;
 	
 	for (var i = 0; i < IterationsCount; i++)
 	{
-		for (var j = CurrentRateStartTestIndex; j < CurrentRateTest.length; j++)
+		for (var j = CurrentRateStartTestIndex; j <= CurrentRateFinishTestIndex; j++)
+		{
+			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+			//
+			
+			do
+			{
+				qrr_print = 0;			
+				QRR_Start(1, DirectCurrentTest, CurrentRateTest[j], DirectVoltageTest, DirectVoltageRateTest)
+				qrr_print = 1;
+				
+				print("Is cursor set (y - yes, n -no, s - Stop process)?");
+				
+				var key = "";
+				while(key != "y" && key != "n" && key != "s")
+				{
+					key = readkey();
+					sleep(100);
+				}
+				
+				if(key == "s")
+					return 0;
+			}
+			while(key != "y")
+			
+			// Unit data
+			var Tq = dev.r(213) / 10;			
+			cal_Tq.push(Tq);
+			print("Tq, us	 : " + Tq);
+
+			// Scope data
+			var TqSc = CAL_MeasureTq(cal_chMeasureI);
+			cal_TqSc.push(TqSc);
+			print("TqTek, us : " + TqSc);
+			
+			// Relative error
+			var TqErr = ((Tq - TqSc) / TqSc * 100).toFixed(2);
+			cal_TqErr.push(TqErr);
+			print("TqErr, %  : " + TqErr);
+			
+			print("--------------------");
+			
+			if (anykey()) return 0;
+		}
+	}
+
+	return 1;
+}
+//--------------------
+
+function CAL_CollectQrr(IterationsCount)
+{
+	cal_CntTotal = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex ) * IterationsCount;
+	cal_CntDone = 1;
+	
+	for (var i = 0; i < IterationsCount; i++)
+	{
+		for (var j = CurrentRateStartTestIndex; j <= CurrentRateFinishTestIndex; j++)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
 			CAL_HorizontalScale(CurrentRateTest[j]);
-			CAL_TekScale(cal_chMeasureQrr, IrrMeasured[j] * cal_Rshunt / 1e6);
+			CAL_TekScale(cal_chMeasureI, IrrMeasured[j] * cal_Rshunt / 1e6);
 			sleep(1000);
 			
 			qrr_print = 0;
 			qrr_single = 1;
 			
-			QRR_Start(0, DirectCurrentTest, CurrentRateTest[j], 1000, 400)
+			QRR_Start(0, DirectCurrentTest, CurrentRateTest[j], DirectVoltageTest, VoltageRateTest)
 			
 			qrr_print = 1;
 			qrr_single = 0;
@@ -128,34 +212,32 @@ function CAL_CollectQrr(IterationsCount)
 			var Irr = dev.r(211);
 			cal_Irr.push(Irr);
 			
-			var trr = dev.r(212) / 10;
-			cal_trr.push(trr);
+			var Trr = dev.r(212) / 10;
+			cal_Trr.push(Trr);
 			
 
 			// Scope data
-			var ScopeData = CAL_MeasureQrr(cal_chMeasureQrr);
+			var ScopeData = CAL_MeasureQrr(cal_chMeasureI);
 			var IrrSc = parseFloat(ScopeData[0]).toFixed(2);
-			var trrSc = parseFloat(ScopeData[1]).toFixed(2);
+			var TrrSc = parseFloat(ScopeData[1]).toFixed(2);
 			var QrrSc = parseFloat(ScopeData[2]).toFixed(2);
 			if(QrrGOST)
-				QrrSc = parseFloat(ScopeData[3]).toFixed(2);
-			
-			IrrSc = Irr;
-			trrSc = trr;
-			QrrSc = Irr * trr / 2;
-			
+				QrrSc = parseFloat(ScopeData[3]).toFixed(2);			
 			cal_IrrSc.push(IrrSc);
-			cal_trrSc.push(trrSc);
+			cal_TrrSc.push(TrrSc);
 			cal_QrrSc.push(QrrSc);
 			
 			
 			// Relative error
 			var IrrErr = ((Irr - IrrSc) / IrrSc * 100).toFixed(2);
-			var trrErr = ((trr - trrSc) / trrSc * 100).toFixed(2);
+			var TrrErr = ((Trr - TrrSc) / TrrSc * 100).toFixed(2);
 			var QrrErr = ((Qrr - QrrSc) / QrrSc * 100).toFixed(2);
+			
 			cal_IrrErr.push(IrrErr);
-			cal_trrErr.push(trrErr);
+			cal_TrrErr.push(TrrErr);
 			cal_QrrErr.push(QrrErr);
+			
+			
 			
 			
 			// Print results
@@ -164,9 +246,9 @@ function CAL_CollectQrr(IterationsCount)
 			print("IrrTek,  A: " + IrrSc);
 			print("IrrErr,  %: " + IrrErr);
 			print("");
-			print("trr, us	 : " + trr);
-			print("trrTek, us: " + trrSc);
-			print("trrErr,  %: " + trrErr);
+			print("Trr, us	 : " + Trr);
+			print("TrrTek, us: " + TrrSc);
+			print("TrrErr,  %: " + TrrErr);
 			print("");
 			print("Qrr, uQ	 : " + Qrr);
 			print("QrrTek, uQ: " + QrrSc);
@@ -184,10 +266,10 @@ function CAL_CollectQrr(IterationsCount)
 function CAL_MeasureQrr(Channel)
 {
 	var CurrentScale = 0, Current = 0, IntegratedCurrent = 0;
-	var Index0 = 0, Index09 = 0, Index025 = 0, IndexIrr = 0, Indextrr = 0;
+	var Index0 = 0, Index09 = 0, Index025 = 0, IndexIrr = 0, IndexTrr = 0;
 	var k = 0, b = 0, TimeFraction;
 	var Result = [];
-	var ResultIrr, Resulttrr, ResultQrr, ResultQrrGOST;
+	var ResultIrr, ResultTrr, ResultQrr, ResultQrrGOST;
 	
 	// Get waveform
 	CurrentScale = 1 / cal_Rshunt * 1e6;
@@ -235,21 +317,21 @@ function CAL_MeasureQrr(Channel)
 	// Irr
 	ResultIrr =  -Current[IndexIrr];
 	
-	// trr calculate
+	// Trr calculate
 	b = Current[Index09];
 	k = (Current[Index025] - Current[Index09]) / (Index025 - Index09);
-	Indextrr = Math.round(-b / k + Index09);
-	Resulttrr = ((Indextrr - Index0) * TimeFraction).toFixed(2);
+	IndexTrr = Math.round(-b / k + Index09);
+	ResultTrr = ((IndexTrr - Index0) * TimeFraction).toFixed(2);
 	
 	// Qrr calculate
-	for(i = Index0; i < Indextrr; i++)
+	for(i = Index0; i < IndexTrr; i++)
 		IntegratedCurrent += -Current[i];
 	ResultQrr = (IntegratedCurrent * TimeFraction).toFixed(2);
-	ResultQrrGOST = (ResultIrr * Resulttrr / 2).toFixed(2);
+	ResultQrrGOST = (ResultIrr * ResultTrr / 2).toFixed(2);
 	
 	var ReturnValues = [];
 	ReturnValues[0] = ResultIrr;
-	ReturnValues[1] = Resulttrr;
+	ReturnValues[1] = ResultTrr;
 	ReturnValues[2] = ResultQrr;
 	ReturnValues[3] = ResultQrrGOST;
 	
@@ -257,22 +339,33 @@ function CAL_MeasureQrr(Channel)
 }
 //--------------------
 
+function CAL_MeasureTq(Channel)
+{
+	TEK_Send("cursor:select:source ch" + Channel);
+	sleep(500);
+	return TEK_Exec("cursor:vbars:delta?") * 1e6;
+}
+//--------------------
+
 function CAL_ResetA()
 {	
 	// Results storage
 	cal_Irr = [];
-	cal_trr = [];
+	cal_Trr = [];
 	cal_Qrr = [];
+	cal_Tq = [];
 
 	// Tektronix data
 	cal_IrrSc = [];
-	cal_trrSc = [];
+	cal_TrrSc = [];
 	cal_QrrSc = [];
+	cal_TqSc = [];
 
 	// Relative error
 	cal_IrrErr = [];
-	cal_trrErr = [];
+	cal_TrrErr = [];
 	cal_QrrErr = [];
+	cal_TqErr = [];
 }
 //--------------------
 
@@ -282,9 +375,9 @@ function CAL_SaveIrr(NameIrr)
 }
 //--------------------
 
-function CAL_Savetrr(Nametrr)
+function CAL_SaveTrr(NameTrr)
 {
-	CGEN_SaveArrays(Nametrr, cal_trr, cal_trrSc, cal_trrErr);
+	CGEN_SaveArrays(NameTrr, cal_Trr, cal_TrrSc, cal_TrrErr);
 }
 //--------------------
 
@@ -294,12 +387,18 @@ function CAL_SaveQrr(NameQrr)
 }
 //--------------------
 
+function CAL_SaveTq(NameTq)
+{
+	CGEN_SaveArrays(NameTq, cal_Tq, cal_TqSc, cal_TqErr);
+}
+//--------------------
+
 function CAL_TekInitQrr()
 {
 	TEK_Horizontal("1e-6", "0");
 	
-	TEK_ChannelInvInit(cal_chMeasureQrr, "1", "0.1");
-	TEK_Send("ch" + cal_chMeasureQrr + ":position 3");
+	TEK_ChannelInvInit(cal_chMeasureI, "1", "0.1");
+	TEK_Send("ch" + cal_chMeasureI + ":position 3");
 	
 	TEK_ChannelInit(cal_chMeasureU, "100", "20");
 	TEK_Send("ch" + cal_chMeasureU + ":position 3");
@@ -311,6 +410,21 @@ function CAL_TekInitQrr()
 	TEK_Send("data:encdg rpb");
 	TEK_Send("data:start 1");
 	TEK_Send("data:stop 2500");
+}
+//--------------------
+
+function CAL_TekInitTq()
+{
+	TEK_Horizontal("10e-6", "0");
+	
+	TEK_ChannelInvInit(cal_chMeasureI, "1", "0.1");
+	TEK_Send("ch" + cal_chMeasureI + ":position 0");
+	
+	TEK_ChannelInit(cal_chMeasureU, "100", "50");
+	TEK_Send("ch" + cal_chMeasureU + ":position -1");
+	
+	TEK_TriggerInit(cal_chMeasureI, "0");
+	TEK_Send("trigger:main:edge:slope raise");
 }
 //--------------------
 
