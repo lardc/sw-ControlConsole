@@ -10,6 +10,25 @@ qrr_print = 1;
 // QRR
 function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
 {	
+	if (dev.r(192) == 1)
+	{
+		dev.c(3);
+		print("Clear fault");
+		sleep(500);
+	}
+	
+	if (dev.r(192) == 0)
+	{
+		print("Power up");
+		dev.c(1);
+		
+		while (dev.r(192) == 3)
+		{
+			if (anykey()) return;
+			sleep(50);
+		}
+	}
+	
 	if (dev.r(192) != 4)
 	{
 		print("Abnormal state = " + dev.r(192));
@@ -92,7 +111,7 @@ function QRR_Status()
 	if (dev.r(2) == 0)
 	{	
 		QSU_NodeStatus(160, 192);
-		print("Fault	   :	" + QSU_ReadReg(7, 193));
+		print("Fault	   :	" + QSU_ReadReg(160, 193));
 	}
 	else
 		print("Emulation");
@@ -102,7 +121,7 @@ function QRR_Status()
 	if (dev.r(3) == 0)
 	{	
 		QSU_NodeStatus(161, 192);
-		print("Fault	   :	" + QSU_ReadReg(7, 193));
+		print("Fault	   :	" + QSU_ReadReg(161, 193));
 	}
 	else
 		print("Emulation");
@@ -112,7 +131,7 @@ function QRR_Status()
 	if (dev.r(4) == 0)
 	{	
 		QSU_NodeStatus(162, 192);
-		print("Fault	   :	" + QSU_ReadReg(7, 193));
+		print("Fault	   :	" + QSU_ReadReg(162, 193));
 	}
 	else
 		print("Emulation");
@@ -122,7 +141,7 @@ function QRR_Status()
 	if (dev.r(5) == 0)
 	{	
 		QSU_NodeStatus(170, 192);
-		print("Fault	   :	" + QSU_ReadReg(7, 193));
+		print("Fault	   :	" + QSU_ReadReg(170, 193));
 	}
 	else
 		print("Emulation");
@@ -132,7 +151,7 @@ function QRR_Status()
 	if (dev.r(6) == 0)
 	{	
 		QSU_NodeStatus(171, 192);
-		print("Fault	   :	" + QSU_ReadReg(7, 193));
+		print("Fault	   :	" + QSU_ReadReg(171, 193));
 	}
 	else
 		print("Emulation");
@@ -142,7 +161,7 @@ function QRR_Status()
 	if (dev.r(7) == 0)
 	{	
 		QSU_NodeStatus(172, 192);
-		print("Fault	   :	" + QSU_ReadReg(7, 193));
+		print("Fault	   :	" + QSU_ReadReg(172, 193));
 	}
 	else
 		print("Emulation");
