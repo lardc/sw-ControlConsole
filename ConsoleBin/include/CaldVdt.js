@@ -12,7 +12,9 @@ cdvdt_chMeasure = 1;
 cdvdt_def_SetpointCount = 7;
 cdvdt_def_VGateMin = 3000;
 cdvdt_def_VGateMax = 5000;
+
 // Definition range config
+cdvdt_def_NO_RANGE = 3; 									// for compibility old pcb
 cdvdt_def_RANGE_LOW = 1;
 cdvdt_def_RANGE_MID = 2;
 cdvdt_def_RANGE_HIGH = 0;
@@ -20,6 +22,7 @@ cdvdt_def_SetpointStartAddr = {}
 cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_LOW]  = 320;
 cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_MID]  = 410;
 cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_HIGH] = 40;
+cdvdt_def_SetpointStartAddr[cdvdt_def_NO_RANGE] = 30;
 //
 cdvdt_CalVoltage = 500;
 cdvdt_SelectedRange = cdvdt_def_RANGE_HIGH;
@@ -187,7 +190,8 @@ function CdVdt_CellCalibrateRate(CellNumber)
 	dVdt_CellCall(CellNumber, 1);
 	
 	// Configure amplitude
-	dVdt_SelectRange(CellNumber, cdvdt_SelectedRange)
+	if(cdvdt_SelectedRange != cdvdt_def_NO_RANGE)
+		dVdt_SelectRange(CellNumber, cdvdt_SelectedRange);
 	dVdt_CellSetV(CellNumber, cdvdt_CalVoltage);
 	CdVdt_TekVScale(cdvdt_chMeasure, cdvdt_CalVoltage);
 	TEK_TriggerInit(cdvdt_chMeasure, cdvdt_CalVoltage / 2);
@@ -406,7 +410,8 @@ function CdVdt_StabCheck(CellNumber, Voltage, Gate)
 	dVdt_CellCall(CellNumber, 1);
 	
 	// Configure amplitude
-	dVdt_SelectRange(CellNumber, cdvdt_SelectedRange)
+	if(cdvdt_SelectedRange != cdvdt_def_NO_RANGE)
+		dVdt_SelectRange(CellNumber, cdvdt_SelectedRange);
 	dVdt_CellSetV(CellNumber, Voltage);
 	CdVdt_TekVScale(cdvdt_chMeasure, Voltage);
 	TEK_TriggerInit(cdvdt_chMeasure, Voltage / 2);
