@@ -35,6 +35,9 @@ cdvdt_Vstp = 500;
 //
 cdvdt_collect_v = 0;
 
+// Hand measurre - cursors
+cdvdt_def_UseHandMeasure = false;
+
 // Voltage rate points
 cdvdt_RatePoint = [200, 500, 1000, 1600, 2000, 2500];
 
@@ -241,8 +244,20 @@ function CdVdt_CellCalibrateRate(CellNumber)
 		}
 		
 		var v = CdVdt_MeasureVfast();
-		var rate = CdVdt_MeasureRate();
-		
+		if(cdvdt_def_UseHandMeasure)
+		{
+			var rate = 0;
+			print("Enter delta voltage value (in V):");
+			var dV	=	readline();				
+			print("Enter delta time value (in us):");
+			var dt	=	readline();	
+			rate = Math.round(dV / dt);
+			CdVdt_TekMeasurement(1);
+			sleep(1000);
+		}
+		else	
+			var rate = CdVdt_MeasureRate();
+
 		if (rate == 0 || rate == Infinity || rate > 3000)
 		{
 			print("Cell " + CellNumber + ". No pulse at gate voltage " + GateSetpointV[i] + "mV.");
@@ -380,10 +395,24 @@ function CdVdt_CollectFixedRate(Repeat)
 				}
 
 				sleep(1500);
-				while(_dVdt_Active()) sleep(50);				
-				var rate = CdVdt_MeasureRate();
-				var OutRate = (rate * 10);
+				while(_dVdt_Active()) sleep(50);
+
 				var v = CdVdt_MeasureVfast();
+				if(cdvdt_def_UseHandMeasure)
+				{
+					var rate = 0;
+					print("Enter delta voltage value (in V):");
+					var dV	=	readline();				
+					print("Enter delta time value (in us):");
+					var dt	=	readline();	
+					rate = Math.round(dV / dt);
+					CdVdt_TekMeasurement(1);
+					sleep(1000);
+				}
+				else	
+					var rate = CdVdt_MeasureRate();
+
+				var OutRate = (rate * 10);
 				
 				print("dVdt set,  V/us: " + cdvdt_RatePoint[i]);
 				print("dV/dt osc, V/us: " + OutRate);
