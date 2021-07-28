@@ -27,6 +27,7 @@ cdvdt_def_SetpointStartAddr[cdvdt_def_NO_RANGE] = 30;
 cdvdt_CalVoltage = 500;
 cdvdt_SelectedRange = cdvdt_def_RANGE_HIGH;
 cdvdt_HVProbeScale = 100		// Коэффициент деления щупа
+cdvdt_DeviderRate = 10; 		// Делить скорости. Установить равным 1 если плата без диапазонов 
 
 // Voltage settings for unit calibration
 cdvdt_Vmin = 500;
@@ -271,7 +272,7 @@ function CdVdt_CellCalibrateRate(CellNumber)
 		
 		// Write to DataTable
 		dev.w(BaseDTAddress + i * 2, GateSetpointV[i]);
-		dev.w(BaseDTAddress + i * 2 + 1, rate * 10);
+		dev.w(BaseDTAddress + i * 2 + 1, rate * cdvdt_DeviderRate);
 		
 		if (anykey()) return 1;
 	}
@@ -379,7 +380,7 @@ function CdVdt_CollectFixedRate(Repeat)
 				sleep(1000);
 				dev.w(129, cdvdt_RatePoint[i])		
 				
-				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], (cdvdt_RatePoint[i]) / 10);
+				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], (cdvdt_RatePoint[i]) / cdvdt_DeviderRate);
 				sleep(500);
 				
 				CdVdt_ClearDisplay();
@@ -412,7 +413,7 @@ function CdVdt_CollectFixedRate(Repeat)
 				else	
 					var rate = CdVdt_MeasureRate();
 
-				var OutRate = (rate * 10);
+				var OutRate = (rate * cdvdt_DeviderRate);
 				
 				print("dVdt set,  V/us: " + cdvdt_RatePoint[i]);
 				print("dV/dt osc, V/us: " + OutRate);
