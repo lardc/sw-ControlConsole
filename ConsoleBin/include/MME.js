@@ -2,13 +2,20 @@ include("TestCS.js")
 include("TestGTU_4.0.js")
 include("TestBVT.js")
 include("TestLSLH.js")
+include ("TestQRRHP.js")
 
 mme_cs_def_force = 5;
 mme_cs_force = 25;
 mme_cs_height = 35;
 //
 mme_bvt_current = 5;
-mme_bvt_voltage = 8000;
+mme_bvt_voltage = 500;
+//
+mme_qrr_current = 400;
+mme_qrr_current_rate = 30;
+mme_qrr_voltage = 1500;
+mme_qrr_voltage_rate = 1000;
+mme_qrr_mode = 1; // 0 - QRR, 1 - QRR Tq
 //
 mme_counter = 0;
 
@@ -19,12 +26,14 @@ mme_BVTD =		2;
 mme_BVTR =		3;
 mme_CSDEF =		4;
 mme_CSMAX =		5;
+mme_QRR = 		6;
 
 // active blocks
 mme_use_GTU = 	1;
 mme_use_SL = 	1;
-mme_use_BVT =	0;
+mme_use_BVT =	1;
 mme_use_CS = 	0;
+mme_use_QRR =	1;
 
 // NodeID
 mme_Nid_HMIU = 0;
@@ -37,6 +46,7 @@ mme_Nid_CROVU = 7;
 mme_Nid_SCTU = 8;
 mme_Nid_ATU = 9;
 mme_Nid_CUext = 5;
+mme_Nid_QRR = 10;
 
 
 // settings
@@ -50,11 +60,11 @@ function MME_Units()
 	try
 	{
 		dev.Read16Silent(0);
-		print("[Node 0] HMIU:	OK");
+		print("[Node 0]  HMIU:	OK");
 	}
 	catch (e)
 	{
-		print("[Node 0] HMIU:	None");
+		print("[Node 0]  HMIU:	None");
 		ret = 0;
 	}
 	
@@ -62,11 +72,11 @@ function MME_Units()
 	try
 	{
 		dev.Read16Silent(0);
-		print("[Node 1] CU:	OK");
+		print("[Node 1]  CU:	OK");
 	}
 	catch (e)
 	{
-		print("[Node 1] CU:	None");
+		print("[Node 1]  CU:	None");
 		ret = 0;
 	}
 	
@@ -74,11 +84,11 @@ function MME_Units()
 	try
 	{
 		dev.Read16Silent(0);
-		print("[Node 2] SL:	OK");
+		print("[Node 2]  SL:	OK");
 	}
 	catch (e)
 	{
-		print("[Node 2] SL:	None");
+		print("[Node 2]  SL:	None");
 		ret = 0;
 	}
 	
@@ -86,11 +96,11 @@ function MME_Units()
 	try
 	{
 		dev.Read16Silent(0);
-		print("[Node 3] GTU:	OK");
+		print("[Node 3]  GTU:	OK");
 	}
 	catch (e)
 	{
-		print("[Node 3] GTU:	None");
+		print("[Node 3]  GTU:	None");
 		ret = 0;
 	}
 	
@@ -98,11 +108,11 @@ function MME_Units()
 	try
 	{
 		dev.Read16Silent(0);
-		print("[Node 4] BVT:	OK");
+		print("[Node 4]  BVT:	OK");
 	}
 	catch (e)
 	{
-		print("[Node 4] BVT:	None");
+		print("[Node 4]  BVT:	None");
 		ret = 0;
 	}
 	
@@ -110,11 +120,11 @@ function MME_Units()
 	try
 	{
 		dev.Read16Silent(0);
-		print("[Node 5] CUext:	OK");
+		print("[Node 5]  CUext:	OK");
 	}
 	catch (e)
 	{
-		print("[Node 5] CUext:	None");
+		print("[Node 5]  CUext:	None");
 		ret = 0;
 	}
 	
@@ -122,11 +132,11 @@ function MME_Units()
 	try
 	{
 		dev.Read16Silent(0);
-		print("[Node 6] CS:	OK");
+		print("[Node 6]  CS:	OK");
 	}
 	catch (e)
 	{
-		print("[Node 6] CS:	None");
+		print("[Node 6]  CS:	None");
 		ret = 0;
 	}
 	
@@ -134,11 +144,11 @@ function MME_Units()
 	try
 	{
 		dev.Read16Silent(0);
-		print("[Node 7] dVdt:	OK");
+		print("[Node 7]  dVdt:	OK");
 	}
 	catch (e)
 	{
-		print("[Node 7] dVdt:	None");
+		print("[Node 7]  dVdt:	None");
 		ret = 0;
 	}
 	
@@ -146,11 +156,11 @@ function MME_Units()
 	try
 	{
 		dev.Read16Silent(0);
-		print("[Node 8] SCTU:	OK");
+		print("[Node 8]  SCTU:	OK");
 	}
 	catch (e)
 	{
-		print("[Node 8] SCTU:	None");
+		print("[Node 8]  SCTU:	None");
 		ret = 0;
 	}
 	
@@ -158,11 +168,23 @@ function MME_Units()
 	try
 	{
 		dev.Read16Silent(0);
-		print("[Node 9] ATU:	OK");
+		print("[Node 9]  ATU:	OK");
 	}
 	catch (e)
 	{
-		print("[Node 9] ATU:	None");
+		print("[Node 9]  ATU:	None");
+		ret = 0;
+	}
+	
+	dev.nid(mme_Nid_QRR);
+	try
+	{
+		dev.Read16Silent(0);
+		print("[Node 10] QRR:	OK");
+	}
+	catch (e)
+	{
+		print("[Node 10] QRR:	None");
 		ret = 0;
 	}
 	
@@ -255,6 +277,18 @@ function MME_IsReady()
 		if (dev.r(96) != 3)
 		{
 			print("CS not ready");
+			return 0;
+		}
+	}
+	
+	// qrr
+	if (mme_use_QRR)
+	{
+		dev.nid(mme_Nid_QRR);
+		if (dev.r(192) == 0) dev.c(1);
+		if (dev.r(192) != 4)
+		{
+			print("QRR not ready");
 			return 0;
 		}
 	}
@@ -473,6 +507,15 @@ function MME_BVT()
 	}
 }
 
+function MME_QRR()
+{
+	if (mme_use_QRR)
+	{
+		dev.nid(mme_Nid_QRR);
+		QRR_Start(mme_qrr_mode, mme_qrr_current, mme_qrr_current_rate, mme_qrr_voltage, mme_qrr_voltage_rate);
+	}
+}
+
 function MME_ResetA()
 {
 	GTU_ResetA();
@@ -541,6 +584,12 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					MME_CS(mme_cs_force);
 					sleep(2000);
 					print("-------------");
+					break;
+				case mme_QRR:
+					print("#QRR");
+					MME_CU(115);
+					MME_QRR();
+					MME_CU(110);
 					break;
 			}
 		}
