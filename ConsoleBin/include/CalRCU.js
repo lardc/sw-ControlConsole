@@ -17,6 +17,7 @@ CurrentRateTest = 0.5; // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
 
 cal_Iterations = 3;
 cal_UseAvg = 1;
+cal_UseCursors = 1;
 //		
 
 // Counters
@@ -355,8 +356,18 @@ function CAL_TekInitId()
 	TEK_TriggerInit(cal_chMeasureId, "0.06");
 	TEK_Send("trigger:main:edge:slope rise");
 	TEK_Horizontal("5e-6", "0");
-	TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
-	TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
+	
+	if(cal_UseCursors)
+	{
+		TEK_Send("cursor:select:source ch" + cal_chMeasureId);
+		TEK_Send("cursor:function vbars");
+		TEK_Send("cursor:vbars:position1 -5e-3");
+	}
+	else
+	{
+		TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
+		TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
+	}
 	
 	CAL_TekSetHorizontalScale();
 }
@@ -384,36 +395,47 @@ function CAL_TekSetHorizontalScale()
 	{
 		case 50:
 			TEK_Horizontal("100e-6", "0");
+			TEK_Send("cursor:vbars:position2 400e-6");
 			break;
 		case 75:
 			TEK_Horizontal("100e-6", "0");
+			TEK_Send("cursor:vbars:position2 400e-6");
 			break;
 		case 100:
 			TEK_Horizontal("50e-6", "0");
+			TEK_Send("cursor:vbars:position2 200e-6");
 			break;
 		case 250:
 			TEK_Horizontal("25e-6", "0");
+			TEK_Send("cursor:vbars:position2 100e-6");
 			break;
 		case 500:
 			TEK_Horizontal("10e-6", "0");
+			TEK_Send("cursor:vbars:position2 40e-6");
 			break;
 		case 750:
 			TEK_Horizontal("10e-6", "0");
+			TEK_Send("cursor:vbars:position2 40e-6");
 			break;
 		case 1000:
-			TEK_Horizontal("5e-6", "0");
+			TEK_Horizontal("10e-6", "0");
+			TEK_Send("cursor:vbars:position2 40e-6");
 			break;
 		case 1500:
 			TEK_Horizontal("5e-6", "0");
+			TEK_Send("cursor:vbars:position2 20e-6");
 			break;
 		case 2500:
-			TEK_Horizontal("2.5e-6", "0");
+			TEK_Horizontal("5e-6", "0");
+			TEK_Send("cursor:vbars:position2 20e-6");
 			break;
 		case 3000:
 			TEK_Horizontal("2.5e-6", "0");
+			TEK_Send("cursor:vbars:position2 10e-6");
 			break;
 		case 5000:
-			TEK_Horizontal("1e-6", "0");
+			TEK_Horizontal("2.5e-6", "0");
+			TEK_Send("cursor:vbars:position2 10e-6");
 			break;
 	}
 }
@@ -428,7 +450,10 @@ function CAL_TekScale(Channel, Value)
 
 function CAL_MeasureId(Channel)
 {
-	return TEK_Measure(Channel);
+	if(cal_UseCursors)
+		return TEK_Exec("cursor:vbars:hpos2?");
+	else
+		return TEK_Measure(Channel);
 }
 //--------------------
 

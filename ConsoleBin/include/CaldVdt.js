@@ -12,7 +12,9 @@ cdvdt_chMeasure = 1;
 cdvdt_def_SetpointCount = 7;
 cdvdt_def_VGateMin = 3000;
 cdvdt_def_VGateMax = 5000;
+
 // Definition range config
+cdvdt_def_NO_RANGE = 3; 									// for compibility old pcb
 cdvdt_def_RANGE_LOW = 1;
 cdvdt_def_RANGE_MID = 2;
 cdvdt_def_RANGE_HIGH = 0;
@@ -20,10 +22,12 @@ cdvdt_def_SetpointStartAddr = {}
 cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_LOW]  = 320;
 cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_MID]  = 410;
 cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_HIGH] = 40;
+cdvdt_def_SetpointStartAddr[cdvdt_def_NO_RANGE] = 30;
 //
 cdvdt_CalVoltage = 500;
 cdvdt_SelectedRange = cdvdt_def_RANGE_HIGH;
 cdvdt_HVProbeScale = 100		// Коэффициент деления щупа
+cdvdt_DeviderRate = 10; 		// Делить скорости. Установить равным 1 если плата без диапазонов 
 
 // Voltage settings for unit calibration
 cdvdt_Vmin = 500;
@@ -31,6 +35,9 @@ cdvdt_Vmax = 4500;
 cdvdt_Vstp = 500;
 //
 cdvdt_collect_v = 0;
+
+// Hand measurre - cursors
+cdvdt_def_UseHandMeasure = false;
 
 // Voltage rate points
 cdvdt_RatePoint = [200, 500, 1000, 1600, 2000, 2500];
@@ -187,7 +194,8 @@ function CdVdt_CellCalibrateRate(CellNumber)
 	dVdt_CellCall(CellNumber, 1);
 	
 	// Configure amplitude
-	dVdt_SelectRange(CellNumber, cdvdt_SelectedRange)
+	if(cdvdt_SelectedRange != cdvdt_def_NO_RANGE)
+		dVdt_SelectRange(CellNumber, cdvdt_SelectedRange);
 	dVdt_CellSetV(CellNumber, cdvdt_CalVoltage);
 	CdVdt_TekVScale(cdvdt_chMeasure, cdvdt_CalVoltage);
 	TEK_TriggerInit(cdvdt_chMeasure, cdvdt_CalVoltage / 2);
@@ -237,8 +245,20 @@ function CdVdt_CellCalibrateRate(CellNumber)
 		}
 		
 		var v = CdVdt_MeasureVfast();
-		var rate = CdVdt_MeasureRate();
-		
+		if(cdvdt_def_UseHandMeasure)
+		{
+			var rate = 0;
+			print("Enter delta voltage value (in V):");
+			var dV	=	readline();				
+			print("Enter delta time value (in us):");
+			var dt	=	readline();	
+			rate = Math.round(dV / dt);
+			CdVdt_TekMeasurement(1);
+			sleep(1000);
+		}
+		else	
+			var rate = CdVdt_MeasureRate();
+
 		if (rate == 0 || rate == Infinity || rate > 3000)
 		{
 			print("Cell " + CellNumber + ". No pulse at gate voltage " + GateSetpointV[i] + "mV.");
@@ -252,7 +272,7 @@ function CdVdt_CellCalibrateRate(CellNumber)
 		
 		// Write to DataTable
 		dev.w(BaseDTAddress + i * 2, GateSetpointV[i]);
-		dev.w(BaseDTAddress + i * 2 + 1, rate * 10);
+		dev.w(BaseDTAddress + i * 2 + 1, rate * cdvdt_DeviderRate);
 		
 		if (anykey()) return 1;
 	}
@@ -360,7 +380,7 @@ function CdVdt_CollectFixedRate(Repeat)
 				sleep(1000);
 				dev.w(129, cdvdt_RatePoint[i])		
 				
-				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], (cdvdt_RatePoint[i]) / 10);
+				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], (cdvdt_RatePoint[i]) / cdvdt_DeviderRate);
 				sleep(500);
 				
 				CdVdt_ClearDisplay();
@@ -376,10 +396,24 @@ function CdVdt_CollectFixedRate(Repeat)
 				}
 
 				sleep(1500);
-				while(_dVdt_Active()) sleep(50);				
-				var rate = CdVdt_MeasureRate();
-				var OutRate = (rate * 10);
+				while(_dVdt_Active()) sleep(50);
+
 				var v = CdVdt_MeasureVfast();
+				if(cdvdt_def_UseHandMeasure)
+				{
+					var rate = 0;
+					print("Enter delta voltage value (in V):");
+					var dV	=	readline();				
+					print("Enter delta time value (in us):");
+					var dt	=	readline();	
+					rate = Math.round(dV / dt);
+					CdVdt_TekMeasurement(1);
+					sleep(1000);
+				}
+				else	
+					var rate = CdVdt_MeasureRate();
+
+				var OutRate = (rate * cdvdt_DeviderRate);
 				
 				print("dVdt set,  V/us: " + cdvdt_RatePoint[i]);
 				print("dV/dt osc, V/us: " + OutRate);
@@ -406,7 +440,8 @@ function CdVdt_StabCheck(CellNumber, Voltage, Gate)
 	dVdt_CellCall(CellNumber, 1);
 	
 	// Configure amplitude
-	dVdt_SelectRange(CellNumber, cdvdt_SelectedRange)
+	if(cdvdt_SelectedRange != cdvdt_def_NO_RANGE)
+		dVdt_SelectRange(CellNumber, cdvdt_SelectedRange);
 	dVdt_CellSetV(CellNumber, Voltage);
 	CdVdt_TekVScale(cdvdt_chMeasure, Voltage);
 	TEK_TriggerInit(cdvdt_chMeasure, Voltage / 2);
