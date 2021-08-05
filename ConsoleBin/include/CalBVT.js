@@ -9,11 +9,11 @@ cbvt_VstpAC = 500;		// in V
 
 cbvt_VmaxDC	= 4500;		// in V
 //
-cbvt_Shunt	= 100;		// in Ohms
-cbvt_R		= 357000;	// in Ohms
+cbvt_Shunt	= 99.46;	// in Ohms
+cbvt_R		= 216050;	// in Ohms
 //
-cbvt_ShuntP	= 10;		// in Ohms
-cbvt_RP		= 30000;	// in Ohms
+cbvt_ShuntP	= 9.92;		// in Ohms
+cbvt_RP		= 21649;	// in Ohms
 //
 cbvt_RangeV = 2;		// Voltage range number
 cbvt_RangeI = 1;		// Current range number
