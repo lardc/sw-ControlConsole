@@ -101,20 +101,31 @@ function SiC_CALC_Recovery(Curves)
 	var Irrm = Irrm_Point.Value;
 	
 	// find aux curve points
-	var trr02 = 0;
-	var Irr02 = 0;
+	var AuxPoint1 = {X : null, Y : null};
+	var AuxPoint2 = {X : null, Y : null};
+	
 	for (var i = Irrm_Point.Index; i < current_trim.length; ++i)
 	{
-		if (current_trim[i] < Irrm * 0.02)
+		if (current_trim[i] <= Irrm * 0.9)
 		{
-			Irr02 = current_trim[i];
-			trr02 = i;
+			AuxPoint1.Y = current_trim[i];
+			AuxPoint1.X = i;
 			break;
 		}
 	}
 	
-	var k_r = (Irrm - Irr02) / (Irrm_Point.Index - trr02);
-	var b_r = Irrm - k_r * Irrm_Point.Index;
+	for (var i = Irrm_Point.Index; i < current_trim.length; ++i)
+	{
+		if (current_trim[i] <= Irrm * 0.25)
+		{
+			AuxPoint2.Y = current_trim[i];
+			AuxPoint2.X = i;
+			break;
+		}
+	}
+	
+	var k_r = (AuxPoint1.Y - AuxPoint2.Y) / (AuxPoint1.X - AuxPoint2.X);
+	var b_r = AuxPoint1.Y - k_r * AuxPoint1.X;
 	
 	// find trr
 	trr_index = Math.round(-b_r / k_r);
@@ -124,7 +135,7 @@ function SiC_CALC_Recovery(Curves)
 	var Qrr = 0;
 	for (var i = 0; i < trr_index; ++i)
 		Qrr += current_trim[i];
-	Qrr = (Qrr - (current_trim[0] + current_trim[current_trim.length - 1]) / 2) * TimeScale / 250 * 1e6;
+	Qrr = (Qrr - 0.5 * (current_trim[0] + current_trim[current_trim.length - 1])) * TimeScale / 250 * 1e6;
 	
 	return {trr : trr, Irrm : Irrm, Qrr : Qrr};
 }
@@ -139,11 +150,13 @@ function SiC_CALC_RecoveryGetXY(Data)
 	
 	var StartIndex = 0;
 	for (var i = MaxPoint.Index; i < Data.length; ++i)
+	{
 		if (Data[i] <= Iavg)
 		{
 			StartIndex = i;
 			break;
 		}
+	}
 	
 	var k = (Data[StartIndex] - Data[EndIndex]) / (StartIndex - EndIndex);
 	var b = Data[StartIndex] - k * StartIndex;
