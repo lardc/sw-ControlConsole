@@ -61,10 +61,11 @@ function SiC_GD_Filter(Data, ScaleI)
 	}
 	
 	// current shunt scale
+	var scale
 	if (typeof ScaleI === 'undefined')
-		var scale = 1;
+		scale = 1;
 	else
-		var scale = ScaleI;
+		scale = ScaleI;
 	
 	// spline filtering
 	for (var i = 0; i < (filtered_avg.length - 3); ++i)

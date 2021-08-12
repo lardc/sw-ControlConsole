@@ -41,10 +41,8 @@ function SiC_CALC_SignalRiseFall(Signal, TimeScale, LowPoint)
 	S_amp /= sic_calc_rf_max_zone;
 	
 	// find rise/fall zone
-	S_min = 0;
-	S_max = 0;
-	t_min = 0;
-	t_max = 0;
+	var t_min = 0;
+	var t_max = 0;
 	
 	if (typeof LowPoint === 'undefined')
 		LowPoint = 0.1;
@@ -128,8 +126,8 @@ function SiC_CALC_Recovery(Curves)
 	var b_r = AuxPoint1.Y - k_r * AuxPoint1.X;
 	
 	// find trr
-	trr_index = Math.round(-b_r / k_r);
-	trr = -b_r / k_r * TimeScale / 250 * 1e9;
+	var trr_index = Math.round(-b_r / k_r);
+	var trr = -b_r / k_r * TimeScale / 250 * 1e9;
 	var Qrr = SiC_CALC_Integrate(current_trim, TimeScale / 250 * 1e6, 0, trr_index - 1)
 	
 	return {trr : trr, Irrm : Irrm, Qrr : Qrr};
