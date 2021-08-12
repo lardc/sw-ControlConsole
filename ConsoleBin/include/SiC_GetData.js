@@ -127,17 +127,19 @@ function SiC_GD_MAX(Data)
 
 function SiC_GD_GetCurves(ChannelVg, ChannelVce, ChannelIce)
 {
-	var HScale  = SiC_GD_GetTimeScale();
+	var TimeStep = SiC_GD_GetTimeScale() / 250;
 	
 	var DataVge = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelVg));
 	var DataVce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelVce));
 	var DataIce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelIce), 40);
 	
-	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, HScale : HScale};
+	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, TimeStep : TimeStep};
 }
 
 function SiC_GD_GetCurvesEmuX(KeyName, SwitchMode, VgeMul, VceMul, IceMul, HScale)
 {
+	var TimeStep = HScale / 250;
+	
 	var vge = load("data/ch_" + KeyName + "_vge_" + SwitchMode + ".csv");
 	var vce = load("data/ch_" + KeyName + "_vce_" + SwitchMode + ".csv");
 	var ice = load("data/ch_" + KeyName + "_ice_" + SwitchMode + ".csv");
@@ -153,5 +155,5 @@ function SiC_GD_GetCurvesEmuX(KeyName, SwitchMode, VgeMul, VceMul, IceMul, HScal
 	var DataVce = SiC_GD_Filter(vce, VceMul);
 	var DataIce = SiC_GD_Filter(ice, IceMul);
 	
-	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, HScale : HScale};
+	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, TimeStep : TimeStep};
 }

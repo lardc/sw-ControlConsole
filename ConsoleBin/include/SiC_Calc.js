@@ -6,30 +6,30 @@ function SiC_CALC_Delay(Curves)
 {
 	var _Vge = Curves.Vge;
 	var _Ice = Curves.Ice;
-	var TimeScale = Curves.HScale;
+	var TimeStep = Curves.TimeStep;
 	
 	// check input data
 	if (_Vge.length != _Ice.length)
 		print("Delay calc: arrays of different lengths.")
 	
 	// get curves pivot points
-	var Vge_pivot = SiC_CALC_SignalRiseFall(_Vge, TimeScale);
-	var Ice_pivot = SiC_CALC_SignalRiseFall(_Ice, TimeScale);
+	var Vge_pivot = SiC_CALC_SignalRiseFall(_Vge, TimeStep);
+	var Ice_pivot = SiC_CALC_SignalRiseFall(_Ice, TimeStep);
 	
 	var delay = SiC_CALC_OnMode(Curves) ? (Ice_pivot.t_min - Vge_pivot.t_min) : (Ice_pivot.t_max - Vge_pivot.t_max);
 	
-	return (delay * TimeScale / 250 * 1e9);
+	return (delay * TimeStep * 1e9);
 }
 
 function SiC_CALC_VI_RiseFall(Curves)
 {
-	var V_points = SiC_CALC_SignalRiseFall(Curves.Vce, Curves.HScale);
-	var I_points = SiC_CALC_SignalRiseFall(Curves.Ice, Curves.HScale);
+	var V_points = SiC_CALC_SignalRiseFall(Curves.Vce, Curves.TimeStep);
+	var I_points = SiC_CALC_SignalRiseFall(Curves.Ice, Curves.TimeStep);
 	
 	return {V_points : V_points, I_points : I_points};
 }
 
-function SiC_CALC_SignalRiseFall(Signal, TimeScale, LowPoint)
+function SiC_CALC_SignalRiseFall(Signal, TimeStep, LowPoint)
 {
 	// find plate max value
 	var S_amp = 0;
@@ -57,7 +57,7 @@ function SiC_CALC_SignalRiseFall(Signal, TimeScale, LowPoint)
 	}
 	
 	// calculate rise/fall
-	var t_rf = Math.abs((t_max - t_min) * (TimeScale / 250));
+	var t_rf = Math.abs((t_max - t_min) * TimeStep);
 	t_rf = t_rf * 1e9;
 	var S_rf = Math.abs((Signal[t_max] - Signal[t_min]) / t_rf);
 	S_rf = S_rf * 1e3;
@@ -70,7 +70,7 @@ function SiC_CALC_Recovery(Curves)
 {
 	var Current = Curves.Ice;
 	var Voltage = Curves.Vce;
-	var TimeScale = Curves.HScale;
+	var TimeStep = Curves.TimeStep;
 	
 	// line equation to find Ir0 point
 	var LineI = SiC_CALC_RecoveryGetXY(Current);
@@ -128,14 +128,14 @@ function SiC_CALC_Recovery(Curves)
 	
 	// find trr
 	var trr_index = Math.round(-b_r / k_r);
-	var trr = -b_r / k_r * TimeScale / 250 * 1e9;
-	var Qrr = SiC_CALC_Integrate(current_trim, TimeScale / 250 * 1e6, 0, trr_index - 1);
+	var trr = -b_r / k_r * TimeStep * 1e9;
+	var Qrr = SiC_CALC_Integrate(current_trim, TimeStep, 0, trr_index - 1) * 1e6;
 	
 	// calculate recovery energy
 	var Power = [];
 	for (var i = tr0; i < (tr0 + trr_index); ++i)
 		Power[i - tr0] = Voltage[i] * (Current[i] - (i * LineI.k + LineI.b));
-	var Energy = SiC_CALC_Integrate(Power, TimeScale / 250 * 1e6, 0, trr_index - 1) * 1e-3;
+	var Energy = SiC_CALC_Integrate(Power, TimeStep, 0, trr_index - 1) * 1e3;
 	
 	return {trr : trr, Irrm : Irrm, Qrr : Qrr, Energy : Energy};
 }
@@ -157,7 +157,7 @@ function SiC_CALC_Energy(Curves)
 	var _Vge = Curves.Vge;
 	var _Vce = Curves.Vce;
 	var _Ice = Curves.Ice;
-	var TimeScale = Curves.HScale;
+	var TimeStep = Curves.TimeStep;
 	
 	// check input data
 	if (_Vce.length != _Ice.length)
@@ -167,9 +167,9 @@ function SiC_CALC_Energy(Curves)
 	var on_mode = SiC_CALC_OnMode(Curves) ? 1 : 0;
 	
 	// get curves pivot points
-	var Vge_pivot = SiC_CALC_SignalRiseFall(_Vge, TimeScale);
-	var Vce_pivot = SiC_CALC_SignalRiseFall(_Vce, TimeScale, 0.02);
-	var Ice_pivot = SiC_CALC_SignalRiseFall(_Ice, TimeScale, 0.02);
+	var Vge_pivot = SiC_CALC_SignalRiseFall(_Vge, TimeStep);
+	var Vce_pivot = SiC_CALC_SignalRiseFall(_Vce, TimeStep, 0.02);
+	var Ice_pivot = SiC_CALC_SignalRiseFall(_Ice, TimeStep, 0.02);
 	
 	// determine time limits
 	var start_time = on_mode ? Vge_pivot.t_min : Vge_pivot.t_max;
@@ -180,7 +180,7 @@ function SiC_CALC_Energy(Curves)
 	for (var i = start_time; i < stop_time; ++i)
 		Power[i - start_time] = _Vce[i] * _Ice[i];
 	
-	var Energy = SiC_CALC_Integrate(Power, TimeScale / 250 * 1e3, 0, Power.length - 1);
+	var Energy = SiC_CALC_Integrate(Power, TimeStep, 0, Power.length - 1) * 1e3;
 	
 	return {Power : Power, Energy : Energy};
 }
@@ -190,7 +190,7 @@ function SiC_CALC_OnMode(Curves)
 	return (Curves.Vce[0] > Curves.Vce[Curves.Vce.length - 1]);
 }
 
-function SiC_CALC_Integrate(Data, TimeScale, StartIndex, EndIndex)
+function SiC_CALC_Integrate(Data, TimeStep, StartIndex, EndIndex)
 {
 	var Result = 0;
 	
@@ -198,5 +198,5 @@ function SiC_CALC_Integrate(Data, TimeScale, StartIndex, EndIndex)
 		Result += Data[i];
 	Result -= 0.5 * (Data[StartIndex] + Data[EndIndex]);
 	
-	return Result * TimeScale;
+	return Result * TimeStep;
 }
