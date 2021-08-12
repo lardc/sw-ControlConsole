@@ -142,26 +142,14 @@ function SiC_CALC_Recovery(Curves)
 
 function SiC_CALC_RecoveryGetXY(Data)
 {
+	var MaxPoint = SiC_GD_MAX(Data);
+	
+	var StartIndex = MaxPoint.Index + Math.round((Data.length - MaxPoint.Index) * 0.25);
 	var EndIndex = Data.length - 1;
 	
-	// find current plate start index
-	var MaxPoint = SiC_GD_MAX(Data);
-	var Iavg = SiC_GD_AvgData(Data, MaxPoint.Index, EndIndex);
+	var Iavg = SiC_GD_AvgData(Data, StartIndex, EndIndex);
 	
-	var StartIndex = 0;
-	for (var i = MaxPoint.Index; i < Data.length; ++i)
-	{
-		if (Data[i] <= Iavg)
-		{
-			StartIndex = i;
-			break;
-		}
-	}
-	
-	var k = (Data[StartIndex] - Data[EndIndex]) / (StartIndex - EndIndex);
-	var b = Data[StartIndex] - k * StartIndex;
-	
-	return {k : k, b : b}
+	return {k : 0, b : Iavg}
 }
 
 function SiC_CALC_Energy(Curves)
