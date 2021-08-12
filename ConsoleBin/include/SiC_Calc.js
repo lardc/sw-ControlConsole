@@ -178,9 +178,6 @@ function SiC_CALC_Energy(Curves)
 	var start_time = on_mode ? Vge_pivot.t_min : Vge_pivot.t_max;
 	var stop_time  = on_mode ? Vce_pivot.t_min : Ice_pivot.t_min;
 	
-	p(start_time)
-	p(stop_time)
-	
 	// integrate
 	var Energy = 0;
 	var Power = [];
