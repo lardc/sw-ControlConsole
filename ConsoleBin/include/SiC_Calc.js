@@ -130,12 +130,7 @@ function SiC_CALC_Recovery(Curves)
 	// find trr
 	trr_index = Math.round(-b_r / k_r);
 	trr = -b_r / k_r * TimeScale / 250 * 1e9;
-	
-	// find qrr
-	var Qrr = 0;
-	for (var i = 0; i < trr_index; ++i)
-		Qrr += current_trim[i];
-	Qrr = (Qrr - 0.5 * (current_trim[0] + current_trim[current_trim.length - 1])) * TimeScale / 250 * 1e6;
+	var Qrr = SiC_CALC_Integrate(current_trim, TimeScale / 250 * 1e6, 0, trr_index - 1)
 	
 	return {trr : trr, Irrm : Irrm, Qrr : Qrr};
 }
@@ -175,16 +170,12 @@ function SiC_CALC_Energy(Curves)
 	var start_time = on_mode ? Vge_pivot.t_min : Vge_pivot.t_max;
 	var stop_time  = on_mode ? Vce_pivot.t_min : Ice_pivot.t_min;
 	
-	// integrate
-	var Energy = 0;
+	// calculate power
 	var Power = [];
 	for (var i = start_time; i < stop_time; ++i)
-	{
-		var pow = _Vce[i] * _Ice[i];
-		Energy += pow;
-		Power[i - start_time] = pow;
-	}
-	Energy = (Energy - 0.5 * (Power[0] + Power[Power.length - 1])) * TimeScale / 250 * 1e3;
+		Power[i - start_time] = _Vce[i] * _Ice[i];
+	
+	var Energy = SiC_CALC_Integrate(Power, TimeScale / 250 * 1e3, 0, Power.length - 1);
 	
 	return {Power : Power, Energy : Energy};
 }
@@ -192,4 +183,15 @@ function SiC_CALC_Energy(Curves)
 function SiC_CALC_OnMode(Curves)
 {
 	return (Curves.Vce[0] > Curves.Vce[Curves.Vce.length - 1]);
+}
+
+function SiC_CALC_Integrate(Data, TimeScale, StartIndex, EndIndex)
+{
+	var Result = 0;
+	
+	for (var i = StartIndex; i <= EndIndex; ++i)
+		Result += Data[i];
+	Result -= 0.5 * (Data[StartIndex] + Data[EndIndex]);
+	
+	return Result * TimeScale;
 }
