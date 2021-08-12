@@ -135,46 +135,22 @@ function SiC_GD_GetCurves(ChannelVg, ChannelVce, ChannelIce)
 	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, HScale : HScale};
 }
 
-function SiC_GD_GetCurvesEmuON()
+function SiC_GD_GetCurvesEmuX(KeyName, SwitchMode, VgeMul, VceMul, IceMul, HScale)
 {
-	var HScale = 1e-7;
+	var vge = load("data/ch_" + KeyName + "_vge_" + SwitchMode + ".csv");
+	var vce = load("data/ch_" + KeyName + "_vce_" + SwitchMode + ".csv");
+	var ice = load("data/ch_" + KeyName + "_ice_" + SwitchMode + ".csv");
 	
-	var ch1 = load("data/ch1_on.csv");
-	var ch2 = load("data/ch2_on.csv");
-	var ch3 = load("data/ch3_on.csv");
-	
-	for (var i = 0; i < ch1.length; ++i)
+	for (var i = 0; i < vge.length; ++i)
 	{
-		ch1[i] = parseFloat(ch1[i]);
-		ch2[i] = parseFloat(ch2[i]);
-		ch3[i] = parseFloat(ch3[i]);
+		vge[i] = parseFloat(vge[i]);
+		vce[i] = parseFloat(vce[i]);
+		ice[i] = parseFloat(ice[i]);
 	}
 	
-	var DataVge = SiC_GD_Filter(ch1);
-	var DataVce = SiC_GD_Filter(ch3, 10);
-	var DataIce = SiC_GD_Filter(ch2, 50);
-	
-	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, HScale : HScale};
-}
-
-function SiC_GD_GetCurvesEmuOFF()
-{
-	var HScale = 1e-7;
-	
-	var ch1 = load("data/ch1_off.csv");
-	var ch2 = load("data/ch2_off.csv");
-	var ch3 = load("data/ch3_off.csv");
-	
-	for (var i = 0; i < ch1.length; ++i)
-	{
-		ch1[i] = parseFloat(ch1[i]);
-		ch2[i] = parseFloat(ch2[i]);
-		ch3[i] = parseFloat(ch3[i]);
-	}
-	
-	var DataVge = SiC_GD_Filter(ch1);
-	var DataVce = SiC_GD_Filter(ch3, 10);
-	var DataIce = SiC_GD_Filter(ch2, 50);
+	var DataVge = SiC_GD_Filter(vge, VgeMul);
+	var DataVce = SiC_GD_Filter(vce, VceMul);
+	var DataIce = SiC_GD_Filter(ice, IceMul);
 	
 	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, HScale : HScale};
 }
