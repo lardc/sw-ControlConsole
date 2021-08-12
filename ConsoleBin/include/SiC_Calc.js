@@ -1,7 +1,6 @@
 include("SiC_GetData.js")
 
 sic_calc_rf_max_zone = 50;
-sic_calc_recovery_plate_step = 300;
 
 function SiC_CALC_Delay(Curves)
 {
@@ -71,17 +70,11 @@ function SiC_CALC_SignalRiseFall(Signal, TimeScale, LowPoint)
 
 function SiC_CALC_Recovery(Curves)
 {
-	var Point1, Point2;
-	var stp = sic_calc_recovery_plate_step;
 	var Current = Curves.Ice;
 	var TimeScale = Curves.HScale;
 	
 	// line equation to find Ir0 point
-	Point1 = SiC_CALC_RecoveryGetXY(Current, Current.length - stp, Current.length);
-	Point2 = SiC_CALC_RecoveryGetXY(Current, Current.length - 2 * stp, Current.length - stp);
-	
-	var k = (Point1.Y - Point2.Y) / (Point1.X - Point2.X);
-	var b = Point1.Y - k * Point1.X;
+	var LineI = SiC_CALC_RecoveryGetXY(Current);
 	
 	var I_PointMin = SiC_GD_MIN(Current);
 	var I_PointMax = SiC_GD_MAX(Current);
@@ -90,7 +83,7 @@ function SiC_CALC_Recovery(Curves)
 	var Ir0 = 0, tr0 = 0;
 	for (var i = I_PointMin.Index; i < I_PointMax.Index; ++i)
 	{
-		if (Current[i] > (i * k + b))
+		if (Current[i] > (i * LineI.k + LineI.b))
 		{
 			Ir0 = Current[i];
 			tr0 = i;
@@ -101,11 +94,11 @@ function SiC_CALC_Recovery(Curves)
 	// adjust current data to find reverse recovery charge
 	var current_trim = [];
 	for (var i = tr0; i < Current.length; ++i)
-		current_trim[i - tr0] = Current[i] - (i * k + b);
+		current_trim[i - tr0] = Current[i] - (i * LineI.k + LineI.b);
 	
 	// find Irrm
 	var Irrm_Point = SiC_GD_MAX(current_trim);
-	var Irrm   = Irrm_Point.Value;
+	var Irrm = Irrm_Point.Value;
 	
 	// find aux curve points
 	var trr02 = 0;
@@ -136,23 +129,26 @@ function SiC_CALC_Recovery(Curves)
 	return {trr : trr, Irrm : Irrm, Qrr : Qrr};
 }
 
-function SiC_CALC_RecoveryGetXY(Data, RangeStart, RangeStop)
+function SiC_CALC_RecoveryGetXY(Data)
 {
-	var avg_time = 0;
-	var avg_value = 0;
-	var avg_counter = 0;
+	var EndIndex = Data.length - 1;
 	
-	for (var i = RangeStart; i < Data.length && i < RangeStop; ++i)
-	{
-		avg_time += i;
-		avg_value += Data[i];
-		++avg_counter;
-	}
+	// find current plate start index
+	var MaxPoint = SiC_GD_MAX(Data);
+	var Iavg = SiC_GD_AvgData(Data, MaxPoint.Index, EndIndex);
 	
-	avg_time  /= avg_counter;
-	avg_value /= avg_counter;
+	var StartIndex = 0;
+	for (var i = MaxPoint.Index; i < Data.length; ++i)
+		if (Data[i] <= Iavg)
+		{
+			StartIndex = i;
+			break;
+		}
 	
-	return {X:avg_time, Y:avg_value}
+	var k = (Data[StartIndex] - Data[EndIndex]) / (StartIndex - EndIndex);
+	var b = Data[StartIndex] - k * StartIndex;
+	
+	return {k : k, b : b}
 }
 
 function SiC_CALC_Energy(Curves)

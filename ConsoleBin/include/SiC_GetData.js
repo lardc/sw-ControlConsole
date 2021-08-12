@@ -80,12 +80,12 @@ function SiC_GD_Filter(Data, ScaleI)
 	return filtered_spl;
 }
 
-function SiC_GD_AvgData(Data, Start, Counter)
+function SiC_GD_AvgData(Data, StartIndex, EndIndex)
 {
 	var res = 0;
 	var res_counter = 0;
 	
-	for (var i = Start; i < (Start + Counter) && i < Data.length; ++i)
+	for (var i = StartIndex; i <= EndIndex && i < Data.length; ++i)
 	{
 		res += Data[i];
 		++res_counter;
