@@ -97,31 +97,31 @@ function SiC_GD_AvgData(Data, Start, Counter)
 function SiC_GD_MIN(Data)
 {
 	var value = Data[0];
-	var time;
+	var index;
 	
 	for (var i = 0; i < Data.length; ++i)
 		if (Data[i] < value)
 		{
 			value = Data[i];
-			time = i;
+			index = i;
 		}
 	
-	return {Value : value, Time : time};
+	return {Value : value, Index : index};
 }
 
 function SiC_GD_MAX(Data)
 {
 	var value = Data[0];
-	var time;
+	var index;
 	
 	for (var i = 0; i < Data.length; ++i)
 		if (Data[i] > value)
 		{
 			value = Data[i];
-			time = i;
+			index = i;
 		}
 	
-	return {Value : value, Time : time};
+	return {Value : value, Index : index};
 }
 
 function SiC_GD_GetCurves(ChannelVg, ChannelVce, ChannelIce)

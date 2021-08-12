@@ -88,7 +88,7 @@ function SiC_CALC_Recovery(Curves)
 	
 	// find Ir0
 	var Ir0 = 0, tr0 = 0;
-	for (var i = I_PointMin.Time; i < I_PointMax.Time; ++i)
+	for (var i = I_PointMin.Index; i < I_PointMax.Index; ++i)
 	{
 		if (Current[i] > (i * k + b))
 		{
@@ -110,7 +110,7 @@ function SiC_CALC_Recovery(Curves)
 	// find aux curve points
 	var trr02 = 0;
 	var Irr02 = 0;
-	for (var i = Irrm_Point.Time; i < current_trim.length; ++i)
+	for (var i = Irrm_Point.Index; i < current_trim.length; ++i)
 	{
 		if (current_trim[i] < Irrm * 0.02)
 		{
@@ -120,8 +120,8 @@ function SiC_CALC_Recovery(Curves)
 		}
 	}
 	
-	var k_r = (Irrm - Irr02) / (Irrm_Point.Time - trr02);
-	var b_r = Irrm - k_r * Irrm_Point.Time;
+	var k_r = (Irrm - Irr02) / (Irrm_Point.Index - trr02);
+	var b_r = Irrm - k_r * Irrm_Point.Index;
 	
 	// find trr
 	trr_index = Math.round(-b_r / k_r);
