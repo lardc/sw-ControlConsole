@@ -1,5 +1,7 @@
 include("SiC_Calc.js")
 
+sic_diag_plot = true;
+
 function SiC_Plot(Data)
 {
 	plot3(Data.Vge, Data.Vce, Data.Ice, 1, 0);
@@ -42,6 +44,7 @@ function SiC_Main(Curves)
 		print("Irrm" + ":\t\t" + Recovery.Irrm.toFixed(1) + "\t (A)");
 		print("trr" + ":\t\t" + Recovery.trr.toFixed(1) + "\t (ns)");
 		print("Qrr" + ":\t\t" + Recovery.Qrr.toFixed(3) + "\t (uC)");
+		print("E_rec" + ":\t\t" + Recovery.Energy.toFixed(3) + "\t (mJ)");
 	}
 }
 

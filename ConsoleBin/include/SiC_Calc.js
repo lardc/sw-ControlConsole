@@ -69,6 +69,7 @@ function SiC_CALC_SignalRiseFall(Signal, TimeScale, LowPoint)
 function SiC_CALC_Recovery(Curves)
 {
 	var Current = Curves.Ice;
+	var Voltage = Curves.Vce;
 	var TimeScale = Curves.HScale;
 	
 	// line equation to find Ir0 point
@@ -128,9 +129,15 @@ function SiC_CALC_Recovery(Curves)
 	// find trr
 	var trr_index = Math.round(-b_r / k_r);
 	var trr = -b_r / k_r * TimeScale / 250 * 1e9;
-	var Qrr = SiC_CALC_Integrate(current_trim, TimeScale / 250 * 1e6, 0, trr_index - 1)
+	var Qrr = SiC_CALC_Integrate(current_trim, TimeScale / 250 * 1e6, 0, trr_index - 1);
 	
-	return {trr : trr, Irrm : Irrm, Qrr : Qrr};
+	// calculate recovery energy
+	var Power = [];
+	for (var i = tr0; i < (tr0 + trr_index); ++i)
+		Power[i - tr0] = Voltage[i] * (Current[i] - (i * LineI.k + LineI.b));
+	var Energy = SiC_CALC_Integrate(Power, TimeScale / 250 * 1e6, 0, trr_index - 1) * 1e-3;
+	
+	return {trr : trr, Irrm : Irrm, Qrr : Qrr, Energy : Energy};
 }
 
 function SiC_CALC_RecoveryGetXY(Data)
