@@ -81,6 +81,14 @@ function SiC_GD_Filter(Data, ScaleI)
 	return filtered_spl;
 }
 
+function SiC_GD_InvertData(Data)
+{
+	var res = []
+	for (var i = 0; i < Data.length; ++i)
+		res.push(-Data[i]);
+	return res;
+}
+
 function SiC_GD_AvgData(Data, StartIndex, EndIndex)
 {
 	var res = 0;

@@ -66,14 +66,14 @@ function SiC_CALC_SignalRiseFall(Signal, TimeStep, LowPoint)
 	return {S_max : S_max, S_amp : S_amp, S_rf : S_rf, t_rf : t_rf, t_min : t_min, t_max : t_max};
 }
 
-function SiC_CALC_Recovery(Curves)
+function SiC_CALC_Recovery(Curves, IsDiode)
 {
-	var Current = Curves.Ice;
-	var Voltage = Curves.Vce;
+	var Current = IsDiode ? SiC_GD_InvertData(Curves.Ice) : Curves.Ice;
+	var Voltage = IsDiode ? SiC_GD_InvertData(Curves.Vce) : Curves.Vce;
 	var TimeStep = Curves.TimeStep;
 	
 	// line equation to find Ir0 point
-	var LineI = SiC_CALC_RecoveryGetXY(Current);
+	var LineI = SiC_CALC_RecoveryGetXY(Current, IsDiode);
 	
 	var I_PointMin = SiC_GD_MIN(Current);
 	var I_PointMax = SiC_GD_MAX(Current);
@@ -121,16 +121,26 @@ function SiC_CALC_Recovery(Curves)
 	return {trr : trr, Irrm : Irrm, Qrr : Qrr, Energy : Energy};
 }
 
-function SiC_CALC_RecoveryGetXY(Data)
+function SiC_CALC_RecoveryGetXY(Data, IsDiode)
 {
 	var MaxPoint = SiC_GD_MAX(Data);
 	
-	var StartIndex = MaxPoint.Index + Math.round((Data.length - MaxPoint.Index) * 0.25);
+	var StartIndex = MaxPoint.Index + Math.round((Data.length - MaxPoint.Index) * 0.5);
 	var EndIndex = Data.length - 1;
 	
-	var Iavg = SiC_GD_AvgData(Data, StartIndex, EndIndex);
+	var k, b;
+	if (IsDiode)
+	{
+		k = (Data[StartIndex] - Data[EndIndex]) / (StartIndex - EndIndex);
+		b = Data[StartIndex] - k * StartIndex;
+	}
+	else
+	{
+		k = 0;
+		b = SiC_GD_AvgData(Data, StartIndex, EndIndex);
+	}
 	
-	return {k : 0, b : Iavg}
+	return {k : k, b : b}
 }
 
 function SiC_CALC_Energy(Curves)
@@ -196,4 +206,9 @@ function SiC_CALC_FindAuxPoint(Data, StartIndex, Threshold)
 	}
 	
 	return {X : x, Y : y};
+}
+
+function SiC_CALC_IsDiode(Curves)
+{
+	return (SiC_GD_AvgData(Curves.Vce, 0, Curves.Vce.length - 1) < 0);
 }
