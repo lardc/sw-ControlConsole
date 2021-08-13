@@ -100,31 +100,11 @@ function SiC_CALC_Recovery(Curves)
 	var Irrm = Irrm_Point.Value;
 	
 	// find aux curve points
-	var AuxPoint1 = {X : null, Y : null};
-	var AuxPoint2 = {X : null, Y : null};
+	var AuxPoint090 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.9);
+	var AuxPoint025 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.25);
 	
-	for (var i = Irrm_Point.Index; i < current_trim.length; ++i)
-	{
-		if (current_trim[i] <= Irrm * 0.9)
-		{
-			AuxPoint1.Y = current_trim[i];
-			AuxPoint1.X = i;
-			break;
-		}
-	}
-	
-	for (var i = Irrm_Point.Index; i < current_trim.length; ++i)
-	{
-		if (current_trim[i] <= Irrm * 0.25)
-		{
-			AuxPoint2.Y = current_trim[i];
-			AuxPoint2.X = i;
-			break;
-		}
-	}
-	
-	var k_r = (AuxPoint1.Y - AuxPoint2.Y) / (AuxPoint1.X - AuxPoint2.X);
-	var b_r = AuxPoint1.Y - k_r * AuxPoint1.X;
+	var k_r = (AuxPoint090.Y - AuxPoint025.Y) / (AuxPoint090.X - AuxPoint025.X);
+	var b_r = AuxPoint090.Y - k_r * AuxPoint090.X;
 	
 	// find trr
 	var trr_index = Math.round(-b_r / k_r);
@@ -199,4 +179,20 @@ function SiC_CALC_Integrate(Data, TimeStep, StartIndex, EndIndex)
 	Result -= 0.5 * (Data[StartIndex] + Data[EndIndex]);
 	
 	return Result * TimeStep;
+}
+
+function SiC_CALC_FindAuxPoint(Data, StartIndex, Threshold)
+{
+	var x, y;
+	for (var i = StartIndex; i < Data.length; ++i)
+	{
+		if (Data[i] <= Threshold)
+		{
+			y = Data[i];
+			x = i;
+			break;
+		}
+	}
+	
+	return {X : x, Y : y};
 }
