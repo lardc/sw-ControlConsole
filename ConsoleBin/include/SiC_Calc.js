@@ -21,9 +21,9 @@ function SiC_CALC_Delay(Curves)
 	return (delay * TimeStep * 1e9);
 }
 
-function SiC_CALC_VI_RiseFall(Curves)
+function SiC_CALC_VI_RiseFall(Curves, IsDiode)
 {
-	var V_points = SiC_CALC_SignalRiseFall(Curves.Vce, Curves.TimeStep);
+	var V_points = SiC_CALC_SignalRiseFall(IsDiode ? SiC_GD_InvertData(Curves.Vce) : Curves.Vce, Curves.TimeStep);
 	var I_points = SiC_CALC_SignalRiseFall(Curves.Ice, Curves.TimeStep);
 	
 	return {V_points : V_points, I_points : I_points};
