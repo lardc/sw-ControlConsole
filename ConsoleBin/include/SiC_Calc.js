@@ -102,6 +102,7 @@ function SiC_CALC_Recovery(Curves)
 	// find aux curve points
 	var AuxPoint090 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.9);
 	var AuxPoint025 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.25);
+	var AuxPoint002 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.02);
 	
 	var k_r = (AuxPoint090.Y - AuxPoint025.Y) / (AuxPoint090.X - AuxPoint025.X);
 	var b_r = AuxPoint090.Y - k_r * AuxPoint090.X;
@@ -113,9 +114,9 @@ function SiC_CALC_Recovery(Curves)
 	
 	// calculate recovery energy
 	var Power = [];
-	for (var i = tr0; i < (tr0 + trr_index); ++i)
+	for (var i = tr0; i < (tr0 + AuxPoint002.X); ++i)
 		Power[i - tr0] = Voltage[i] * (Current[i] - (i * LineI.k + LineI.b));
-	var Energy = SiC_CALC_Integrate(Power, TimeStep, 0, trr_index - 1) * 1e3;
+	var Energy = SiC_CALC_Integrate(Power, TimeStep, 0, Power.length - 1) * 1e3;
 	
 	return {trr : trr, Irrm : Irrm, Qrr : Qrr, Energy : Energy};
 }
