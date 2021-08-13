@@ -3,6 +3,9 @@ include("Tektronix.js")
 sic_gd_filter_points = 5;
 sic_gd_filter_factor = 0.5;
 
+sic_gd_vce_probe = 100;
+sic_gd_ice_shunt = 2.5e-3;
+
 function SiC_GD_Init(Port)
 {
 	TEK_PortInit(Port, 19200);
@@ -138,8 +141,8 @@ function SiC_GD_GetCurves(ChannelVg, ChannelVce, ChannelIce)
 	var TimeStep = SiC_GD_GetTimeScale() / 250;
 	
 	var DataVge = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelVg));
-	var DataVce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelVce));
-	var DataIce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelIce), 40);
+	var DataVce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelVce), sic_gd_vce_probe);
+	var DataIce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelIce), 1 / sic_gd_ice_shunt);
 	
 	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, TimeStep : TimeStep};
 }
