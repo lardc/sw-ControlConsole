@@ -1,18 +1,13 @@
 include("SiC_Calc.js")
 
-sic_diag_emulation = true;
 sic_device_name = "NONE";
 
 sic_ch_vge = 1;
 sic_ch_ice = 2;
 sic_ch_vce = 3;
 
-SiC_PrintChannelInfo();
-print("")
-// SiC_PrintProbeInfo();
-// print("")
-SiC_PrintDeviceName();
-print("\nДля вывода справки выполните doc()");
+print("Для вывода справки выполните doc()");
+print("Для отображения текущих настроек выполните inf()");
 
 function SiC_Plot(Data)
 {
@@ -37,6 +32,10 @@ function SiC_Main(Curves, Position)
 	
 	var RiseFallData = SiC_CALC_VI_RiseFall(Curves, IsDiode);
 	
+	print("Тип СПП:\t" + (IsDiode ? "диод" : "ключ"));
+	if (!IsDiode)
+		print("Режим ключа:\t" + (OnMode ? "включение" : "выключение"));
+	out_data.push("---");
 	out_data.push("V" + ":\t\t" + RiseFallData.V_points.S_amp.toFixed(0) + "\t (V)");
 	out_data.push("Vmax" + ":\t\t" + RiseFallData.V_points.S_max.toFixed(0) + "\t (V)");
 	out_data.push("---");
@@ -135,21 +134,40 @@ function SiC_PrintProbeInfo()
 	print("Делитель напряжения Vce:\t1:" + sic_gd_vce_probe);
 }
 
-function high()
+function SiC_HandleMeasure(Position)
 {
-	var Curves = SiC_GD_GetCurves(sic_ch_vge, sic_ch_vce, sic_ch_ice);
-	SiC_Main(Curves, "HIGH");
+	print("Имя прибора:\t" + sic_device_name);
+	print("Для продолжения нажмите \"y\". Для отмены нажмите любую другую клавишу.");
+	var k = readkey();
+	if (k == "y")
+	{
+		var Curves = SiC_GD_GetCurves(sic_ch_vge, sic_ch_vce, sic_ch_ice);
+		SiC_Main(Curves, Position);
+	}
 }
 
 function low()
 {
-	var Curves = SiC_GD_GetCurves(sic_ch_vge, sic_ch_vce, sic_ch_ice);
-	SiC_Main(Curves, "LOW");
+	SiC_HandleMeasure("LOW");
+}
+
+function high()
+{
+	SiC_HandleMeasure("HIGH");
+}
+
+function inf()
+{
+	SiC_PrintChannelInfo();
+	print("")
+	SiC_PrintProbeInfo();
+	print("")
+	SiC_PrintDeviceName();
 }
 
 function doc()
 {
-	print("1. Для выбора каналов измерения выполните chan(ch_Vge, ch_Ice, ch_Vce)");
+	print("1. Для задания каналов измерения выполните chan(ch_Vge, ch_Ice, ch_Vce)");
 	print("\tch_Vge - номер канала измерения Vge");
 	print("\tch_Ice - номер канала измерения Ice");
 	print("\tch_Vce - номер канала измерения Vce");
@@ -169,4 +187,7 @@ function doc()
 	print("\tlow() — для нижнего ключа или диода");
 	print("\tскрипт автоматически определит тип СПП (ключ или диод) и режим");
 	print("\tпереключения (включение или выключение) для ключа");
+	print("");
+	print("Изменённые настройки в пп.1-3 сохраняют актуальность до перезагрузки");
+	print("расчётного скрипта или до изменения с помощью соответствующей функции.");
 }
