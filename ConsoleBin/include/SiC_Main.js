@@ -19,7 +19,7 @@ function SiC_PrintRF(Data)
 
 function SiC_Main(Curves, FileName)
 {
-	var Mode = SiC_CALC_OnMode(Curves);
+	var OnMode = SiC_CALC_OnMode(Curves);
 	var RiseFallData = SiC_CALC_VI_RiseFall(Curves);
 	
 	var out_data = [];
@@ -30,15 +30,15 @@ function SiC_Main(Curves, FileName)
 	out_data.push("I" + ":\t\t" + RiseFallData.I_points.S_amp.toFixed(0) + "\t (A)");
 	out_data.push("Imax" + ":\t\t" + RiseFallData.I_points.S_max.toFixed(0) + "\t (A)");
 	out_data.push("---");
-	out_data.push("dI/dt_" + (Mode ? "on" : "off") + ":\t" + RiseFallData.I_points.S_rf.toFixed(0) + "\t (A/us)");
-	out_data.push("t" + (Mode ? "r" : "f") + "i:\t\t" + RiseFallData.I_points.t_rf.toFixed(0) + "\t (ns)");
-	out_data.push("tdi_" + (Mode ? "on: " : "off:") + "\t" + SiC_CALC_Delay(Curves).toFixed(0) + "\t (ns)");
+	out_data.push("dI/dt_" + (OnMode ? "on" : "off") + ":\t" + RiseFallData.I_points.S_rf.toFixed(0) + "\t (A/us)");
+	out_data.push("t" + (OnMode ? "r" : "f") + "i:\t\t" + RiseFallData.I_points.t_rf.toFixed(0) + "\t (ns)");
+	out_data.push("tdi_" + (OnMode ? "on: " : "off:") + "\t" + SiC_CALC_Delay(Curves).toFixed(0) + "\t (ns)");
 	out_data.push("---");
-	out_data.push("dU/dt_" + (Mode ? "on" : "off") + ":\t" + RiseFallData.V_points.S_rf.toFixed(0) + "\t (V/us)");
-	out_data.push("t" + (Mode ? "f" : "r") + "v:\t\t" + RiseFallData.V_points.t_rf.toFixed(0) + "\t (ns)");
-	out_data.push("E_" + (Mode ? "on" : "off") + ":\t\t" + SiC_CALC_Energy(Curves).Energy.toFixed(0) + "\t (mJ)");
+	out_data.push("dU/dt_" + (OnMode ? "on" : "off") + ":\t" + RiseFallData.V_points.S_rf.toFixed(0) + "\t (V/us)");
+	out_data.push("t" + (OnMode ? "f" : "r") + "v:\t\t" + RiseFallData.V_points.t_rf.toFixed(0) + "\t (ns)");
+	out_data.push("E_" + (OnMode ? "on" : "off") + ":\t\t" + SiC_CALC_Energy(Curves).Energy.toFixed(0) + "\t (mJ)");
 	
-	if (Mode)
+	if (OnMode)
 	{
 		var Recovery = SiC_CALC_Recovery(Curves);
 		
@@ -54,8 +54,8 @@ function SiC_Main(Curves, FileName)
 	
 	if (FileName)
 	{
-		FileName += '_' + (new Date()).toISOString().slice(0, 19).replace(/[\-:]/g, '').replace('T', '_') + '.txt';
-		save(FileName, out_data);
+		FileName += "_" + (new Date()).toISOString().slice(0, 19).replace(/[\-:]/g, "").replace("T", "_") + ".txt";
+		save("data\\" + FileName, out_data);
 	}
 }
 
