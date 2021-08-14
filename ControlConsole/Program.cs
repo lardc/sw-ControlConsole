@@ -6,8 +6,8 @@ namespace PE.ControlConsole
     {
         private static void Main()
         {
-            Console.WriteLine(Environment.NewLine + @" SCCI protocol script console, v1.9");
-            Console.WriteLine(@" (C) Proton-Electrotex JSC, 2011-2021");
+            Console.WriteLine(Environment.NewLine + @"IGBT dynamic control console, v1.0");
+            Console.WriteLine(@"(C) Proton-Electrotex JSC, 2011-2021" + Environment.NewLine);
 
             using (var dialog = new DialogEngine())
                 dialog.Run();

@@ -27,9 +27,10 @@ namespace PE.ControlConsole
                 {
                     m_RecreateContext = false;
                     CreateContext();
+                    input = new StringBuilder("i(\"SiC_Main.js\")");
                 }
-
-                InputCommand(input);
+                else
+                    InputCommand(input);
 
                 try
                 {
