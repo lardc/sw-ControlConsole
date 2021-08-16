@@ -363,7 +363,11 @@ namespace PE.ControlConsole
         {
             try
             {
-                return SerialPort.GetPortNames().Aggregate(" Ports: \n", (Result, Element) => Result + "\t " + Element + "\n");
+                var PortsArray = SerialPort.GetPortNames();
+                if (PortsArray.Length > 0)
+                    return PortsArray.Aggregate((Result, Element) => Result + " " + Element);
+                else
+                    return @"Not found";
             }
             catch (Exception e)
             {
