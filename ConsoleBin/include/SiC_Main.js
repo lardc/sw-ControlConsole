@@ -142,7 +142,7 @@ function SiC_PrintProbeInfo()
 	print("Делитель напряжения Vce:\t1:" + sic_gd_vce_probe);
 }
 
-function SiC_HandleMeasure(Position)
+function calc()
 {
 	print("Имя прибора:\t" + sic_device_name);
 	print("Для продолжения нажмите \"y\". Для отмены нажмите любую другую клавишу.");
@@ -150,18 +150,8 @@ function SiC_HandleMeasure(Position)
 	if (k == "y")
 	{
 		var Curves = SiC_GD_GetCurves(sic_ch_vge, sic_ch_vce, sic_ch_ice);
-		SiC_Main(Curves, Position);
+		SiC_Main(Curves);
 	}
-}
-
-function low()
-{
-	SiC_HandleMeasure("LOW");
-}
-
-function high()
-{
-	SiC_HandleMeasure("HIGH");
 }
 
 function inf()
@@ -191,9 +181,7 @@ function doc()
 	print("\tDeviceName - имя прибора в двойных кавычках");
 	print("\tНапример, name(\"MIXM Cu 150 C 0_5 Ohm\")");
 	print("")
-	print("4. Для запуска расчёта выполните");
-	print("\thigh() — для верхнего ключа или диода");
-	print("\tlow() — для нижнего ключа или диода");
+	print("4. Для запуска расчёта выполните calc()");
 	print("\tскрипт автоматически определит тип СПП (ключ или диод) и режим");
 	print("\tпереключения (включение или выключение) для ключа");
 	print("");

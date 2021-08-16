@@ -6,6 +6,12 @@ sic_gd_filter_factor = 0.5;
 sic_gd_vce_probe = 100;
 sic_gd_ice_shunt = 2.5e-3;
 
+sic_gd_emu = false;
+sic_gd_emu_hscale = 0.5e-6;
+sic_gd_emu_name_vge = "vge.csv";
+sic_gd_emu_name_vce = "vce.csv";
+sic_gd_emu_name_ice = "ice.csv";
+
 function SiC_GD_Init(Port)
 {
 	TEK_PortInit(Port, 9600);
@@ -142,26 +148,28 @@ function SiC_GD_MAX(Data)
 
 function SiC_GD_GetCurves(ChannelVge, ChannelVce, ChannelIce)
 {
-	var TimeStep = SiC_GD_GetTimeScale() / 250;
+	if (sic_gd_emu)
+	{
+		var vge = SiC_GD_ParseTekCSV(sic_gd_emu_name_vge);
+		var vce = SiC_GD_ParseTekCSV(sic_gd_emu_name_vce);
+		var ice = SiC_GD_ParseTekCSV(sic_gd_emu_name_ice);
+		
+		var hscale = sic_gd_emu_hscale;
+	}
+	else
+	{
+		var vge = SiC_GD_VgeGetDataWrapper(ChannelVge);
+		var vce = SiC_GD_GetChannelCurve(ChannelVce);
+		var ice = SiC_GD_GetChannelCurve(ChannelIce);
+		
+		var hscale = SiC_GD_GetTimeScale();
+	}
 	
-	var DataVge = SiC_GD_Filter(SiC_GD_VgeGetDataWrapper(ChannelVge));
-	var DataVce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelVce), sic_gd_vce_probe);
-	var DataIce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelIce), 1 / sic_gd_ice_shunt);
+	var TimeStep = hscale / 250;
 	
-	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, TimeStep : TimeStep};
-}
-
-function SiC_GD_GetCurvesEmuX(KeyName, SwitchMode, VgeMul, VceMul, IceMul, HScale)
-{
-	var TimeStep = HScale / 250;
-	
-	var vge = load("data/ch_" + KeyName + "_vge_" + SwitchMode + ".csv");
-	var vce = load("data/ch_" + KeyName + "_vce_" + SwitchMode + ".csv");
-	var ice = load("data/ch_" + KeyName + "_ice_" + SwitchMode + ".csv");
-	
-	var DataVge = SiC_GD_Filter(vge, VgeMul);
-	var DataVce = SiC_GD_Filter(vce, VceMul);
-	var DataIce = SiC_GD_Filter(ice, IceMul);
+	var DataVge = SiC_GD_Filter(vge);
+	var DataVce = SiC_GD_Filter(vce, sic_gd_vce_probe);
+	var DataIce = SiC_GD_Filter(ice, 1 / sic_gd_ice_shunt);
 	
 	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, TimeStep : TimeStep};
 }
@@ -171,7 +179,29 @@ function SiC_GD_VgeGetDataWrapper(Channel)
 	var SwitchedChannels = TEK_Exec("sel?").split(";");
 	
 	if (SwitchedChannels[Channel - 1] == '1')
-		return SiC_GD_Filter(SiC_GD_GetChannelCurve(Channel));
+		return SiC_GD_GetChannelCurve(Channel);
 	else
 		return [];
+}
+
+function SiC_GD_SetEmuSettings(VgeN, VceN, IceN, HScale)
+{
+	sic_gd_emu_name_vge = VgeN;
+	sic_gd_emu_name_vce = VceN;
+	sic_gd_emu_name_ice = IceN;
+	sic_gd_emu_hscale = HScale;
+}
+
+function SiC_GD_ParseTekCSV(FileName)
+{
+	var data = loadn("data\\" + FileName);
+	var result = [];
+	
+	for (var i = 0; i < data.length; ++i)
+	{
+		var raw = data[i].split(",");
+		result.push(parseFloat(raw[4]));
+	}
+	
+	return result;
 }
