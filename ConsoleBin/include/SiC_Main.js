@@ -132,7 +132,7 @@ function probe(VceProbe, IceShuntRes)
 	sic_gd_vce_probe = VceProbe;
 	sic_gd_ice_shunt = IceShuntRes / 1000;
 	
-	SiC_GD_PrintProbeInfo();
+	SiC_PrintProbeInfo();
 }
 
 function SiC_PrintProbeInfo()
