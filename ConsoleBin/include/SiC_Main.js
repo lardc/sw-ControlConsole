@@ -82,8 +82,11 @@ function SiC_Main(Curves, Position)
 	// add voltage
 	FileName += "_" + RiseFallData.V_points.S_amp.toFixed(0) + "V";
 	FileName += "_" + (new Date()).toISOString().slice(0, 19).replace(/[\-:]/g, "").replace("T", "_") + ".txt";
+	FileName = "data\\" + FileName;
 	
-	save("data\\" + FileName, out_data);
+	save(FileName, out_data);
+	print("\nСохранено в файл:");
+	print(FileName);
 }
 
 function SiC_Start()
