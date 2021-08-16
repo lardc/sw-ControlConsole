@@ -37,6 +37,7 @@ namespace PE.ControlConsole
             EngineContext.SetParameter(@"sleep", new Action<object>(Sleep));
             EngineContext.SetParameter(@"save", new Action<string, IList<object>>(Save));
             EngineContext.SetParameter(@"load", new Func<string, object[]>(Load));
+            EngineContext.SetParameter(@"loadn", new Func<string, object[]>(LoadN));
             EngineContext.SetParameter(@"loadtihex", new Func<string, object[]>(LoadTIHex));
             EngineContext.SetParameter(@"loadbin", new Func<string, object[]>(LoadBin));
             EngineContext.SetParameter(@"help", new Action(Help));
@@ -131,7 +132,7 @@ namespace PE.ControlConsole
             }             
         }
 
-        private object[] Load(string FileName)
+        private object[] LoadX(string FileName, bool MakeSplit)
         {
             try
             {
@@ -143,12 +144,17 @@ namespace PE.ControlConsole
 
                     while ((data = reader.ReadLine()) != null)
                     {
-                        string[] elements = data.Split(' ', ';', ',');
-                        for (int i = 0; i < elements.Length; i++)
+                        if (MakeSplit)
                         {
-                            string element = elements[i].TrimEnd(' ', ';', ',');
-                            result.Add(element);
+                            string[] elements = data.Split(' ', ';', ',');
+                            for (int i = 0; i < elements.Length; i++)
+                            {
+                                string element = elements[i].TrimEnd(' ', ';', ',');
+                                result.Add(element);
+                            }
                         }
+                        else
+                            result.Add(data);
                     }
 
                     return result.ToArray();
@@ -160,7 +166,17 @@ namespace PE.ControlConsole
                 return null;
             }             
         }
-        
+
+        private object[] Load(string FileName)
+        {
+            return LoadX(FileName, true);
+        }
+
+        private object[] LoadN(string FileName)
+        {
+            return LoadX(FileName, false);
+        }
+
         private object[] LoadTIHex(string FileName)
         {
             try
