@@ -158,12 +158,16 @@ function SiC_CALC_Energy(Curves)
 	var on_mode = SiC_CALC_OnMode(Curves) ? 1 : 0;
 	
 	// get curves pivot points
-	var Vge_pivot = SiC_CALC_SignalRiseFall(_Vge, TimeStep);
 	var Vce_pivot = SiC_CALC_SignalRiseFall(_Vce, TimeStep, 0.02);
 	var Ice_pivot = SiC_CALC_SignalRiseFall(_Ice, TimeStep, 0.02);
 	
 	// determine time limits
-	var start_time = on_mode ? Vge_pivot.t_min : Vge_pivot.t_max;
+	var start_time = 0;
+	if (_Vge.length != 0)
+	{
+		var Vge_pivot = SiC_CALC_SignalRiseFall(_Vge, TimeStep);
+		start_time = on_mode ? Vge_pivot.t_min : Vge_pivot.t_max;
+	}
 	var stop_time  = on_mode ? Vce_pivot.t_min : Ice_pivot.t_min;
 	
 	// calculate power
@@ -211,4 +215,9 @@ function SiC_CALC_FindAuxPoint(Data, StartIndex, Threshold)
 function SiC_CALC_IsDiode(Curves)
 {
 	return (SiC_GD_AvgData(Curves.Vce, 0, Curves.Vce.length - 1) < 0);
+}
+
+function SiC_CALC_IsHighElement(Curves)
+{
+	return (Curves.Vge.length == 0);
 }
