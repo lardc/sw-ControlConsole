@@ -376,99 +376,8 @@ function MME_GTU()
 	}
 }
 
-function MME_GTUSL(Current, Force)
+function MME_GTUSL(Current)
 {
-	// prepare cu
-	dev.nid(mme_Nid_CU);
-	if (dev.r(96) == 0)
-	{
-		dev.c(1);
-		if (dev.r(96) != 3)
-		{
-			print("CU in abnormal state");
-			PrintStatus();
-			return;
-		}
-	}
-	else if (dev.r(96) != 3)
-	{
-		print("CU in abnormal state");
-		PrintStatus();
-		return;
-	}
-	else
-	{
-		dev.c(116);
-		print("CU ok");
-	}
-	
-	// prepare gtu
-	dev.nid(mme_Nid_GTU);
-	if (dev.r(192) != 0)
-	{
-		print("GTU in abnormal state");
-		PrintStatus();
-		return;
-	}
-	else
-	{
-		print("GTU ok");
-	}
-	
-	// prepare sl
-	dev.nid(mme_Nid_SL)
-	if (dev.r(192) == 0)
-	{
-		dev.c(1);
-		print("SL power on...");
-	}
-	while (dev.r(192) == 3) sleep(50);
-	if (dev.r(192) != 4)
-	{
-		print("SL in abnormal state");
-		PrintStatus();
-		return;
-	}
-	else
-	{
-		print("SL ok");
-	}
-	
-	// prepare clamp
-	dev.nid(mme_Nid_CS);
-	if (dev.r(96) == 0)
-	{
-		dev.c(100);
-		print("CS homing...");
-	}
-	while (dev.r(96) == 5) sleep(50);
-	if (dev.r(96) != 3)
-	{
-		print("CS in abnormal state");
-		PrintStatus();
-		return;
-	}
-	else
-	{
-		print("CS clamping...");
-		dev.w(70, Force * 10);
-		dev.w(71, mme_cs_height);
-		dev.c(102);
-		
-		while (dev.r(96) == 7) sleep(50);
-		
-		if (dev.r(96) != 8)
-		{
-			print("CS in abnormal state");
-			PrintStatus();
-			return;
-		}
-		else
-		{
-			print("CS ok");
-		}
-	}
-	
 	// activate gtu
 	dev.nid(mme_Nid_GTU);
 	dev.w(130, 1);
@@ -477,49 +386,31 @@ function MME_GTUSL(Current, Force)
 	
 	// activate sl
 	dev.nid(mme_Nid_SL);
-	sl_rep = 1;
-	dev.w(162, 1);
+	//sl_rep = 1;
+	//dev.w(162, 1);
 	dev.w(163, 1);
-	
 	sleep(20);
-	SL_Sin(Current);
+	LSLH_StartMeasure(Current);
+	//SL_Sin(Current);
 	
 	// read gtu
 	dev.nid(mme_Nid_GTU);
-	while(dev.r(192) == 5) sleep(50);
-	dev.w(130, 0);
+	while(dev.r(192) == 5) sleep(100);
 	if (dev.r(197) == 2) print("problem: " + dev.r(196));
 	print("Ih,   mA: " + dev.r(201));
-	print("Trig    : " + dev.r(230));
-	print("Toler   : " + dev.r(231));
-	print("Finish  : " + dev.r(232));
+	//print("Trig    : " + dev.r(230));
+	//print("Toler   : " + dev.r(231));
+	//print("Finish  : " + dev.r(232));
 	plot(dev.rafs(1), 1, 0);
 	
 	// recommutate
-	dev.nid(mme_Nid_CU);
-	dev.c(111);
+	MME_CU(111);
 	print("CU ok");
 	
 	// measure in ordinary way
 	dev.nid(mme_Nid_GTU);
 	dev.w(130, 0);
 	GTU_Holding();
-	
-	// release clamp
-	dev.nid(mme_Nid_CS);
-	dev.c(104);
-	print("CS unclamp...");
-	while(dev.r(96) == 10) sleep(50);
-	if (dev.r(96) != 3)
-	{
-		print("CS in abnormal state");
-		PrintStatus();
-		return;
-	}
-	else
-	{
-		print("CS ok");
-	}
 }
 
 function MME_SL(Current)
@@ -561,7 +452,7 @@ function MME_CROVU()
 		dev.w(129, mme_crovu_dvdt);
 		dev.c(10);
 		dev.c(100);
-		while (_dVdt_Active()) { sleep(50); };
+		while (_dVdt_Active()) { sleep(100); };
 		if (mme_plot) if(dev.r(198) == 1)
 			print("Прибор остался закрытым");
 		else if(dev.r(198) == 0)
@@ -670,6 +561,13 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					MME_QRR();
 					MME_CU(110);
 					break;
+				case mme_GTUSL:
+					print("#MME_GTUSL - IH GOST");
+					MME_CS(mme_cs_force);
+					MME_CU(116);
+					MME_GTUSL();
+					MME_CU(110);
+					break;	
 			}
 		}
 		
