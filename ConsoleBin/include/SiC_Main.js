@@ -8,6 +8,8 @@ sic_ch_vce = 3;
 
 print("Для вывода справки выполните doc()");
 print("Для отображения текущих настроек выполните inf()");
+print("Доступные COM-порты:");
+pp();
 
 function SiC_Plot(Data)
 {
@@ -110,12 +112,15 @@ function SiC_PrintDeviceName()
 	print("Текущее имя прибора:\t\t" + sic_device_name);
 }
 
-function chan(ch_Vge, ch_Ice, ch_Vce)
+function scope(ComPort, ch_Vge, ch_Ice, ch_Vce)
 {
 	sic_ch_vge = ch_Vge;
 	sic_ch_ice = ch_Ice;
 	sic_ch_vce = ch_Vce;
 	
+	SiC_GD_Init(ComPort);
+	
+	print("Идентификатор осциллографа: " + TEK_Exec("id?") + "\n");
 	SiC_PrintChannelInfo();
 }
 
@@ -167,11 +172,12 @@ function inf()
 
 function doc()
 {
-	print("1. Для задания каналов измерения выполните chan(ch_Vge, ch_Ice, ch_Vce)");
+	print("1. Для задания настроек осциллографа выполните scope(ComPort, ch_Vge, ch_Ice, ch_Vce)");
+	print("\tComPort - номер COM-порта для подключения осциллографа");
 	print("\tch_Vge - номер канала измерения Vge");
 	print("\tch_Ice - номер канала измерения Ice");
 	print("\tch_Vce - номер канала измерения Vce");
-	print("\tНапример, chan(1, 2, 3)");
+	print("\tНапример, scope(1, 1, 2, 3)");
 	print("")
 	print("2. Для задания настроек пробников выполните probe(VceProbe, IceShuntRes)");
 	print("\tVceProbe - коэффициент деления пробника Vсe");
@@ -187,6 +193,8 @@ function doc()
 	print("\tlow() — для нижнего ключа или диода");
 	print("\tскрипт автоматически определит тип СПП (ключ или диод) и режим");
 	print("\tпереключения (включение или выключение) для ключа");
+	print("");
+	print("5. Для повторного отображжения списка COM-портов выполните pp()");
 	print("");
 	print("Изменённые настройки в пп.1-3 сохраняют актуальность до перезагрузки");
 	print("расчётного скрипта или до изменения с помощью соответствующей функции.");
