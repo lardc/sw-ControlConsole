@@ -8,7 +8,7 @@ sic_gd_ice_shunt = 2.5e-3;
 
 function SiC_GD_Init(Port)
 {
-	TEK_PortInit(Port, 19200);
+	TEK_PortInit(Port, 9600);
 	TEK_Send("data:width 1");
 	TEK_Send("data:encdg rpb");
 	TEK_Send("data:start 1");
@@ -17,6 +17,8 @@ function SiC_GD_Init(Port)
 
 function SiC_GD_GetChannelCurve(Channel)
 {
+	print("Считывание данных канала № " + Channel + "...");
+	
 	// read basic data
 	var p_scale = TEK_Exec("ch" + Channel + ":scale?");
 	var p_position = TEK_Exec("ch" + Channel + ":position?");
@@ -26,7 +28,6 @@ function SiC_GD_GetChannelCurve(Channel)
 	
 	// read curve
 	var data_input = TEK_Exec("curve?");
-	print("Channel " + Channel + " loaded");
 	
 	// validate data
 	if ((data_input[0] != "#") || (data_input[1] != 4) || (data_input[2] != 2) ||
