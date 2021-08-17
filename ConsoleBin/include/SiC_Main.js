@@ -154,8 +154,12 @@ function SiC_DataArrayCompose(DataArr, Str1, Value, Str2)
 
 function SiC_ComposeFileName()
 {
-	var date_str = (new Date()).toISOString().slice(2, 10).replace(/[\-]/g, "");
-	return (sic_device_part_number + "_" + sic_device_serial_number + "_" + date_str + ".txt");
+	return (sic_device_part_number + "_" + sic_device_serial_number + "_" + SiC_GetDateStr() + ".txt");
+}
+
+function SiC_GetDateStr()
+{
+	return (new Date()).toISOString().slice(2, 10).replace(/[\-]/g, "");
 }
 
 function SiC_Start()
@@ -278,6 +282,48 @@ function doc()
 	print("");
 	print("6. Для повторного отображжения списка COM-портов выполните pp()");
 	print("");
+	print("7. Для формирования сводного отчёта выполните rep()");
+	print("");
 	print("Изменённые настройки в пп.1-4 сохраняют актуальность до перезагрузки");
 	print("расчётного скрипта или до изменения с помощью соответствующей функции.");
+}
+
+function rep()
+{
+	var Labels =	["PN", "SN", "--",
+					"dI/dt_on", "tri", "dU/dt_on", "tfv", "Eon", "tdi_on",
+					"dI/dt_off", "tfi", "Icpk", "dU/dt_off", "trv", "Eoff", "tdi_off",
+					"Irm [A]", "trr", "trr1", "trr2", "Qrr", "Erec",
+					"Uce_100", "Uce_max", "--",
+					"dI/dt_on", "tri", "dU/dt_on", "tfv", "Eon", "tdi_on",
+					"dI/dt_off", "tfi", "Icpk", "dU/dt_off", "trv", "Eoff", "tdi_off",
+					"Irm [A]", "trr", "trr1", "trr2", "Qrr", "Erec",
+					"Uce_100", "Uce_max"];
+	
+	var ReportPath = "data\\REPORT_" + SiC_GetDateStr() + ".csv";
+	var Files = list("data");
+	
+	// load filenames with test data
+	var FilesData = [];
+	for (var i = 0; i < Files.length; ++i)
+		if (Files[i].match(/\.txt/i) != null)
+			FilesData.push(loadn(Files[i]));
+	
+	// compose report output
+	var out = [];
+	for (var i = 0; i < Labels.length; ++i)
+	{
+		var raw_str = Labels[i] + "\t";
+		for (var j = 0; j < FilesData.length; ++j)
+		{
+			if (FilesData[j][i] != null)
+				raw_str += FilesData[j][i];
+			
+			raw_str += "\t";
+		}
+		out.push(raw_str);
+	}
+	
+	save(ReportPath, out);
+	print("Сформирован отчёт: " + ReportPath);
 }
