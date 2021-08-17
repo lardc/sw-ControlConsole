@@ -1,4 +1,4 @@
-include("SiC_Calc.js")
+include("SiC_Calc.js");
 
 sic_device_part_number = "NONE";
 sic_device_serial_number = "00000000";
@@ -90,6 +90,7 @@ function SiC_Main(Curves)
 	{
 		var FilePath = "data\\" + SiC_ComposeFileName();
 		SiC_ArrangeDataInFile(OnMode, IsHigh, FilePath, out_data);
+		print("Результат записан в: " + FilePath);
 	}
 }
 
@@ -174,13 +175,13 @@ function SiC_PrintChannelInfo()
 
 function pn(PartNumber)
 {
-	sic_device_part_number = DeviceName;
+	sic_device_part_number = PartNumber;
 	SiC_PrintPN();
 }
 
 function SiC_PrintPN()
 {
-	print("Тип прибора:\t\t" + sic_device_part_number);
+	print("Тип прибора:\t\t\t" + sic_device_part_number);
 }
 
 function sn(SerialNumber)
@@ -193,7 +194,7 @@ function sn(SerialNumber)
 
 function SiC_PrintSN()
 {
-	print("Серийный номер:\t\t" + sic_device_serial_number);
+	print("Серийный номер:\t\t\t" + sic_device_serial_number);
 }
 
 function scope(ComPort, ch_Vge, ch_Ice, ch_Vce)
@@ -229,7 +230,7 @@ function calc()
 	SiC_PrintSN();
 	var FileName = SiC_ComposeFileName();
 	
-	print("")
+	print("");
 	if (exists("data\\" + FileName))
 		print("Данные будут добавлены в существующий файл:\n" + FileName + "\n");
 	else
@@ -242,10 +243,11 @@ function calc()
 function inf()
 {
 	SiC_PrintChannelInfo();
-	print("")
+	print("");
 	SiC_PrintProbeInfo();
-	print("")
-	SiC_PrintDeviceName();
+	print("");
+	SiC_PrintPN();
+	SiC_PrintSN();
 }
 
 function doc()
@@ -256,22 +258,26 @@ function doc()
 	print("\tch_Ice - номер канала измерения Ice");
 	print("\tch_Vce - номер канала измерения Vce");
 	print("\tНапример, scope(1, 1, 2, 3)");
-	print("")
+	print("");
 	print("2. Для задания настроек пробников выполните probe(VceProbe, IceShuntRes)");
 	print("\tVceProbe - коэффициент деления пробника Vсe");
 	print("\tIceShuntRes - сопротивление токового шунта Iсe в мОм");
 	print("\tНапример, probe(100, 2.5)");
-	print("")
-	print("3. Для задания имени прибора выполните name(DeviceName)");
-	print("\tDeviceName - имя прибора в двойных кавычках");
-	print("\tНапример, name(\"MIXM Cu 150 C 0_5 Ohm\")");
-	print("")
-	print("4. Для запуска расчёта выполните calc()");
+	print("");
+	print("3. Для задания типа прибора выполните pn(PartNumber)");
+	print("\tPartNumber - тип прибора в двойных кавычках");
+	print("\tНапример, pn(\"MIHA-HB17FA-300N\")");
+	print("");
+	print("4. Для задания серийного номера прибора выполните sn(SerialNumber)");
+	print("\tSerialNumber - серийный номер прибора в двойных кавычках");
+	print("\tНапример, sn(\"000123\")");
+	print("");
+	print("5. Для запуска расчёта выполните calc()");
 	print("\tскрипт автоматически определит тип СПП (ключ или диод) и режим");
 	print("\tпереключения (включение или выключение) для ключа");
 	print("");
-	print("5. Для повторного отображжения списка COM-портов выполните pp()");
+	print("6. Для повторного отображжения списка COM-портов выполните pp()");
 	print("");
-	print("Изменённые настройки в пп.1-3 сохраняют актуальность до перезагрузки");
+	print("Изменённые настройки в пп.1-4 сохраняют актуальность до перезагрузки");
 	print("расчётного скрипта или до изменения с помощью соответствующей функции.");
 }
