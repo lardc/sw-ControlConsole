@@ -36,6 +36,7 @@ namespace PE.ControlConsole
             EngineContext.SetParameter(@"p", new Action<object>(Print));
             EngineContext.SetParameter(@"sleep", new Action<object>(Sleep));
             EngineContext.SetParameter(@"save", new Action<string, IList<object>>(Save));
+            EngineContext.SetParameter(@"exists", new Func<string, bool>(FileExists));
             EngineContext.SetParameter(@"load", new Func<string, object[]>(Load));
             EngineContext.SetParameter(@"loadn", new Func<string, object[]>(LoadN));
             EngineContext.SetParameter(@"loadtihex", new Func<string, object[]>(LoadTIHex));
@@ -130,6 +131,11 @@ namespace PE.ControlConsole
             {
                 Console.WriteLine(e.Message);
             }             
+        }
+
+        private bool FileExists(string FileName)
+        {
+            return File.Exists(FileName);
         }
 
         private object[] LoadX(string FileName, bool MakeSplit)
