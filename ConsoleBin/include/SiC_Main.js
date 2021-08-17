@@ -1,6 +1,7 @@
 include("SiC_Calc.js")
 
-sic_device_name = "NONE";
+sic_device_part_number = "NONE";
+sic_device_serial_number = "00000000";
 
 sic_ch_vge = 1;
 sic_ch_ice = 2;
@@ -38,24 +39,31 @@ function SiC_Main(Curves)
 	print("Тип СПП:\t" + (IsDiode ? "диод" : "ключ"));
 	if (!IsDiode)
 		print("Режим ключа:\t" + (OnMode ? "включение" : "выключение"));
-	out_data.push("---");
-	out_data.push("V" + ":\t\t" + RiseFallData.V_points.S_amp.toFixed(0) + "\t (V)");
-	out_data.push("Vmax" + ":\t\t" + RiseFallData.V_points.S_max.toFixed(0) + "\t (V)");
-	out_data.push("---");
-	out_data.push("I" + ":\t\t" + RiseFallData.I_points.S_amp.toFixed(0) + "\t (A)");
-	out_data.push("Imax" + ":\t\t" + RiseFallData.I_points.S_max.toFixed(0) + "\t (A)");
-	out_data.push("---");
+	print("* - значения для справки");
+	print("");
+	print("Uce *" + ":\t\t" + RiseFallData.V_points.S_amp.toFixed(0) + "\t(V)");
+	print("Uce_max *" + ":\t" + RiseFallData.V_points.S_max.toFixed(0) + "\t(V)");
+	print("Ice *" + ":\t\t" + RiseFallData.I_points.S_amp.toFixed(0) + "\t(A)");
+	print("Ice_max *" + ":\t" + RiseFallData.I_points.S_max.toFixed(0) + "\t(A)");
+	print("");
 	
 	if (!IsDiode)
 	{
-		out_data.push("dI/dt_" + (OnMode ? "on" : "off") + ":\t" + RiseFallData.I_points.S_rf.toFixed(0) + "\t (A/us)");
-		out_data.push("t" + (OnMode ? "r" : "f") + "i:\t\t" + RiseFallData.I_points.t_rf.toFixed(0) + "\t (ns)");
+		SiC_DataArrayCompose(out_data, "dI/dt_" + (OnMode ? "on" : "off") + ":\t", RiseFallData.I_points.S_rf.toFixed(0), "\t(A/us)");
+		SiC_DataArrayCompose(out_data, "t" + (OnMode ? "r" : "f") + "i:\t\t", RiseFallData.I_points.t_rf.toFixed(0), "\t(ns)");
+		if (!OnMode)
+			SiC_DataArrayCompose(out_data, "Icpk" + ":\t\t", RiseFallData.I_points.S_max.toFixed(0), "\t(A)");
+		SiC_DataArrayCompose(out_data, "dU/dt_" + (OnMode ? "on" : "off") + ":\t", RiseFallData.V_points.S_rf.toFixed(0), "\t(V/us)");
+		SiC_DataArrayCompose(out_data, "t" + (OnMode ? "f" : "r") + "v:\t\t", RiseFallData.V_points.t_rf.toFixed(0), "\t(ns)");
+		SiC_DataArrayCompose(out_data, "E" + (OnMode ? "on" : "off") + ":\t\t", SiC_CALC_Energy(Curves).Energy.toFixed(0), "\t(mJ)");
 		if (!IsHigh)
-			out_data.push("tdi_" + (OnMode ? "on: " : "off:") + "\t" + SiC_CALC_Delay(Curves).toFixed(0) + "\t (ns)");
-		out_data.push("---");
-		out_data.push("dU/dt_" + (OnMode ? "on" : "off") + ":\t" + RiseFallData.V_points.S_rf.toFixed(0) + "\t (V/us)");
-		out_data.push("t" + (OnMode ? "f" : "r") + "v:\t\t" + RiseFallData.V_points.t_rf.toFixed(0) + "\t (ns)");
-		out_data.push("E_" + (OnMode ? "on" : "off") + ":\t\t" + SiC_CALC_Energy(Curves).Energy.toFixed(0) + "\t (mJ)");
+			SiC_DataArrayCompose(out_data, "tdi_" + (OnMode ? "on: " : "off:") + "\t", SiC_CALC_Delay(Curves).toFixed(0), "\t(ns)");
+		if (!OnMode)
+		{
+			print("");
+			SiC_DataArrayCompose(out_data, "Uce_100" + ":\t", RiseFallData.V_points.S_amp.toFixed(0), "\t(V)");
+			SiC_DataArrayCompose(out_data, "Uce_max" + ":\t", RiseFallData.V_points.S_max.toFixed(0), "\t(V)");
+		}
 	}
 	
 	if (OnMode || IsDiode)
@@ -63,30 +71,81 @@ function SiC_Main(Curves)
 		var Recovery = SiC_CALC_Recovery(Curves, IsDiode);
 		
 		if (!IsDiode)
-			out_data.push("---");
-		out_data.push("Irrm" + ":\t\t" + Recovery.Irrm.toFixed(0) + "\t (A)");
-		out_data.push("trr" + ":\t\t" + Recovery.trr.toFixed(0) + "\t (ns)");
-		out_data.push("Qrr" + ":\t\t" + Recovery.Qrr.toFixed(0) + "\t (uC)");
-		out_data.push("E_rec" + ":\t\t" + Recovery.Energy.toFixed(1) + "\t (mJ)");
+			print("");
+		SiC_DataArrayCompose(out_data, "Irm [A]" + ":\t", Recovery.Irrm.toFixed(0), "\t(A)");
+		SiC_DataArrayCompose(out_data, "trr" + ":\t\t", Recovery.trr.toFixed(0), "\t(ns)");
+		SiC_DataArrayCompose(out_data, "trr1" + ":\t\t", Recovery.trr1.toFixed(0), "\t(ns)");
+		SiC_DataArrayCompose(out_data, "trr2" + ":\t\t", Recovery.trr2.toFixed(0), "\t(ns)");
+		SiC_DataArrayCompose(out_data, "Qrr" + ":\t\t", Recovery.Qrr.toFixed(0), "\t(uC)");
+		SiC_DataArrayCompose(out_data, "Erec" + ":\t\t", Recovery.Energy.toFixed(1), "\t(mJ)");
 	}
 	
-	for (var  i = 0; i < out_data.length; ++i)
-		print(out_data[i]);
+	var FilePath = "data\\" + SiC_ComposeFileName();
+	SiC_ArrangeDataInFile(OnMode, IsHigh, FilePath, out_data);
+}
+
+function SiC_ArrangeDataInFile(OnMode, IsHigh, FilePath, Data)
+{
+	var out = exists(FilePath) ? loadn(FilePath) : [];
 	
-	// compose file name and save
-	var FileName = sic_device_name + "_" + (IsHigh ? "HIGH" : "LOW") + "_" + (IsDiode ? "DIODE" : "KEY");
-	if (!IsDiode)
-		FileName += "_" + (OnMode ? "ON" : "OFF");
-	// add current
-	FileName += "_" + RiseFallData.I_points.S_amp.toFixed(0) + "A";
-	// add voltage
-	FileName += "_" + RiseFallData.V_points.S_amp.toFixed(0) + "V";
-	FileName += "_" + (new Date()).toISOString().slice(0, 19).replace(/[\-:]/g, "").replace("T", "_") + ".txt";
-	FileName = "data\\" + FileName;
+	out[0] = sic_device_part_number;
+	out[1] = sic_device_serial_number;
+	out[2] = "---";
+	out[24] = "---";
 	
-	save(FileName, out_data);
-	print("\nСохранено в файл:");
-	print(FileName);
+	if (OnMode && !IsHigh)
+	{
+		for (var i = 0; i < 6; ++i)
+			out[i + 3] = Data[i];
+		
+		for (var i = 6; i < 12; ++i)
+			out[i + 10] = Data[i];
+	}
+	else if (!OnMode && !IsHigh)
+	{
+		for (var i = 0; i < 7; ++i)
+			out[i + 9] = Data[i];
+		
+		for (var i = 7; i < 9; ++i)
+			out[i + 22 - 7] = Data[i];
+	}
+	else if (OnMode && IsHigh)
+	{
+		for (var i = 0; i < 5; ++i)
+			out[i + 25] = Data[i];
+		
+		for (var i = 5; i < 11; ++i)
+			out[i + 33] = Data[i];
+	}
+	else if (!OnMode && IsHigh)
+	{
+		for (var i = 0; i < 6; ++i)
+			out[i + 31] = Data[i];
+		
+		for (var i = 6; i < 8; ++i)
+			out[i + 44 - 6] = Data[i];
+	}
+	
+	// fill empty cells
+	for (var i = 0; i < out.length; ++i)
+	{
+		if (out[i] == null)
+			out[i] = " ";
+	}
+	
+	save(FilePath, out);
+}
+
+function SiC_DataArrayCompose(DataArr, Str1, Value, Str2)
+{
+	DataArr.push(Value);
+	print(Str1 + Value + Str2);
+}
+
+function SiC_ComposeFileName()
+{
+	var date_str = (new Date()).toISOString().slice(2, 10).replace(/[\-]/g, "");
+	return (sic_device_part_number + "_" + sic_device_serial_number + "_" + date_str + ".txt");
 }
 
 function SiC_Start()
@@ -104,15 +163,28 @@ function SiC_PrintChannelInfo()
 	print("Канал измерения Vce:\t\t" + sic_ch_vce);
 }
 
-function name(DeviceName)
+function pn(PartNumber)
 {
-	sic_device_name = DeviceName;
-	SiC_PrintDeviceName();
+	sic_device_part_number = DeviceName;
+	SiC_PrintPN();
 }
 
-function SiC_PrintDeviceName()
+function SiC_PrintPN()
 {
-	print("Текущее имя прибора:\t\t" + sic_device_name);
+	print("Тип прибора:\t\t" + sic_device_part_number);
+}
+
+function sn(SerialNumber)
+{
+	sic_device_serial_number = SerialNumber;
+	
+	SiC_PrintPN();
+	SiC_PrintSN();
+}
+
+function SiC_PrintSN()
+{
+	print("Серийный номер:\t\t" + sic_device_serial_number);
 }
 
 function scope(ComPort, ch_Vge, ch_Ice, ch_Vce)
@@ -144,8 +216,17 @@ function SiC_PrintProbeInfo()
 
 function calc()
 {
-	print("Имя прибора:\t" + sic_device_name);
-	print("Для продолжения нажмите \"y\". Для отмены нажмите любую другую клавишу.");
+	SiC_PrintPN();
+	SiC_PrintSN();
+	var FileName = SiC_ComposeFileName();
+	
+	print("")
+	if (exists("data\\" + FileName))
+		print("Данные будут добавлены в существующий файл:\n" + FileName);
+	else
+		print("Будет создан новый файл:\n" + FileName);
+	
+	print("Для продолжения нажмите \"y\". Для отмены нажмите любую другую клавишу.\n");
 	var k = readkey();
 	if (k == "y")
 	{
