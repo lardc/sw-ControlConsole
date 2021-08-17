@@ -345,6 +345,10 @@ function MME_CS(Force)
 			dev.c(104);
 			while (dev.r(96) != 3) sleep(500);
 		}
+		else if (Force == Math.ceil((dev.r(110) / 10)))
+		{
+			print("Already reached this force, kN: " + (dev.r(110) / 10));
+		}
 		else
 		{
 			dev.w(70, Force * 10);
