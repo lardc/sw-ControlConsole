@@ -1,56 +1,68 @@
-include("TestCS.js")
-include("TestGTU_4.0.js")
+include("TestATU.js")
 include("TestBVT.js")
+include("TestCS.js")
+include("TestdVdt.js")
+//include("TestGTU_4.0.js") // не забываем что есть версия TestGTU_4.0.js
+include("TestGTU.js")
 include("TestLSLH.js")
-include ("TestQRRHP.js")
+include("TestQRRHP.js")
 
-mme_cs_def_force = 5;
-mme_cs_force = 25;
-mme_cs_height = 35;
-//
-mme_bvt_current = 5;
-mme_bvt_voltage = 500;
-//
+// CSCU
+mme_cs_def_force = 5; // Усилие зажатия минимальная в кН
+mme_cs_force = 25; // Усилие зажатия максимальная в кН
+mme_cs_height = 33; // Высота прибора в мм
+// BVT HP
+mme_bvt_current = 200; // Ток отсечки в мА
+mme_bvt_voltage = 4400; // Задание амплитуды напряжения в В
+// ATU HP
+mme_atu_power = 2000; // Ударная мощность обратных потерь в Вт
+mme_atu_precurrent = 150; // Задание амплитуды препульса в мА
+// CROVU
+mme_crovu_voltage = 3000; // Задание амплитуды напряжения в В
+mme_crovu_dvdt = 500; // Задание скорости нарастания напряжения в В/мкс
+// QRR
 mme_qrr_current = 400;
 mme_qrr_current_rate = 30;
 mme_qrr_voltage = 1500;
 mme_qrr_voltage_rate = 1000;
 mme_qrr_mode = 1; // 0 - QRR, 1 - QRR Tq
-//
 mme_counter = 0;
 
 // definitions
-mme_GTU =		0;
-mme_SL =		1;
-mme_BVTD =		2;
-mme_BVTR =		3;
-mme_CSDEF =		4;
-mme_CSMAX =		5;
-mme_QRR = 		6;
+mme_GTU =	0;
+mme_SL =	1;
+mme_BVTD =	2;
+mme_BVTR =	3;
+mme_CSDEF =	4;
+mme_CSMAX =	5;
+mme_CROVU = 6;
+mme_ATU = 	7;
+mme_QRR = 	8;
 
 // active blocks
 mme_use_GTU = 	1;
 mme_use_SL = 	1;
 mme_use_BVT =	1;
-mme_use_CS = 	0;
-mme_use_QRR =	1;
+mme_use_CS = 	1;
+mme_use_CROVU = 1;
+mme_use_ATU = 	0;
+mme_use_QRR = 	0;
 
-// NodeID
+// Номера id блоков
 mme_Nid_HMIU = 0;
-mme_Nid_GTU = 3;
-mme_Nid_SL = 9;
-mme_Nid_BVT = 4;
-mme_Nid_CS = 6;
 mme_Nid_CU = 1;
+mme_Nid_SL = 2; // может быть и id 9, смотрим в прошивку
+mme_Nid_GTU = 3;
+mme_Nid_BVT = 4;
+mme_Nid_CUext = 5;
+mme_Nid_CS = 6;
 mme_Nid_CROVU = 7;
 mme_Nid_SCTU = 8;
 mme_Nid_ATU = 9;
-mme_Nid_CUext = 5;
 mme_Nid_QRR = 10;
 
-
 // settings
-mme_plot = 0;		// Plot graphics
+mme_plot = 1;	// Plot graphics
 
 function MME_Units()
 {
@@ -116,7 +128,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-	dev.nid(mme_Nid_CUext);
+dev.nid(mme_Nid_CUext);
 	try
 	{
 		dev.Read16Silent(0);
@@ -293,9 +305,33 @@ function MME_IsReady()
 		}
 	}
 	
+	// dvdt
+	if (mme_use_CROVU)
+	{
+		dev.nid(mme_Nid_CROVU);
+		if (dev.r(192) == 0) dev.c(1);
+		if (dev.r(192) != 3)
+		{
+			print("CROVU not ready");
+			return 0;
+		}
+	}
+	
+	// atu
+	if (mme_use_ATU)
+	{
+		dev.nid(mme_Nid_ATU);
+		if (dev.r(96) == 0) dev.c(1);
+		if (dev.r(96) != 4)
+		{
+			print("ATU not ready");
+			return 0;
+		}
+	}
+	
 	return 1;
 }
-
+	
 function MME_CS(Force)
 {
 	if (mme_use_CS)
@@ -340,99 +376,8 @@ function MME_GTU()
 	}
 }
 
-function MME_GTUSL(Current, Force)
+function MME_GTUSL(Current)
 {
-	// prepare cu
-	dev.nid(mme_Nid_CU);
-	if (dev.r(96) == 0)
-	{
-		dev.c(1);
-		if (dev.r(96) != 3)
-		{
-			print("CU in abnormal state");
-			PrintStatus();
-			return;
-		}
-	}
-	else if (dev.r(96) != 3)
-	{
-		print("CU in abnormal state");
-		PrintStatus();
-		return;
-	}
-	else
-	{
-		dev.c(116);
-		print("CU ok");
-	}
-	
-	// prepare gtu
-	dev.nid(mme_Nid_GTU);
-	if (dev.r(192) != 0)
-	{
-		print("GTU in abnormal state");
-		PrintStatus();
-		return;
-	}
-	else
-	{
-		print("GTU ok");
-	}
-	
-	// prepare sl
-	dev.nid(mme_Nid_SL)
-	if (dev.r(192) == 0)
-	{
-		dev.c(1);
-		print("SL power on...");
-	}
-	while (dev.r(192) == 3) sleep(50);
-	if (dev.r(192) != 4)
-	{
-		print("SL in abnormal state");
-		PrintStatus();
-		return;
-	}
-	else
-	{
-		print("SL ok");
-	}
-	
-	// prepare clamp
-	dev.nid(mme_Nid_CS);
-	if (dev.r(96) == 0)
-	{
-		dev.c(100);
-		print("CS homing...");
-	}
-	while (dev.r(96) == 5) sleep(50);
-	if (dev.r(96) != 3)
-	{
-		print("CS in abnormal state");
-		PrintStatus();
-		return;
-	}
-	else
-	{
-		print("CS clamping...");
-		dev.w(70, Force * 10);
-		dev.w(71, 50);
-		dev.c(102);
-		
-		while (dev.r(96) == 7) sleep(50);
-		
-		if (dev.r(96) != 8)
-		{
-			print("CS in abnormal state");
-			PrintStatus();
-			return;
-		}
-		else
-		{
-			print("CS ok");
-		}
-	}
-	
 	// activate gtu
 	dev.nid(mme_Nid_GTU);
 	dev.w(130, 1);
@@ -441,49 +386,31 @@ function MME_GTUSL(Current, Force)
 	
 	// activate sl
 	dev.nid(mme_Nid_SL);
-	sl_rep = 1;
-	dev.w(162, 1);
+	//sl_rep = 1;
+	//dev.w(162, 1);
 	dev.w(163, 1);
-	
 	sleep(20);
-	SL_Sin(Current);
+	LSLH_StartMeasure(Current);
+	//SL_Sin(Current);
 	
 	// read gtu
 	dev.nid(mme_Nid_GTU);
-	while(dev.r(192) == 5) sleep(50);
-	dev.w(130, 0);
+	while(dev.r(192) == 5) sleep(100);
 	if (dev.r(197) == 2) print("problem: " + dev.r(196));
 	print("Ih,   mA: " + dev.r(201));
-	print("Trig    : " + dev.r(230));
-	print("Toler   : " + dev.r(231));
-	print("Finish  : " + dev.r(232));
+	//print("Trig    : " + dev.r(230));
+	//print("Toler   : " + dev.r(231));
+	//print("Finish  : " + dev.r(232));
 	plot(dev.rafs(1), 1, 0);
 	
 	// recommutate
-	dev.nid(mme_Nid_CU);
-	dev.c(111);
+	MME_CU(111);
 	print("CU ok");
 	
 	// measure in ordinary way
 	dev.nid(mme_Nid_GTU);
 	dev.w(130, 0);
 	GTU_Holding();
-	
-	// release clamp
-	dev.nid(mme_Nid_CS);
-	dev.c(104);
-	print("CS unclamp...");
-	while(dev.r(96) == 10) sleep(50);
-	if (dev.r(96) != 3)
-	{
-		print("CS in abnormal state");
-		PrintStatus();
-		return;
-	}
-	else
-	{
-		print("CS ok");
-	}
 }
 
 function MME_SL(Current)
@@ -491,9 +418,8 @@ function MME_SL(Current)
 	if (mme_use_SL)
 	{
 		dev.nid(mme_Nid_SL);
-		dev.w(160, 3)
 		LSLH_StartMeasure(Current);
-		if (mme_plot) SL_Plot();
+		if (mme_plot) pl(dev.rafs(1));
 	}
 }
 
@@ -504,6 +430,35 @@ function MME_BVT()
 		dev.nid(mme_Nid_BVT);
 		BVT_StartPulse(1, mme_bvt_voltage, mme_bvt_current * 10);
 		if (mme_plot) BVT_PlotXY();
+	}
+}
+
+function MME_ATU()
+{
+	if (mme_use_ATU)
+	{
+		dev.nid(mme_Nid_ATU);
+		ATU_StartPower(mme_atu_precurrent, mme_atu_power);
+		if (mme_plot) ATU_Plot();
+	}
+}
+
+function MME_CROVU()
+{
+	if (mme_use_CROVU)
+	{
+		dev.nid(mme_Nid_CROVU);
+		dev.w(128, mme_crovu_voltage);
+		dev.w(129, mme_crovu_dvdt);
+		dev.c(10);
+		dev.c(100);
+		while (_dVdt_Active()) { sleep(100); };
+		if (mme_plot) if(dev.r(198) == 1)
+			print("Прибор остался закрытым");
+		else if(dev.r(198) == 0)
+			print("Прибор открылся");
+		dVdt_PrintInfo();
+		print("---------------------");
 	}
 }
 
@@ -585,12 +540,34 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					sleep(2000);
 					print("-------------");
 					break;
+				case mme_ATU:
+					print("#ATU");
+					MME_CS(mme_cs_force);
+					MME_CU(115);
+					MME_ATU();
+					MME_CU(110);
+					break;
+				case mme_CROVU:
+					print("#CROVU");
+					MME_CS(mme_cs_force);
+					MME_CU(115);
+					MME_CROVU();
+					MME_CU(110);
+					break;
 				case mme_QRR:
 					print("#QRR");
+					MME_CS(mme_cs_force);
 					MME_CU(115);
 					MME_QRR();
 					MME_CU(110);
 					break;
+				case mme_GTUSL:
+					print("#MME_GTUSL - IH GOST");
+					MME_CS(mme_cs_force);
+					MME_CU(116);
+					MME_GTUSL();
+					MME_CU(110);
+					break;	
 			}
 		}
 		
