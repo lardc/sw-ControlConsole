@@ -7,12 +7,14 @@ include("TestGTU.js")
 include("TestLSLH.js")
 include("TestQRRHP.js")
 
+// SL
+mme_sl_current_ih = 100;
 // CSCU
 mme_cs_def_force = 5; // Усилие зажатия минимальная в кН
 mme_cs_force = 25; // Усилие зажатия максимальная в кН
-mme_cs_height = 33; // Высота прибора в мм
+mme_cs_height = 27; // Высота прибора в мм
 // BVT HP
-mme_bvt_current = 200; // Ток отсечки в мА
+mme_bvt_current = 190; // Ток отсечки в мА
 mme_bvt_voltage = 4400; // Задание амплитуды напряжения в В
 // ATU HP
 mme_atu_power = 2000; // Ударная мощность обратных потерь в Вт
@@ -28,7 +30,7 @@ mme_qrr_voltage_rate = 1000;
 mme_qrr_mode = 1; // 0 - QRR, 1 - QRR Tq
 mme_counter = 0;
 
-// definitions
+// definitions for MME_Test()
 mme_GTU =	0;
 mme_SL =	1;
 mme_BVTD =	2;
@@ -38,6 +40,7 @@ mme_CSMAX =	5;
 mme_CROVU = 6;
 mme_ATU = 	7;
 mme_QRR = 	8;
+mme_GTUSL = 9;
 
 // active blocks
 mme_use_GTU = 	1;
@@ -62,7 +65,7 @@ mme_Nid_ATU = 9;
 mme_Nid_QRR = 10;
 
 // settings
-mme_plot = 1;	// Plot graphics
+mme_plot = 0;	// Plot graphics
 
 function MME_Units()
 {
@@ -260,7 +263,7 @@ function MME_IsReady()
 	{
 		dev.nid(mme_Nid_SL);
 		if (dev.r(192) == 0) dev.c(1);
-		while (dev.r(192) == 3) sleep(100);
+		while (dev.r(192) == 3) sleep(500);
 		if (dev.r(192) != 4)
 		{
 			print("SL not ready");
@@ -285,7 +288,7 @@ function MME_IsReady()
 	{
 		dev.nid(mme_Nid_CS);
 		if (dev.r(96) == 0) dev.c(100);
-		while (dev.r(96) == 5) sleep(100);
+		while (dev.r(96) == 5) sleep(500);
 		if (dev.r(96) != 3)
 		{
 			print("CS not ready");
@@ -387,15 +390,14 @@ function MME_GTUSL(Current)
 	// activate sl
 	dev.nid(mme_Nid_SL);
 	//sl_rep = 1;
-	//dev.w(162, 1);
+	dev.w(162, 1);
 	dev.w(163, 1);
-	sleep(20);
 	LSLH_StartMeasure(Current);
 	//SL_Sin(Current);
 	
 	// read gtu
 	dev.nid(mme_Nid_GTU);
-	while(dev.r(192) == 5) sleep(100);
+	while(dev.r(192) == 5) sleep(500);
 	if (dev.r(197) == 2) print("problem: " + dev.r(196));
 	print("Ih,   mA: " + dev.r(201));
 	//print("Trig    : " + dev.r(230));
@@ -410,6 +412,7 @@ function MME_GTUSL(Current)
 	// measure in ordinary way
 	dev.nid(mme_Nid_GTU);
 	dev.w(130, 0);
+	gtu_plot = mme_plot;
 	GTU_Holding();
 }
 
@@ -452,7 +455,7 @@ function MME_CROVU()
 		dev.w(129, mme_crovu_dvdt);
 		dev.c(10);
 		dev.c(100);
-		while (_dVdt_Active()) { sleep(100); };
+		while (_dVdt_Active()) sleep(500);
 		if (mme_plot) if(dev.r(198) == 1)
 			print("Прибор остался закрытым");
 		else if(dev.r(198) == 0)
@@ -563,9 +566,9 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					break;
 				case mme_GTUSL:
 					print("#MME_GTUSL - IH GOST");
-					MME_CS(mme_cs_force);
 					MME_CU(116);
-					MME_GTUSL();
+					MME_CS(mme_cs_force);
+					MME_GTUSL(mme_sl_current_ih);
 					MME_CU(110);
 					break;	
 			}
