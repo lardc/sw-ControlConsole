@@ -7,7 +7,6 @@ sic_gd_vce_probe = 100;
 sic_gd_ice_shunt = 2.5e-3;
 
 sic_gd_emu = false;
-sic_gd_emu_hscale = 0.5e-6;
 sic_gd_emu_name_vge = "vge.csv";
 sic_gd_emu_name_vce = "vce.csv";
 sic_gd_emu_name_ice = "ice.csv";
@@ -154,7 +153,7 @@ function SiC_GD_GetCurves(ChannelVge, ChannelVce, ChannelIce)
 		var vce = SiC_GD_ParseTekCSV(sic_gd_emu_name_vce);
 		var ice = SiC_GD_ParseTekCSV(sic_gd_emu_name_ice);
 		
-		var hscale = sic_gd_emu_hscale;
+		var hscale = SiC_GD_ParseTekHScale(sic_gd_emu_name_vce);
 	}
 	else
 	{
@@ -184,12 +183,13 @@ function SiC_GD_VgeGetDataWrapper(Channel)
 		return [];
 }
 
-function SiC_GD_SetEmuSettings(VgeN, VceN, IceN, HScale)
+function SiC_GD_SetEmuSettings(VgeN, VceN, IceN)
 {
 	sic_gd_emu_name_vge = VgeN;
 	sic_gd_emu_name_vce = VceN;
 	sic_gd_emu_name_ice = IceN;
-	sic_gd_emu_hscale = HScale;
+	
+	sic_gd_emu = true;
 }
 
 function SiC_GD_ParseTekCSV(FileName)
@@ -204,4 +204,12 @@ function SiC_GD_ParseTekCSV(FileName)
 	}
 	
 	return result;
+}
+
+function SiC_GD_ParseTekHScale(FileName)
+{
+	var data = loadn("data\\" + FileName);
+	var raw = data[11].split(",");
+	
+	return parseFloat(raw[1]);
 }
