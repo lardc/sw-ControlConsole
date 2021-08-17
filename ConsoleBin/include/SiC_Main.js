@@ -179,9 +179,9 @@ function pn(PartNumber)
 	SiC_PrintPN();
 }
 
-function SiC_PrintPN()
+function SiC_PrintPN(LongTab)
 {
-	print("Тип прибора:\t\t\t" + sic_device_part_number);
+	print("Тип прибора:" + (LongTab ? "\t\t\t" : "\t") + sic_device_part_number);
 }
 
 function sn(SerialNumber)
@@ -192,9 +192,9 @@ function sn(SerialNumber)
 	SiC_PrintSN();
 }
 
-function SiC_PrintSN()
+function SiC_PrintSN(LongTab)
 {
-	print("Серийный номер:\t\t\t" + sic_device_serial_number);
+	print("Серийный номер:" + (LongTab ? "\t\t\t" : "\t") + sic_device_serial_number);
 }
 
 function scope(ComPort, ch_Vge, ch_Ice, ch_Vce)
@@ -246,8 +246,8 @@ function inf()
 	print("");
 	SiC_PrintProbeInfo();
 	print("");
-	SiC_PrintPN();
-	SiC_PrintSN();
+	SiC_PrintPN(true);
+	SiC_PrintSN(true);
 }
 
 function doc()
