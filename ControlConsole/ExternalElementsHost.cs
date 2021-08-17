@@ -37,6 +37,7 @@ namespace PE.ControlConsole
             EngineContext.SetParameter(@"sleep", new Action<object>(Sleep));
             EngineContext.SetParameter(@"save", new Action<string, IList<object>>(Save));
             EngineContext.SetParameter(@"exists", new Func<string, bool>(FileExists));
+            EngineContext.SetParameter(@"list", new Func<string, object[]>(ListFiles));
             EngineContext.SetParameter(@"load", new Func<string, object[]>(Load));
             EngineContext.SetParameter(@"loadn", new Func<string, object[]>(LoadN));
             EngineContext.SetParameter(@"loadtihex", new Func<string, object[]>(LoadTIHex));
@@ -133,9 +134,32 @@ namespace PE.ControlConsole
             }             
         }
 
+        private object[] ListFiles(string DirPath)
+        {
+            try
+            {
+                if (Directory.Exists(DirPath))
+                    return Directory.GetFiles(DirPath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            return new string[] { };
+        }
+
         private bool FileExists(string FileName)
         {
-            return File.Exists(FileName);
+            try
+            {
+                return File.Exists(FileName);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return false;
+            }
         }
 
         private object[] LoadX(string FileName, bool MakeSplit)
