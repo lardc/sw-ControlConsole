@@ -38,13 +38,16 @@ function SiC_Main(Curves)
 	
 	print("Тип СПП:\t" + (IsDiode ? "диод" : "ключ"));
 	if (!IsDiode)
+	{
 		print("Режим ключа:\t" + (OnMode ? "включение" : "выключение"));
-	print("* - значения для справки");
+		print("Положение:\t" + (IsHigh ? "верхний" : "нижний"));
+	}
 	print("");
 	print("Uce *" + ":\t\t" + RiseFallData.V_points.S_amp.toFixed(0) + "\t(V)");
 	print("Uce_max *" + ":\t" + RiseFallData.V_points.S_max.toFixed(0) + "\t(V)");
 	print("Ice *" + ":\t\t" + RiseFallData.I_points.S_amp.toFixed(0) + "\t(A)");
 	print("Ice_max *" + ":\t" + RiseFallData.I_points.S_max.toFixed(0) + "\t(A)");
+	print("* - значения для справки");
 	print("");
 	
 	if (!IsDiode)
@@ -80,8 +83,14 @@ function SiC_Main(Curves)
 		SiC_DataArrayCompose(out_data, "Erec" + ":\t\t", Recovery.Energy.toFixed(1), "\t(mJ)");
 	}
 	
-	var FilePath = "data\\" + SiC_ComposeFileName();
-	SiC_ArrangeDataInFile(OnMode, IsHigh, FilePath, out_data);
+	
+	print("\nДля записи результата в файл нажмите \"y\". Для отмены нажмите любую другую клавишу.");
+	var k = readkey();
+	if (k == "y")
+	{
+		var FilePath = "data\\" + SiC_ComposeFileName();
+		SiC_ArrangeDataInFile(OnMode, IsHigh, FilePath, out_data);
+	}
 }
 
 function SiC_ArrangeDataInFile(OnMode, IsHigh, FilePath, Data)
@@ -90,8 +99,8 @@ function SiC_ArrangeDataInFile(OnMode, IsHigh, FilePath, Data)
 	
 	out[0] = sic_device_part_number;
 	out[1] = sic_device_serial_number;
-	out[2] = "---";
-	out[24] = "---";
+	out[2] = "-- low --";
+	out[24] = "-- high --";
 	
 	if (OnMode && !IsHigh)
 	{
@@ -222,17 +231,12 @@ function calc()
 	
 	print("")
 	if (exists("data\\" + FileName))
-		print("Данные будут добавлены в существующий файл:\n" + FileName);
+		print("Данные будут добавлены в существующий файл:\n" + FileName + "\n");
 	else
-		print("Будет создан новый файл:\n" + FileName);
+		print("Будет создан новый файл:\n" + FileName + "\n");
 	
-	print("Для продолжения нажмите \"y\". Для отмены нажмите любую другую клавишу.\n");
-	var k = readkey();
-	if (k == "y")
-	{
-		var Curves = SiC_GD_GetCurves(sic_ch_vge, sic_ch_vce, sic_ch_ice);
-		SiC_Main(Curves);
-	}
+	var Curves = SiC_GD_GetCurves(sic_ch_vge, sic_ch_vce, sic_ch_ice);
+	SiC_Main(Curves);
 }
 
 function inf()
