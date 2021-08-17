@@ -112,13 +112,16 @@ function SiC_CALC_Recovery(Curves, IsDiode)
 	var trr = -b_r / k_r * TimeStep * 1e9;
 	var Qrr = SiC_CALC_Integrate(current_trim, TimeStep, 0, trr_index - 1) * 1e6;
 	
+	var trr2 = (trr_index - Irrm_Point.Index) * TimeStep * 1e9;
+	var trr1 = trr - trr2;
+	
 	// calculate recovery energy
 	var Power = [];
 	for (var i = tr0; i < (tr0 + AuxPoint002.X); ++i)
 		Power[i - tr0] = Voltage[i] * (Current[i] - (i * LineI.k + LineI.b));
 	var Energy = SiC_CALC_Integrate(Power, TimeStep, 0, Power.length - 1) * 1e3;
 	
-	return {trr : trr, Irrm : Irrm, Qrr : Qrr, Energy : Energy};
+	return {trr : trr, trr1 : trr1, trr2 : trr2, Irrm : Irrm, Qrr : Qrr, Energy : Energy};
 }
 
 function SiC_CALC_RecoveryGetXY(Data, IsDiode)
