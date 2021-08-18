@@ -1,36 +1,35 @@
 include("SiC_GetData.js")
 
 sic_calc_rf_max_zone = 50;
-sic_calc_recovery_plate_step = 300;
 
 function SiC_CALC_Delay(Curves)
 {
 	var _Vge = Curves.Vge;
 	var _Ice = Curves.Ice;
-	var TimeScale = Curves.HScale;
+	var TimeStep = Curves.TimeStep;
 	
 	// check input data
 	if (_Vge.length != _Ice.length)
 		print("Delay calc: arrays of different lengths.")
 	
 	// get curves pivot points
-	var Vge_pivot = SiC_CALC_SignalRiseFall(_Vge, TimeScale);
-	var Ice_pivot = SiC_CALC_SignalRiseFall(_Ice, TimeScale);
+	var Vge_pivot = SiC_CALC_SignalRiseFall(_Vge, TimeStep);
+	var Ice_pivot = SiC_CALC_SignalRiseFall(_Ice, TimeStep);
 	
 	var delay = SiC_CALC_OnMode(Curves) ? (Ice_pivot.t_min - Vge_pivot.t_min) : (Ice_pivot.t_max - Vge_pivot.t_max);
 	
-	return (delay * TimeScale / 250 * 1e9);
+	return (delay * TimeStep * 1e9);
 }
 
-function SiC_CALC_VI_RiseFall(Curves)
+function SiC_CALC_VI_RiseFall(Curves, IsDiode)
 {
-	var V_points = SiC_CALC_SignalRiseFall(Curves.Vce, Curves.HScale);
-	var I_points = SiC_CALC_SignalRiseFall(Curves.Ice, Curves.HScale);
+	var V_points = SiC_CALC_SignalRiseFall(IsDiode ? SiC_GD_InvertData(Curves.Vce) : Curves.Vce, Curves.TimeStep);
+	var I_points = SiC_CALC_SignalRiseFall(Curves.Ice, Curves.TimeStep);
 	
 	return {V_points : V_points, I_points : I_points};
 }
 
-function SiC_CALC_SignalRiseFall(Signal, TimeScale, LowPoint)
+function SiC_CALC_SignalRiseFall(Signal, TimeStep, LowPoint)
 {
 	// find plate max value
 	var S_amp = 0;
@@ -42,10 +41,8 @@ function SiC_CALC_SignalRiseFall(Signal, TimeScale, LowPoint)
 	S_amp /= sic_calc_rf_max_zone;
 	
 	// find rise/fall zone
-	S_min = 0;
-	S_max = 0;
-	t_min = 0;
-	t_max = 0;
+	var t_min = 0;
+	var t_max = 0;
 	
 	if (typeof LowPoint === 'undefined')
 		LowPoint = 0.1;
@@ -60,7 +57,7 @@ function SiC_CALC_SignalRiseFall(Signal, TimeScale, LowPoint)
 	}
 	
 	// calculate rise/fall
-	var t_rf = Math.abs((t_max - t_min) * (TimeScale / 250));
+	var t_rf = Math.abs((t_max - t_min) * TimeStep);
 	t_rf = t_rf * 1e9;
 	var S_rf = Math.abs((Signal[t_max] - Signal[t_min]) / t_rf);
 	S_rf = S_rf * 1e3;
@@ -69,28 +66,23 @@ function SiC_CALC_SignalRiseFall(Signal, TimeScale, LowPoint)
 	return {S_max : S_max, S_amp : S_amp, S_rf : S_rf, t_rf : t_rf, t_min : t_min, t_max : t_max};
 }
 
-function SiC_CALC_Recovery(Curves)
+function SiC_CALC_Recovery(Curves, IsDiode)
 {
-	var Point1, Point2;
-	var stp = sic_calc_recovery_plate_step;
-	var Current = Curves.Ice;
-	var TimeScale = Curves.HScale;
+	var Current = IsDiode ? SiC_GD_InvertData(Curves.Ice) : Curves.Ice;
+	var Voltage = IsDiode ? SiC_GD_InvertData(Curves.Vce) : Curves.Vce;
+	var TimeStep = Curves.TimeStep;
 	
 	// line equation to find Ir0 point
-	Point1 = SiC_CALC_RecoveryGetXY(Current, Current.length - stp, Current.length);
-	Point2 = SiC_CALC_RecoveryGetXY(Current, Current.length - 2 * stp, Current.length - stp);
-	
-	var k = (Point1.Y - Point2.Y) / (Point1.X - Point2.X);
-	var b = Point1.Y - k * Point1.X;
+	var LineI = SiC_CALC_RecoveryGetXY(Current, IsDiode);
 	
 	var I_PointMin = SiC_GD_MIN(Current);
 	var I_PointMax = SiC_GD_MAX(Current);
 	
 	// find Ir0
 	var Ir0 = 0, tr0 = 0;
-	for (var i = I_PointMin.Time; i < I_PointMax.Time; ++i)
+	for (var i = I_PointMin.Index; i < I_PointMax.Index; ++i)
 	{
-		if (Current[i] > (i * k + b))
+		if (Current[i] > (i * LineI.k + LineI.b))
 		{
 			Ir0 = Current[i];
 			tr0 = i;
@@ -101,58 +93,54 @@ function SiC_CALC_Recovery(Curves)
 	// adjust current data to find reverse recovery charge
 	var current_trim = [];
 	for (var i = tr0; i < Current.length; ++i)
-		current_trim[i - tr0] = Current[i] - (i * k + b);
+		current_trim[i - tr0] = Current[i] - (i * LineI.k + LineI.b);
 	
 	// find Irrm
 	var Irrm_Point = SiC_GD_MAX(current_trim);
-	var Irrm   = Irrm_Point.Value;
+	var Irrm = Irrm_Point.Value;
 	
 	// find aux curve points
-	var trr02 = 0;
-	var Irr02 = 0;
-	for (var i = Irrm_Point.Time; i < current_trim.length; ++i)
-	{
-		if (current_trim[i] < Irrm * 0.02)
-		{
-			Irr02 = current_trim[i];
-			trr02 = i;
-			break;
-		}
-	}
+	var AuxPoint090 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.9);
+	var AuxPoint025 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.25);
+	var AuxPoint002 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.02);
 	
-	var k_r = (Irrm - Irr02) / (Irrm_Point.Time - trr02);
-	var b_r = Irrm - k_r * Irrm_Point.Time;
+	var k_r = (AuxPoint090.Y - AuxPoint025.Y) / (AuxPoint090.X - AuxPoint025.X);
+	var b_r = AuxPoint090.Y - k_r * AuxPoint090.X;
 	
 	// find trr
-	trr_index = Math.round(-b_r / k_r);
-	trr = -b_r / k_r * TimeScale / 250 * 1e9;
+	var trr_index = Math.round(-b_r / k_r);
+	var trr = -b_r / k_r * TimeStep * 1e9;
+	var Qrr = SiC_CALC_Integrate(current_trim, TimeStep, 0, trr_index - 1) * 1e6;
 	
-	// find qrr
-	var Qrr = 0;
-	for (var i = 0; i < trr_index; ++i)
-		Qrr += current_trim[i];
-	Qrr = (Qrr - (current_trim[0] + current_trim[current_trim.length - 1]) / 2) * TimeScale / 250 * 1e6;
+	// calculate recovery energy
+	var Power = [];
+	for (var i = tr0; i < (tr0 + AuxPoint002.X); ++i)
+		Power[i - tr0] = Voltage[i] * (Current[i] - (i * LineI.k + LineI.b));
+	var Energy = SiC_CALC_Integrate(Power, TimeStep, 0, Power.length - 1) * 1e3;
 	
-	return {trr : trr, Irrm : Irrm, Qrr : Qrr};
+	return {trr : trr, Irrm : Irrm, Qrr : Qrr, Energy : Energy};
 }
 
-function SiC_CALC_RecoveryGetXY(Data, RangeStart, RangeStop)
+function SiC_CALC_RecoveryGetXY(Data, IsDiode)
 {
-	var avg_time = 0;
-	var avg_value = 0;
-	var avg_counter = 0;
+	var MaxPoint = SiC_GD_MAX(Data);
 	
-	for (var i = RangeStart; i < Data.length && i < RangeStop; ++i)
+	var StartIndex = MaxPoint.Index + Math.round((Data.length - MaxPoint.Index) * 0.5);
+	var EndIndex = Data.length - 1;
+	
+	var k, b;
+	if (IsDiode)
 	{
-		avg_time += i;
-		avg_value += Data[i];
-		++avg_counter;
+		k = (Data[StartIndex] - Data[EndIndex]) / (StartIndex - EndIndex);
+		b = Data[StartIndex] - k * StartIndex;
+	}
+	else
+	{
+		k = 0;
+		b = SiC_GD_AvgData(Data, StartIndex, EndIndex);
 	}
 	
-	avg_time  /= avg_counter;
-	avg_value /= avg_counter;
-	
-	return {X:avg_time, Y:avg_value}
+	return {k : k, b : b}
 }
 
 function SiC_CALC_Energy(Curves)
@@ -160,7 +148,7 @@ function SiC_CALC_Energy(Curves)
 	var _Vge = Curves.Vge;
 	var _Vce = Curves.Vce;
 	var _Ice = Curves.Ice;
-	var TimeScale = Curves.HScale;
+	var TimeStep = Curves.TimeStep;
 	
 	// check input data
 	if (_Vce.length != _Ice.length)
@@ -170,24 +158,20 @@ function SiC_CALC_Energy(Curves)
 	var on_mode = SiC_CALC_OnMode(Curves) ? 1 : 0;
 	
 	// get curves pivot points
-	var Vge_pivot = SiC_CALC_SignalRiseFall(_Vge, TimeScale);
-	var Vce_pivot = SiC_CALC_SignalRiseFall(_Vce, TimeScale, 0.02);
-	var Ice_pivot = SiC_CALC_SignalRiseFall(_Ice, TimeScale, 0.02);
+	var Vge_pivot = SiC_CALC_SignalRiseFall(_Vge, TimeStep);
+	var Vce_pivot = SiC_CALC_SignalRiseFall(_Vce, TimeStep, 0.02);
+	var Ice_pivot = SiC_CALC_SignalRiseFall(_Ice, TimeStep, 0.02);
 	
 	// determine time limits
 	var start_time = on_mode ? Vge_pivot.t_min : Vge_pivot.t_max;
 	var stop_time  = on_mode ? Vce_pivot.t_min : Ice_pivot.t_min;
 	
-	// integrate
-	var Energy = 0;
+	// calculate power
 	var Power = [];
 	for (var i = start_time; i < stop_time; ++i)
-	{
-		var pow = _Vce[i] * _Ice[i];
-		Energy += pow;
-		Power[i - start_time] = pow;
-	}
-	Energy = Energy * TimeScale;
+		Power[i - start_time] = _Vce[i] * _Ice[i];
+	
+	var Energy = SiC_CALC_Integrate(Power, TimeStep, 0, Power.length - 1) * 1e3;
 	
 	return {Power : Power, Energy : Energy};
 }
@@ -195,4 +179,36 @@ function SiC_CALC_Energy(Curves)
 function SiC_CALC_OnMode(Curves)
 {
 	return (Curves.Vce[0] > Curves.Vce[Curves.Vce.length - 1]);
+}
+
+function SiC_CALC_Integrate(Data, TimeStep, StartIndex, EndIndex)
+{
+	var Result = 0;
+	
+	for (var i = StartIndex; i <= EndIndex; ++i)
+		Result += Data[i];
+	Result -= 0.5 * (Data[StartIndex] + Data[EndIndex]);
+	
+	return Result * TimeStep;
+}
+
+function SiC_CALC_FindAuxPoint(Data, StartIndex, Threshold)
+{
+	var x, y;
+	for (var i = StartIndex; i < Data.length; ++i)
+	{
+		if (Data[i] <= Threshold)
+		{
+			y = Data[i];
+			x = i;
+			break;
+		}
+	}
+	
+	return {X : x, Y : y};
+}
+
+function SiC_CALC_IsDiode(Curves)
+{
+	return (SiC_GD_AvgData(Curves.Vce, 0, Curves.Vce.length - 1) < 0);
 }

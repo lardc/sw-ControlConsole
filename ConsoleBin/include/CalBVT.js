@@ -9,17 +9,17 @@ cbvt_VstpAC = 500;		// in V
 
 cbvt_VmaxDC	= 4500;		// in V
 //
-cbvt_Shunt	= 100;		// in Ohms
-cbvt_R		= 357000;	// in Ohms
+cbvt_Shunt	= 99.45;	// in Ohms
+cbvt_R		= 215930;	// in Ohms
 //
-cbvt_ShuntP	= 10;		// in Ohms
-cbvt_RP		= 30000;	// in Ohms
+cbvt_ShuntP	= 9.92;		// in Ohms
+cbvt_RP		= 21656;	// in Ohms
 //
 cbvt_RangeV = 2;		// Voltage range number
 cbvt_RangeI = 1;		// Current range number
 //
 cbvt_UseRangeTuning = 1;
-cbvt_UseMicroAmps = 0;	// Use microamp precision for current
+cbvt_UseMicroAmps = 1;	// Use microamp precision for current
 //
 cbvt_Vmin	= 0;
 cbvt_Vmax	= 0;
@@ -221,6 +221,9 @@ function CBVT_VerifyIx(FileName)
 		
 		// Plot relative error distribution
 		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Current relative error");
+
+		// Plot relative error distribution
+		scattern(cbvt_i_sc, cbvt_i_err_sum, "Current (in mA)", "Error (in %)", "Current summary error");
 	}
 }
 

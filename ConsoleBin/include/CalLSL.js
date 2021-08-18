@@ -670,12 +670,7 @@ function LSL_TriggerInit(Channel)
 
 function LSL_TekScale(Channel, Value)
 {
-	if(Value <= 1.5)
-		TEK_Send("ch" + Channel + ":scale " + 0.2);
-	else if(Value <= 3.5)
-		TEK_Send("ch" + Channel + ":scale " + 0.5);
-	else
-		TEK_Send("ch" + Channel + ":scale " + 1);
+	TEK_ChannelScale(Channel, Value);
 }
 //--------------------
 

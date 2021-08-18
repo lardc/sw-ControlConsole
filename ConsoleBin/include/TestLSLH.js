@@ -18,7 +18,7 @@ function LSLH_StartMeasure(Current)
 	if(dev.r(192) == 4)
 	{
 		dev.c(100);
-		while(dev.r(192) != 4){sleep(10);}
+		while(dev.r(192) != 4){sleep(100);}
 		
 		if(LSLH_Print)
 		{			

@@ -3,6 +3,9 @@ include("Tektronix.js")
 sic_gd_filter_points = 5;
 sic_gd_filter_factor = 0.5;
 
+sic_gd_vce_probe = 100;
+sic_gd_ice_shunt = 2.5e-3;
+
 function SiC_GD_Init(Port)
 {
 	TEK_PortInit(Port, 19200);
@@ -61,10 +64,11 @@ function SiC_GD_Filter(Data, ScaleI)
 	}
 	
 	// current shunt scale
+	var scale
 	if (typeof ScaleI === 'undefined')
-		var scale = 1;
+		scale = 1;
 	else
-		var scale = ScaleI;
+		scale = ScaleI;
 	
 	// spline filtering
 	for (var i = 0; i < (filtered_avg.length - 3); ++i)
@@ -80,12 +84,20 @@ function SiC_GD_Filter(Data, ScaleI)
 	return filtered_spl;
 }
 
-function SiC_GD_AvgData(Data, Start, Counter)
+function SiC_GD_InvertData(Data)
+{
+	var res = []
+	for (var i = 0; i < Data.length; ++i)
+		res.push(-Data[i]);
+	return res;
+}
+
+function SiC_GD_AvgData(Data, StartIndex, EndIndex)
 {
 	var res = 0;
 	var res_counter = 0;
 	
-	for (var i = Start; i < (Start + Counter) && i < Data.length; ++i)
+	for (var i = StartIndex; i <= EndIndex && i < Data.length; ++i)
 	{
 		res += Data[i];
 		++res_counter;
@@ -97,84 +109,62 @@ function SiC_GD_AvgData(Data, Start, Counter)
 function SiC_GD_MIN(Data)
 {
 	var value = Data[0];
-	var time;
+	var index;
 	
 	for (var i = 0; i < Data.length; ++i)
 		if (Data[i] < value)
 		{
 			value = Data[i];
-			time = i;
+			index = i;
 		}
 	
-	return {Value : value, Time : time};
+	return {Value : value, Index : index};
 }
 
 function SiC_GD_MAX(Data)
 {
 	var value = Data[0];
-	var time;
+	var index;
 	
 	for (var i = 0; i < Data.length; ++i)
 		if (Data[i] > value)
 		{
 			value = Data[i];
-			time = i;
+			index = i;
 		}
 	
-	return {Value : value, Time : time};
+	return {Value : value, Index : index};
 }
 
 function SiC_GD_GetCurves(ChannelVg, ChannelVce, ChannelIce)
 {
-	var HScale  = SiC_GD_GetTimeScale();
+	var TimeStep = SiC_GD_GetTimeScale() / 250;
 	
 	var DataVge = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelVg));
-	var DataVce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelVce));
-	var DataIce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelIce), 40);
+	var DataVce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelVce), sic_gd_vce_probe);
+	var DataIce = SiC_GD_Filter(SiC_GD_GetChannelCurve(ChannelIce), 1 / sic_gd_ice_shunt);
 	
-	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, HScale : HScale};
+	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, TimeStep : TimeStep};
 }
 
-function SiC_GD_GetCurvesEmuON()
+function SiC_GD_GetCurvesEmuX(KeyName, SwitchMode, VgeMul, VceMul, IceMul, HScale)
 {
-	var HScale = 1e-7;
+	var TimeStep = HScale / 250;
 	
-	var ch1 = load("data/ch1_on.csv");
-	var ch2 = load("data/ch2_on.csv");
-	var ch3 = load("data/ch3_on.csv");
+	var vge = load("data/ch_" + KeyName + "_vge_" + SwitchMode + ".csv");
+	var vce = load("data/ch_" + KeyName + "_vce_" + SwitchMode + ".csv");
+	var ice = load("data/ch_" + KeyName + "_ice_" + SwitchMode + ".csv");
 	
-	for (var i = 0; i < ch1.length; ++i)
+	for (var i = 0; i < vge.length; ++i)
 	{
-		ch1[i] = parseFloat(ch1[i]);
-		ch2[i] = parseFloat(ch2[i]);
-		ch3[i] = parseFloat(ch3[i]);
+		vge[i] = parseFloat(vge[i]);
+		vce[i] = parseFloat(vce[i]);
+		ice[i] = parseFloat(ice[i]);
 	}
 	
-	var DataVge = SiC_GD_Filter(ch1);
-	var DataVce = SiC_GD_Filter(ch3, 10);
-	var DataIce = SiC_GD_Filter(ch2, 50);
+	var DataVge = SiC_GD_Filter(vge, VgeMul);
+	var DataVce = SiC_GD_Filter(vce, VceMul);
+	var DataIce = SiC_GD_Filter(ice, IceMul);
 	
-	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, HScale : HScale};
-}
-
-function SiC_GD_GetCurvesEmuOFF()
-{
-	var HScale = 1e-7;
-	
-	var ch1 = load("data/ch1_off.csv");
-	var ch2 = load("data/ch2_off.csv");
-	var ch3 = load("data/ch3_off.csv");
-	
-	for (var i = 0; i < ch1.length; ++i)
-	{
-		ch1[i] = parseFloat(ch1[i]);
-		ch2[i] = parseFloat(ch2[i]);
-		ch3[i] = parseFloat(ch3[i]);
-	}
-	
-	var DataVge = SiC_GD_Filter(ch1);
-	var DataVce = SiC_GD_Filter(ch3, 10);
-	var DataIce = SiC_GD_Filter(ch2, 50);
-	
-	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, HScale : HScale};
+	return {Vge : DataVge, Vce : DataVce, Ice : DataIce, TimeStep : TimeStep};
 }
