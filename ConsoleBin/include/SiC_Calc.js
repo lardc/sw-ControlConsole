@@ -37,12 +37,13 @@ function SiC_CALC_SignalRiseFall(Signal, TimeStep, LowPoint)
 {
 	// find plate max value
 	var S_amp = 0;
-	var rise_mode = (Signal[0] < Signal[Signal.length - 1]) ? 1 : 0;
+	var rise_mode = (Signal[0] < Signal[Signal.length - 1]) ? true : false;
 	
 	// find amplitude
 	for (var i = 0; i < sic_calc_rf_max_zone; ++i)
 		S_amp += Signal[rise_mode ? (Signal.length - 1 - i) : i];
 	S_amp /= sic_calc_rf_max_zone;
+	var S_max = SiC_GD_MAX(Signal).Value;
 	
 	// find rise/fall zone
 	var t_min = 0;
@@ -51,12 +52,13 @@ function SiC_CALC_SignalRiseFall(Signal, TimeStep, LowPoint)
 	if (typeof LowPoint === 'undefined')
 		LowPoint = 0.1;
 	
+	var BaseValue = rise_mode ? S_amp : S_max;
 	for (var i = 0; i < Signal.length; ++i)
 	{
-		if (Signal[rise_mode ? i : (Signal.length - 1 - i)] > (S_amp * LowPoint) && t_min == 0)
+		if (Signal[rise_mode ? i : (Signal.length - 1 - i)] >= (BaseValue * LowPoint) && t_min == 0)
 			t_min = (rise_mode ? i : (Signal.length - 1 - i));
 		
-		if (Signal[rise_mode ? i : (Signal.length - 1 - i)] > (S_amp * 0.9) && t_max == 0)
+		if (Signal[rise_mode ? i : (Signal.length - 1 - i)] >= (BaseValue * 0.9) && t_max == 0)
 			t_max = (rise_mode ? i : (Signal.length - 1 - i));
 	}
 	
@@ -65,7 +67,6 @@ function SiC_CALC_SignalRiseFall(Signal, TimeStep, LowPoint)
 	t_rf = t_rf * 1e9;
 	var S_rf = Math.abs((Signal[t_max] - Signal[t_min]) / t_rf);
 	S_rf = S_rf * 1e3;
-	var S_max = SiC_GD_MAX(Signal).Value;
 	
 	return {S_max : S_max, S_amp : S_amp, S_rf : S_rf, t_rf : t_rf, t_min : t_min, t_max : t_max};
 }
