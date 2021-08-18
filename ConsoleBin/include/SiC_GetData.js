@@ -183,18 +183,26 @@ function SiC_GD_VgeGetDataWrapper(Channel)
 		return [];
 }
 
-function SiC_GD_SetEmuSettings(VgeN, VceN, IceN)
+function SiC_GD_SetEmuSettings(FileNumber)
 {
-	sic_gd_emu_name_vge = VgeN;
-	sic_gd_emu_name_vce = VceN;
-	sic_gd_emu_name_ice = IceN;
+	var NameStr = "0000" + FileNumber;
+	NameStr = "F" + (NameStr).substr(NameStr.length - 4) + "CH";
+	
+	sic_gd_emu_name_vge = NameStr + sic_ch_vge + ".CSV";
+	sic_gd_emu_name_vce = NameStr + sic_ch_vce + ".CSV";
+	sic_gd_emu_name_ice = NameStr + sic_ch_ice + ".CSV";
 	
 	sic_gd_emu = true;
 }
 
 function SiC_GD_ParseTekCSV(FileName)
 {
-	var data = loadn("data\\" + FileName);
+	var FilePath = "data\\" + FileName;
+	
+	if (!exists(FilePath))
+		return [];
+	
+	var data = loadn(FilePath);
 	var result = [];
 	
 	for (var i = 0; i < data.length; ++i)

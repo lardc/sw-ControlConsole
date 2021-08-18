@@ -207,9 +207,12 @@ function scope(ComPort, ch_Vge, ch_Ice, ch_Vce)
 	sic_ch_ice = ch_Ice;
 	sic_ch_vce = ch_Vce;
 	
-	SiC_GD_Init(ComPort);
+	if (ComPort != 0)
+	{
+		SiC_GD_Init(ComPort);
+		print("Идентификатор осциллографа: " + TEK_Exec("id?") + "\n");
+	}
 	
-	print("Идентификатор осциллографа: " + TEK_Exec("id?") + "\n");
 	SiC_PrintChannelInfo();
 }
 
@@ -228,8 +231,13 @@ function SiC_PrintProbeInfo()
 	print("Делитель напряжения Vce:\t1:" + sic_gd_vce_probe);
 }
 
-function calc()
+function calc(FileNumber)
 {
+	if(FileNumber)
+		SiC_GD_SetEmuSettings(FileNumber);
+	else
+		sic_gd_emu = false;
+	
 	SiC_PrintPN();
 	SiC_PrintSN();
 	var FileName = SiC_ComposeFileName();
