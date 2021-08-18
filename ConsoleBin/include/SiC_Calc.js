@@ -2,6 +2,10 @@ include("SiC_GetData.js")
 
 sic_calc_rf_max_zone = 50;
 
+sic_calc_rr_magic_A = 20;
+sic_calc_rr_magic_B = 12;
+sic_calc_rr_magic_C = 2;
+
 function SiC_CALC_Delay(Curves)
 {
 	var _Vge = Curves.Vge;
@@ -73,7 +77,7 @@ function SiC_CALC_Recovery(Curves, IsDiode)
 	var TimeStep = Curves.TimeStep;
 	
 	// line equation to find Ir0 point
-	var LineI = SiC_CALC_RecoveryGetXY(Current, IsDiode);
+	var LineI = SiC_CALC_RecoveryGetXY(Current);
 	
 	var I_PointMin = SiC_GD_MIN(Current);
 	var I_PointMax = SiC_GD_MAX(Current);
@@ -91,18 +95,23 @@ function SiC_CALC_Recovery(Curves, IsDiode)
 	}
 	
 	// adjust current data to find reverse recovery charge
-	var current_trim = [];
+	var CurrentTrim = [];
+	var CurrentCut = [];
 	for (var i = tr0; i < Current.length; ++i)
-		current_trim[i - tr0] = Current[i] - (i * LineI.k + LineI.b);
+	{
+		CurrentTrim.push(Current[i] - (i * LineI.k + LineI.b));
+		CurrentCut.push(Current[i]);
+	}
+	plot2(CurrentCut, CurrentTrim, 1, 0);
 	
 	// find Irrm
-	var Irrm_Point = SiC_GD_MAX(current_trim);
+	var Irrm_Point = SiC_GD_MAX(CurrentTrim);
 	var Irrm = Irrm_Point.Value;
 	
 	// find aux curve points
-	var AuxPoint090 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.9);
-	var AuxPoint025 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.25);
-	var AuxPoint002 = SiC_CALC_FindAuxPoint(current_trim, Irrm_Point.Index, Irrm * 0.02);
+	var AuxPoint090 = SiC_CALC_FindAuxPoint(CurrentTrim, Irrm_Point.Index, Irrm * 0.9);
+	var AuxPoint025 = SiC_CALC_FindAuxPoint(CurrentTrim, Irrm_Point.Index, Irrm * 0.25);
+	var AuxPoint002 = SiC_CALC_FindAuxPoint(CurrentTrim, Irrm_Point.Index, Irrm * 0.02);
 	
 	var k_r = (AuxPoint090.Y - AuxPoint025.Y) / (AuxPoint090.X - AuxPoint025.X);
 	var b_r = AuxPoint090.Y - k_r * AuxPoint090.X;
@@ -110,38 +119,31 @@ function SiC_CALC_Recovery(Curves, IsDiode)
 	// find trr
 	var trr_index = Math.round(-b_r / k_r);
 	var trr = -b_r / k_r * TimeStep * 1e9;
-	var Qrr = SiC_CALC_Integrate(current_trim, TimeStep, 0, trr_index - 1) * 1e6;
+	var Qrr = SiC_CALC_Integrate(CurrentTrim, TimeStep, 0, trr_index - 1) * 1e6;
 	
 	var trr2 = (trr_index - Irrm_Point.Index) * TimeStep * 1e9;
 	var trr1 = trr - trr2;
 	
 	// calculate recovery energy
 	var Power = [];
+	var MaxVoltage = SiC_GD_MAX(Voltage).Value;
 	for (var i = tr0; i < (tr0 + AuxPoint002.X); ++i)
-		Power[i - tr0] = Voltage[i] * (Current[i] - (i * LineI.k + LineI.b));
+		Power.push((MaxVoltage - Voltage[i]) * (Current[i] - (i * LineI.k + LineI.b)));
 	var Energy = SiC_CALC_Integrate(Power, TimeStep, 0, Power.length - 1) * 1e3;
 	
 	return {trr : trr, trr1 : trr1, trr2 : trr2, Irrm : Irrm, Qrr : Qrr, Energy : Energy};
 }
 
-function SiC_CALC_RecoveryGetXY(Data, IsDiode)
+function SiC_CALC_RecoveryGetXY(Data)
 {
 	var MaxPoint = SiC_GD_MAX(Data);
+	var Fraction = Math.round((Data.length - MaxPoint.Index) / sic_calc_rr_magic_A);
 	
-	var StartIndex = MaxPoint.Index + Math.round((Data.length - MaxPoint.Index) * 0.5);
-	var EndIndex = Data.length - 1;
+	var StartIndex = MaxPoint.Index + Fraction * sic_calc_rr_magic_B;
+	var EndIndex = Data.length - Fraction * sic_calc_rr_magic_C;
 	
-	var k, b;
-	if (IsDiode)
-	{
-		k = (Data[StartIndex] - Data[EndIndex]) / (StartIndex - EndIndex);
-		b = Data[StartIndex] - k * StartIndex;
-	}
-	else
-	{
-		k = 0;
-		b = SiC_GD_AvgData(Data, StartIndex, EndIndex);
-	}
+	var k = (Data[StartIndex] - Data[EndIndex]) / (StartIndex - EndIndex);
+	var b = Data[StartIndex] - k * StartIndex;
 	
 	return {k : k, b : b}
 }
