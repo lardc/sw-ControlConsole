@@ -689,14 +689,14 @@ function CdVdt_CollectdVdt(Repeat)
 			
 			for (var i = 0; i < cdvdt_RatePoint.length; i++)
 			{
-				sleep(500);
+				sleep(1000);
 				dev.w(129, cdvdt_RatePoint[i]);		
 				
 				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], (cdvdt_RatePoint[i]) / cdvdt_DeviderRate);
-				sleep(500);
+				sleep(1500);
 				
 				CdVdt_ClearDisplay();
-				sleep(500);
+				sleep(1500);
 				
 				var DesiredHalfTimeRise = ((VoltageArray[k] / 2) / (cdvdt_RatePoint[i] / cdvdt_DeviderRate) * 1e-6).toExponential();
 				
@@ -705,7 +705,7 @@ function CdVdt_CollectdVdt(Repeat)
 				{			
 					while(_dVdt_Active()) sleep(50);
 					dev.c(100);
-					sleep(1000);
+					sleep(1500);
 				}
 
 				sleep(1500);
