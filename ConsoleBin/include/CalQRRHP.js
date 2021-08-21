@@ -125,7 +125,7 @@ function CAL_VerifyQrr()
 
 function CAL_CollectTq(IterationsCount)
 {
-	cal_CntTotal = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex) * IterationsCount;
+	cal_CntTotal = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex + 1) * IterationsCount;
 	cal_CntDone = 1;
 	
 	for (var i = 0; i < IterationsCount; i++)
@@ -182,7 +182,7 @@ function CAL_CollectTq(IterationsCount)
 
 function CAL_CollectQrr(IterationsCount)
 {
-	cal_CntTotal = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex ) * IterationsCount;
+	cal_CntTotal = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex + 1) * IterationsCount;
 	cal_CntDone = 1;
 	
 	for (var i = 0; i < IterationsCount; i++)
@@ -198,7 +198,7 @@ function CAL_CollectQrr(IterationsCount)
 			qrr_print = 0;
 			qrr_single = 1;
 			
-			QRR_Start(0, DirectCurrentTest, CurrentRateTest[j], DirectVoltageTest, VoltageRateTest)
+			QRR_Start(0, DirectCurrentTest, CurrentRateTest[j], DirectVoltageTest, DirectVoltageRateTest)
 			
 			qrr_print = 1;
 			qrr_single = 0;
@@ -423,7 +423,7 @@ function CAL_TekInitTq()
 	TEK_ChannelInit(cal_chMeasureU, "100", "50");
 	TEK_Send("ch" + cal_chMeasureU + ":position -1");
 	
-	TEK_TriggerInit(cal_chMeasureI, "0");
+	TEK_TriggerInit(cal_chMeasureU, "-50");
 	TEK_Send("trigger:main:edge:slope raise");
 }
 //--------------------
@@ -440,37 +440,37 @@ function CAL_HorizontalScale(CurrentRate)
 	switch(CurrentRate * 10)
 	{
 		case 10:
-			TEK_Horizontal("10e-6", "0");
+			TEK_Horizontal("10e-6", "-10e-6");
 			break;
 		case 15:
-			TEK_Horizontal("10e-6", "0");
+			TEK_Horizontal("10e-6", "-10e-6");
 			break;
 		case 20:
-			TEK_Horizontal("5e-6", "0");
+			TEK_Horizontal("10e-6", "-10e-6");
 			break;
 		case 50:
-			TEK_Horizontal("5e-6", "0");
+			TEK_Horizontal("5e-6", "-5e-6");
 			break;
 		case 100:
-			TEK_Horizontal("5e-6", "0");
+			TEK_Horizontal("5e-6", "-5e-6");
 			break;
 		case 150:
-			TEK_Horizontal("5e-6", "0");
+			TEK_Horizontal("5e-6", "-5e-6");
 			break;
 		case 200:
-			TEK_Horizontal("5e-6", "0");
+			TEK_Horizontal("5e-6", "-5e-6");
 			break;
 		case 300:
-			TEK_Horizontal("2.5e-6", "0");
+			TEK_Horizontal("2.5e-6", "-2.5e-6");
 			break;
 		case 500:
-			TEK_Horizontal("2.5e-6", "0");
+			TEK_Horizontal("2.5e-6", "-2.5e-6");
 			break;
 		case 600:
-			TEK_Horizontal("2.5e-6", "0");
+			TEK_Horizontal("2.5e-6", "-2.5e-6");
 			break;
 		case 1000:
-			TEK_Horizontal("2.5e-6", "0");
+			TEK_Horizontal("2.5e-6", "-2.5e-6");
 			break;
 	}
 }

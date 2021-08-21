@@ -8,17 +8,17 @@ include("TestLSLH.js")
 include("TestQRRHP.js")
 
 // SL
-mme_sl_current_ih = 100;
+mme_sl_current_ih = 2000; // Уставка по току для измерения параметра IH связкой SL-GTU
 // CSCU
 mme_cs_def_force = 5; // Усилие зажатия минимальная в кН
 mme_cs_force = 25; // Усилие зажатия максимальная в кН
-mme_cs_height = 27; // Высота прибора в мм
+mme_cs_height = 30; // Высота прибора в мм
 // BVT HP
 mme_bvt_current = 190; // Ток отсечки в мА
 mme_bvt_voltage = 4400; // Задание амплитуды напряжения в В
 // ATU HP
-mme_atu_power = 2000; // Ударная мощность обратных потерь в Вт
-mme_atu_precurrent = 150; // Задание амплитуды препульса в мА
+mme_atu_power = 0; // Ударная мощность обратных потерь в Вт
+mme_atu_precurrent = 0; // Задание амплитуды препульса в мА
 // CROVU
 mme_crovu_voltage = 3000; // Задание амплитуды напряжения в В
 mme_crovu_dvdt = 500; // Задание скорости нарастания напряжения в В/мкс
@@ -37,32 +37,32 @@ mme_BVTD =	2;
 mme_BVTR =	3;
 mme_CSDEF =	4;
 mme_CSMAX =	5;
-mme_CROVU = 6;
+mme_CROVU =	6;
 mme_ATU = 	7;
 mme_QRR = 	8;
-mme_GTUSL = 9;
+mme_GTUSL =	9;
 
 // active blocks
 mme_use_GTU = 	1;
 mme_use_SL = 	1;
 mme_use_BVT =	1;
 mme_use_CS = 	1;
-mme_use_CROVU = 1;
-mme_use_ATU = 	0;
+mme_use_CROVU =	1;
+mme_use_ATU = 	1;
 mme_use_QRR = 	0;
 
 // Номера id блоков
-mme_Nid_HMIU = 0;
-mme_Nid_CU = 1;
-mme_Nid_SL = 2; // может быть и id 9, смотрим в прошивку
-mme_Nid_GTU = 3;
-mme_Nid_BVT = 4;
-mme_Nid_CUext = 5;
-mme_Nid_CS = 6;
-mme_Nid_CROVU = 7;
-mme_Nid_SCTU = 8;
-mme_Nid_ATU = 9;
-mme_Nid_QRR = 10;
+mme_Nid_HMIU =	0;
+mme_Nid_CU =	1;
+mme_Nid_SL =	2; // может быть и id 9, смотрим в прошивку к блоку
+mme_Nid_GTU =	3;
+mme_Nid_BVT =	4;
+mme_Nid_CUext =	5;
+mme_Nid_CS =	6;
+mme_Nid_CROVU =	7;
+mme_Nid_SCTU =	8;
+mme_Nid_ATU =	9;
+mme_Nid_QRR =	10;
 
 // settings
 mme_plot = 0;	// Plot graphics
@@ -345,6 +345,7 @@ function MME_CS(Force)
 			dev.c(104);
 			while (dev.r(96) != 3) sleep(500);
 		}
+		// Проверка усилия зажатия на CS для необходимости изменения этого усилия
 		else if (Force == Math.ceil((dev.r(110) / 10)))
 		{
 			print("Already reached this force, kN: " + (dev.r(110) / 10));
@@ -393,21 +394,15 @@ function MME_GTUSL(Current)
 	
 	// activate sl
 	dev.nid(mme_Nid_SL);
-	//sl_rep = 1;
-	dev.w(162, 1);
 	dev.w(163, 1);
 	LSLH_StartMeasure(Current);
-	//SL_Sin(Current);
+	if (mme_plot) pl(dev.rafs(1));
 	
 	// read gtu
 	dev.nid(mme_Nid_GTU);
 	while(dev.r(192) == 5) sleep(500);
 	if (dev.r(197) == 2) print("problem: " + dev.r(196));
 	print("Ih,   mA: " + dev.r(201));
-	//print("Trig    : " + dev.r(230));
-	//print("Toler   : " + dev.r(231));
-	//print("Finish  : " + dev.r(232));
-	plot(dev.rafs(1), 1, 0);
 	
 	// recommutate
 	MME_CU(111);
@@ -490,13 +485,13 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 	if (!MME_IsReady())
 	{
 		print("System not ready, exit");
-		print("-------------");
+		print("----------------------");
 		return;
 	}
 	else
 	{
 		print("System is ready");
-		print("-------------");
+		print("---------------");
 	}
 	
 	for (var i = 0; i < Counter; i++)
@@ -570,8 +565,8 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					break;
 				case mme_GTUSL:
 					print("#MME_GTUSL - IH GOST");
-					MME_CU(116);
 					MME_CS(mme_cs_force);
+					MME_CU(116);
 					MME_GTUSL(mme_sl_current_ih);
 					MME_CU(110);
 					break;	
