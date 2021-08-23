@@ -7,6 +7,10 @@ cbvt_VmaxAC = 8000;		// in V
 cbvt_VminAC = 1000;		// in V
 cbvt_VstpAC = 500;		// in V
 
+cbvt_VoltageProbeRatio = 1000;	// Коэффициент деление пробника напряжения
+cbvt_StartVLow = 100;	// Стартовое напряжение для напряжений до 1000В (В)
+cbvt_StartVHigh = 500;	// Стартовое напряжение для напряжений от 1000В (В)
+
 cbvt_VmaxDC	= 4500;		// in V
 //
 cbvt_Shunt	= 99.45;	// in Ohms
@@ -71,11 +75,14 @@ cbvt_chMeasureI = 1;
 
 // Iterations
 cbvt_Iterations = 3;
+cbvt_AvgLevel = 4;
+cbvt_UseAvg = true;
 
 // Measurement errors
 EUosc = 3;
 ER = 1;
 E0 = 0;
+cbvt_EnableSumError = false;
 
 function CBVT_CalibrateV()
 {
@@ -183,7 +190,8 @@ function CBVT_VerifyV()
 		scattern(cbvt_v_sc, cbvt_v_err, "Voltage (in V)", "Error (in %)", "Voltage relative error");
 		
 		// Plot summary error distribution
-		scattern(cbvt_v_sc, cbvt_v_err_sum, "Voltage (in V)", "Error (in %)", "Voltage summary error");
+		if(cbvt_EnableSumError)
+			scattern(cbvt_v_sc, cbvt_v_err_sum, "Voltage (in V)", "Error (in %)", "Voltage summary error");
 	}
 }
 
@@ -223,7 +231,8 @@ function CBVT_VerifyIx(FileName)
 		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Current relative error");
 
 		// Plot relative error distribution
-		scattern(cbvt_i_sc, cbvt_i_err_sum, "Current (in mA)", "Error (in %)", "Current summary error");
+		if(cbvt_EnableSumError)
+			scattern(cbvt_i_sc, cbvt_i_err_sum, "Current (in mA)", "Error (in %)", "Current summary error");
 	}
 }
 
@@ -342,8 +351,9 @@ function CBVT_Collect(VoltageValues, IterationsCount, PrintMode)
 	}
 	print("-----------");
 	
+	CBVT_UpdateVoltageProbeRatio(cbvt_chMeasureV, cbvt_VoltageProbeRatio);
 	// Acquire mode
-	TEK_AcquireAvg(4);
+	cbvt_UseAvg ? TEK_AcquireAvg(cbvt_AvgLevel) : TEK_AcquireSample();
 	// Init measurement
 	CBVT_TekMeasurement(cbvt_chMeasureV);
 	CBVT_TekMeasurement(cbvt_chMeasureI);
@@ -369,7 +379,6 @@ function CBVT_Collect(VoltageValues, IterationsCount, PrintMode)
 	dev.w(130, CBVT_GetILim() * 10);											// Current limit
 	dev.w(132, bvt_test_time);													// Plate time
 	dev.w(133, 30);																// Rise rate
-	dev.w(134, bvt_start_v);													// Start voltage
 	dev.w(136, Math.round(50 / ((cbvt_MaxP == 0) ? cbvt_Freq1 : cbvt_Freq2)));	// Frequency divisor
 	
 	CBVT_TekScale(cbvt_chMeasureV, cbvt_Vmax);
@@ -388,7 +397,8 @@ function CBVT_Collect(VoltageValues, IterationsCount, PrintMode)
 			TEK_TriggerLevelF(VoltageValues[j] / 2);
 			sleep(200);
 			
-			dev.w(131, VoltageValues[j]);
+			dev.w(134, (VoltageValues[j] < 1000) ? cbvt_StartVLow : cbvt_StartVHigh);	// Start voltage
+			dev.w(131, VoltageValues[j]);	// Target voltage
 			CBVT_Probe(PrintMode);
 			
 			if (anykey()) return 0;
@@ -590,7 +600,7 @@ function CBVT_Init(portBVT, portTek, channelMeasureV, channelMeasureI)
 	TEK_PortInit(portTek);
 	
 	// Init channels
-	TEK_ChannelInit(cbvt_chMeasureV, "1000", "100");
+	TEK_ChannelInit(cbvt_chMeasureV, cbvt_VoltageProbeRatio, "100");
 	TEK_ChannelInit(cbvt_chMeasureI, "1", "1");
 	
 	// Display channels
@@ -601,6 +611,11 @@ function CBVT_Init(portBVT, portTek, channelMeasureV, channelMeasureI)
 		else
 			TEK_ChannelOff(i);
 	}
+}
+
+function CBVT_UpdateVoltageProbeRatio(Channel, Ratio)
+{
+	TEK_Send("ch" + Channel + ":probe " + Ratio);
 }
 
 function CBVT_GetILim()
