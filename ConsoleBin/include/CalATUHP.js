@@ -16,7 +16,6 @@ catu_ShuntRes	= 0.05;			// Current shunt resistanse (in Ohms)
 // Select software
 catu_new_soft = 1;
 
-
 // Calibrate I limits (in mA)
 catu_Imin = 1000;
 // catu_Imax is automatically calculated from MaxVoltage or MaxPower and resistance
@@ -26,6 +25,9 @@ catu_Istp = 1000;
 catu_Pmin = 2000;
 // catu_Pmax is equal catu_Power
 catu_Pstp = 7000;
+
+// Automatic selection of the maximum current limit for calibration
+catu_high_current = 0;
 
 // Counters
 catu_cntTotal = 0;
@@ -73,7 +75,7 @@ catu_i_corr = [];
 function CATU_CalibrateI()
 {
 	// Prepare variables
-	var catu_high_current = 1; // Для расчета максимального тока в диапазоне тока
+	catu_high_current = 1;
 	var CurrentArray = CATU_GetCurrentRange();
 
 	if (!Array.isArray(CurrentArray))
@@ -103,6 +105,7 @@ function CATU_CalibrateI()
 function CATU_CalibrateV()
 {
 	// Prepare variables
+	catu_high_current = 0;
 	var CurrentArray = CATU_GetCurrentRange();
 	if (!Array.isArray(CurrentArray))
 		return;
@@ -128,7 +131,7 @@ function CATU_CalibrateV()
 function CATU_VerifyI()
 {
 	// Prepare variables
-	var catu_high_current = 1; // Для расчета максимального тока в диапазоне тока
+	catu_high_current = 1;
 	var CurrentArray = CATU_GetCurrentRange();
 
 	if (!Array.isArray(CurrentArray))
@@ -150,6 +153,7 @@ function CATU_VerifyI()
 function CATU_VerifyV()
 {
 	// Prepare variables
+	catu_high_current = 0;
 	var CurrentArray = CATU_GetCurrentRange();
 	if (!Array.isArray(CurrentArray))
 		return;
@@ -168,6 +172,7 @@ function CATU_VerifyV()
 function CATU_VerifyP()
 {
 	// Prepare variables
+	catu_high_current = 0;
 	var PowerArray = CGEN_GetRange(catu_Pmin, catu_Power, catu_Pstp);
 
 	CATU_ResetA();
