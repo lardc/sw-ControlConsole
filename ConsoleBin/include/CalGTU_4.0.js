@@ -816,7 +816,8 @@ function CGTU_TekCursor(Channel)
 
 function CGTU_TekScale(Channel, Value)
 {
-	TEK_ChannelScale(Channel, Value);
+	Value = Value / 7;
+	TEK_Send("ch" + Channel + ":scale " + Value);
 }
 
 function CGTU_Measure(Channel)

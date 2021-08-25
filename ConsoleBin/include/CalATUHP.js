@@ -5,7 +5,7 @@ include("CalGeneral.js")
 
 // Input params
 catu_LoadType	= 2;			// Load Type: 1-DUT; 2-Resistor;
-catu_LoadR		= 1152;			// Load Resistance (in Ohms)
+catu_LoadR		= 24.88;			// Load Resistance (in Ohms)
 catu_Vmax		= 9000;			// Max output voltage (in V)
 catu_Power		= 75000;		// Max output power (in W)
 catu_LoadV		= 0;			// Fixed extra voltage for DUT (in V)
@@ -15,7 +15,6 @@ catu_ShuntRes	= 0.05;			// Current shunt resistanse (in Ohms)
 
 // Select software
 catu_new_soft = 1;
-
 
 // Calibrate I limits (in mA)
 catu_Imin = 1000;
@@ -27,13 +26,15 @@ catu_Pmin = 2000;
 // catu_Pmax is equal catu_Power
 catu_Pstp = 7000;
 
+// Automatic selection of the maximum current limit for calibration
+catu_high_current = 0;
+
 // Counters
 catu_cntTotal = 0;
 catu_cntDone = 0;
 
 // Iterations
-catu_Iterations = 3
-;
+catu_Iterations = 3;
 
 // Channels
 catu_chMeasureV = 1;
@@ -74,7 +75,9 @@ catu_i_corr = [];
 function CATU_CalibrateI()
 {
 	// Prepare variables
+	catu_high_current = 1;
 	var CurrentArray = CATU_GetCurrentRange();
+
 	if (!Array.isArray(CurrentArray))
 		return;
 
@@ -87,8 +90,8 @@ function CATU_CalibrateI()
 		CATU_SaveIset("atuhp_iset");
 
 		// Plot relative error distribution
-		scattern(catu_i_sc, catu_i_err, "Current (in mA)", "Error (in %)", "Current relative error"); sleep(200);
-		scattern(catu_i_set, catu_iset_err, "Current (in mA)", "Error (in %)", "Current setpoint relative error");
+		scattern(catu_i_sc, catu_i_err, "Current (in A)", "Error (in %)", "Current relative error"); sleep(200);
+		scattern(catu_i_set, catu_iset_err, "Current (in A)", "Error (in %)", "Current setpoint relative error");
 
 		// Calculate correction
 		catu_i_corr = CGEN_GetCorrection2("atuhp_i");
@@ -102,6 +105,7 @@ function CATU_CalibrateI()
 function CATU_CalibrateV()
 {
 	// Prepare variables
+	catu_high_current = 0;
 	var CurrentArray = CATU_GetCurrentRange();
 	if (!Array.isArray(CurrentArray))
 		return;
@@ -127,7 +131,9 @@ function CATU_CalibrateV()
 function CATU_VerifyI()
 {
 	// Prepare variables
+	catu_high_current = 1;
 	var CurrentArray = CATU_GetCurrentRange();
+
 	if (!Array.isArray(CurrentArray))
 		return;
 
@@ -139,14 +145,15 @@ function CATU_VerifyI()
 		CATU_SaveIset("atuhp_iset_fixed");
 
 		// Plot relative error distribution
-		scattern(catu_i_sc, catu_i_err, "Current (in mA)", "Error (in %)", "Current relative error"); sleep(200);
-		scattern(catu_i_set, catu_iset_err, "Current (in mA)", "Error (in %)", "Current setpoint relative error");
+		scattern(catu_i_sc, catu_i_err, "Current (in A)", "Error (in %)", "Current relative error"); sleep(200);
+		scattern(catu_i_set, catu_iset_err, "Current (in A)", "Error (in %)", "Current setpoint relative error");
 	}
 }
 
 function CATU_VerifyV()
 {
 	// Prepare variables
+	catu_high_current = 0;
 	var CurrentArray = CATU_GetCurrentRange();
 	if (!Array.isArray(CurrentArray))
 		return;
@@ -165,6 +172,7 @@ function CATU_VerifyV()
 function CATU_VerifyP()
 {
 	// Prepare variables
+	catu_high_current = 0;
 	var PowerArray = CGEN_GetRange(catu_Pmin, catu_Power, catu_Pstp);
 
 	CATU_ResetA();
@@ -198,8 +206,11 @@ function CATU_GetCurrentRange()
 		// For resistor
 		var I_v = Math.round(1000 * catu_Vmax / catu_LoadR);
 		var I_p = Math.round(1000 * Math.sqrt(catu_Power / catu_LoadR));
-		catu_Imax = (I_v < I_p) ? I_v : I_p; // Для калибровки напряжения, и верификации мощности разкоммитить
-		//catu_Imax = 45000; // Для калибровки тока разкоммитить
+		if (catu_high_current == 1)
+			catu_Imax = 45000; // Для калибровки/верификации тока
+		else
+			catu_Imax = (I_v < I_p) ? I_v : I_p; // Для калибровки/верификации напряжения и мощности
+
 	}
 	else
 	{
