@@ -168,8 +168,7 @@ function CdVdt_MeasureVfast()
 
 function CdVdt_MeasureRate()
 {
-	var outrate = (TEK_Measure(3) * 0.8 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(2);
-	return outrate;
+	return (TEK_Measure(3) * 0.8 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(2);
 }
 
 function CdVdt_TekVScale(Channel, Voltage)
@@ -274,12 +273,11 @@ function CdVdt_CellCalibrateRate(CellNumber)
 		var v = CdVdt_MeasureVfast();
 		if(cdvdt_def_UseHandMeasure)
 		{
-			var rate = 0;
 			print("Enter delta voltage value (in V):");
 			var dV	=	readline();
 			print("Enter delta time value (in us):");
 			var dt	=	readline();
-			rate = Math.round(dV / dt);
+			var rate = (dV / dt).toFixed(2);
 			CdVdt_TekMeasurement(1);
 			sleep(1000);
 		}
@@ -405,9 +403,9 @@ function CdVdt_CollectFixedRate(Repeat)
 			for (var i = 0; i < cdvdt_RatePoint.length; i++)
 			{
 				sleep(1000);
-				dev.w(129, cdvdt_RatePoint[i])
+				dev.w(129, cdvdt_RatePoint[i] * cdvdt_DeviderRate)
 				
-				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], (cdvdt_RatePoint[i]) / cdvdt_DeviderRate);
+				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], cdvdt_RatePoint[i]);
 				sleep(500);
 				
 				CdVdt_ClearDisplay();
@@ -428,28 +426,25 @@ function CdVdt_CollectFixedRate(Repeat)
 				var v = CdVdt_MeasureVfast();
 				if(cdvdt_def_UseHandMeasure)
 				{
-					var rate = 0;
 					print("Enter delta voltage value (in V):");
 					var dV	=	readline();
 					print("Enter delta time value (in us):");
 					var dt	=	readline();
-					rate = Math.round(dV / dt);
+					var rate = (dV / dt).toFixed(2);
 					CdVdt_TekMeasurement(1);
 					sleep(1000);
 				}
 				else
 					var rate = CdVdt_MeasureRate();
 				
-				var OutRate = (rate * cdvdt_DeviderRate);
-				
 				print("dVdt set,  V/us: " + cdvdt_RatePoint[i]);
-				print("dV/dt osc, V/us: " + OutRate);
-				print("Vset,         V: " + VoltageArray[k]);
+				print("dV/dt osc, V/us: " + rate);
+				print("V set,        V: " + VoltageArray[k]);
 				print("V osc,        V: " + v);
 				
 				cntDone++;
 				print("-- result " + cntDone + " of " + cntTotal + " --");
-				CdVdt_StoreVoltageAndFixRate(cdvdt_RatePoint[i], OutRate, VoltageArray[k], v);
+				CdVdt_StoreVoltageAndFixRate(cdvdt_RatePoint[i], rate, VoltageArray[k], v);
 				
 				if (anykey()){ p("Stopped from user!"); return};
 			}
@@ -643,7 +638,7 @@ function CdVdt_ResourceTest(Repeat)
 			for (var i = 0; i < cdvdt_RatePoint.length; i++)
 			{
 				sleep(1000);
-				dev.w(129, cdvdt_RatePoint[i])
+				dev.w(129, cdvdt_RatePoint[i] * cdvdt_DeviderRate)
 				sleep(1000);
 				
 				// Start pulse
@@ -689,15 +684,15 @@ function CdVdt_CollectdVdt(Repeat)
 			for (var i = 0; i < cdvdt_RatePoint.length; i++)
 			{
 				sleep(1000);
-				dev.w(129, cdvdt_RatePoint[i]);
+				dev.w(129, cdvdt_RatePoint[i] * cdvdt_DeviderRate);
 				
-				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], (cdvdt_RatePoint[i]) / cdvdt_DeviderRate);
+				CdVdt_TekHScale(cdvdt_chMeasure, VoltageArray[k], cdvdt_RatePoint[i]);
 				sleep(1500);
 				
 				CdVdt_ClearDisplay();
 				sleep(1500);
 				
-				var DesiredHalfTimeRise = ((VoltageArray[k] / 2) / (cdvdt_RatePoint[i] / cdvdt_DeviderRate) * 1e-6).toExponential();
+				var DesiredHalfTimeRise = ((VoltageArray[k] / 2) / cdvdt_RatePoint[i] * 1e-6).toExponential();
 				
 				// Start pulse
 				for(var CounterAverages = 0; CounterAverages < cdvdt_def_UseAverage; CounterAverages++)
@@ -714,29 +709,29 @@ function CdVdt_CollectdVdt(Repeat)
 				
 				var v = CdVdt_CursorMeasureV();
 				
-				var RealHalfTimeRise = ((v / 2) / (cdvdt_RatePoint[i] / cdvdt_DeviderRate) * 1e-6).toExponential();
+				var RealHalfTimeRise = ((v / 2) / cdvdt_RatePoint[i] * 1e-6).toExponential();
 				
-				var FirstTimePoint =  (RealHalfTimeRise - ((0.97 * v / (cdvdt_RatePoint[i] / cdvdt_DeviderRate))) * 1e-6).toExponential();
+				var FirstTimePoint =  (RealHalfTimeRise - (0.97 * v / cdvdt_RatePoint[i]) * 1e-6).toExponential();
 				
-				var SecondTimePoint = (RealHalfTimeRise - ((0.17 * v / (cdvdt_RatePoint[i] / cdvdt_DeviderRate))) * 1e-6).toExponential();
+				var SecondTimePoint = (RealHalfTimeRise - (0.17 * v / cdvdt_RatePoint[i]) * 1e-6).toExponential();
 				
 				CdVdt_SetTekCursor(cdvdt_chMeasure, FirstTimePoint, SecondTimePoint);
 				
 				var OutRate = CdVdt_MeasuredVdt(cdvdt_chMeasure);
 				
-				var dVdt_err = (((OutRate * cdvdt_DeviderRate - cdvdt_RatePoint[i]) / cdvdt_RatePoint[i]) * 100).toFixed(2);
-				var v_err = (((v - VoltageArray[k]) / VoltageArray[k]) * 100).toFixed(2);
+				var dVdt_err = ((OutRate - cdvdt_RatePoint[i]) / cdvdt_RatePoint[i] * 100).toFixed(2);
+				var v_err = ((v - VoltageArray[k]) / VoltageArray[k] * 100).toFixed(2);
 				
 				print("dVdt set,  V/us: " + cdvdt_RatePoint[i]);
-				print("dV/dt osc, V/us: " + OutRate * cdvdt_DeviderRate);
+				print("dV/dt osc, V/us: " + OutRate);
 				print("dV/dt err,    %: " + dVdt_err);
-				print("Vset,         V: " + VoltageArray[k]);
+				print("V set,        V: " + VoltageArray[k]);
 				print("V osc,        V: " + v);
 				print("V err,        %: " + v_err);
 				
 				cntDone++;
 				print("-- result " + cntDone + " of " + cntTotal + " --");
-				CdVdt_StoreVoltageAndFixRate(cdvdt_RatePoint[i], OutRate * cdvdt_DeviderRate, VoltageArray[k], v);
+				CdVdt_StoreVoltageAndFixRate(cdvdt_RatePoint[i], OutRate, VoltageArray[k], v);
 				
 				if (anykey()){ p("Stopped from user!"); return};
 			}
