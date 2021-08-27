@@ -58,7 +58,8 @@ function GTU_Gate()
 		if (dev.r(197) == 2) print("#Problem: " + dev.r(196));
 	}
 	
-	print("Igt,  mA: " + dev.r(199));
+	var igt = (dev.r(199) + dev.r(232) / 1000).toFixed(2);
+	print("Igt,  mA: " + igt);
 	print("Vgt,  mV: " + dev.r(200));
 	
 	gtu_igt.push(dev.r(199));

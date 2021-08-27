@@ -498,7 +498,7 @@ function CGTU_Probe(ProbeCMD)
 	if (ProbeCMD == 110)
 	{
 		f = CGTU_Measure(cgtu_chMeasureGate);
-		var vgt = dev.r(204);
+		var vgt = (dev.r(204) + dev.r(233) / 1000).toFixed(2);
 		var vgt_sc = f;
 		var vgt_set = dev.r(130);
 		
@@ -523,8 +523,8 @@ function CGTU_Probe(ProbeCMD)
 	if (ProbeCMD == 111)
 	{
 		f = CGTU_Measure(cgtu_chMeasureGate);
-		var igt = dev.r(204);
-		var igt_sc = (f / cgtu_ResGate).toFixed(1);
+		var igt = (dev.r(204) + dev.r(233) / 1000).toFixed(2);
+		var igt_sc = (f / cgtu_ResGate).toFixed(2);
 		var igt_set = dev.r(131);
 		
 		// gtu data
@@ -549,7 +549,7 @@ function CGTU_Probe(ProbeCMD)
 	if (ProbeCMD == 112)
 	{
 		f = CGTU_Measure(cgtu_chMeasurePower);
-		var vd = dev.r(204);
+		var vd = (dev.r(204) + dev.r(233) / 1000).toFixed(2);
 		var vd_sc = f;
 		var vd_set = dev.r(128);
 		
@@ -574,8 +574,8 @@ function CGTU_Probe(ProbeCMD)
 	if (ProbeCMD == 113)
 	{
 		f = CGTU_Measure(cgtu_chMeasurePower);
-		var id = dev.r(204);
-		var id_sc = (f / cgtu_ResPower).toFixed(1);
+		var id = (dev.r(204) + dev.r(233) / 1000).toFixed(2);
+		var id_sc = (f / cgtu_ResPower).toFixed(2);
 		var id_set = dev.r(129);
 		
 		// gtu data
