@@ -2,67 +2,91 @@ include("TestATU.js")
 include("TestBVT.js")
 include("TestCS.js")
 include("TestdVdt.js")
-//include("TestGTU_4.0.js") // не забываем что есть версия TestGTU_4.0.js
-include("TestGTU.js")
+include("TestGTU_4.0.js")
 include("TestLSLH.js")
 include("TestQRRHP.js")
 
 // SL
-mme_sl_current_ih = 2000; // Уставка по току для измерения параметра IH связкой SL-GTU
+mme_sl_current_ih = 100;
 // CSCU
-mme_cs_def_force = 5; // Усилие зажатия минимальная в кН
-mme_cs_force = 25; // Усилие зажатия максимальная в кН
-mme_cs_height = 30; // Высота прибора в мм
+mme_cs_def_force = 5; 			// Усилие зажатия минимальная в кН
+mme_cs_force = 25; 				// Усилие зажатия максимальная в кН
+mme_cs_height = 27; 			// Высота прибора в мм
 // BVT HP
-mme_bvt_current = 190; // Ток отсечки в мА
-mme_bvt_voltage = 4400; // Задание амплитуды напряжения в В
+mme_bvt_current = 20; 			// Ток отсечки в мА
+mme_bvt_voltage = 1500; 		// Задание амплитуды напряжения в В
 // ATU HP
-mme_atu_power = 0; // Ударная мощность обратных потерь в Вт
-mme_atu_precurrent = 0; // Задание амплитуды препульса в мА
+mme_atu_power = 2000; 			// Ударная мощность обратных потерь в Вт
+mme_atu_precurrent = 150; 		// Задание амплитуды препульса в мА
 // CROVU
-mme_crovu_voltage = 3000; // Задание амплитуды напряжения в В
-mme_crovu_dvdt = 500; // Задание скорости нарастания напряжения в В/мкс
+mme_crovu_voltage = 3000; 		// Задание амплитуды напряжения в В
+mme_crovu_dvdt = 500; 			// Задание скорости нарастания напряжения в В/мкс
 // QRR
 mme_qrr_current = 400;
 mme_qrr_current_rate = 30;
 mme_qrr_voltage = 1500;
 mme_qrr_voltage_rate = 1000;
-mme_qrr_mode = 1; // 0 - QRR, 1 - QRR Tq
+mme_qrr_mode = 1; 				// 0 - QRR, 1 - QRR Tq, 2 - only CROVU
 mme_counter = 0;
+// VGNT
+mme_vgnt_voltage = 1000;		// Anode voltage (in V)
+mme_vgnt_current = 5;			// Anode current (in mA)
 
 // definitions for MME_Test()
-mme_GTU =	0;
-mme_SL =	1;
-mme_BVTD =	2;
-mme_BVTR =	3;
+mme_GTU   =	0;
+mme_SL    =	1;
+mme_BVTD  =	2;
+mme_BVTR  =	3;
 mme_CSDEF =	4;
 mme_CSMAX =	5;
-mme_CROVU =	6;
-mme_ATU = 	7;
-mme_QRR = 	8;
-mme_GTUSL =	9;
+mme_CROVU = 6;
+mme_ATU   =	7;
+mme_QRR   =	8;
+mme_GTUSL = 9;
+mme_VGNT  = 10;
+mme_QRR_CROVU = 11;
 
 // active blocks
 mme_use_GTU = 	1;
 mme_use_SL = 	1;
 mme_use_BVT =	1;
-mme_use_CS = 	1;
-mme_use_CROVU =	1;
-mme_use_ATU = 	1;
-mme_use_QRR = 	0;
+mme_use_CS = 	0;
+mme_use_CROVU = 0;
+mme_use_ATU = 	0;
+mme_use_QRR = 	1;
 
 // Номера id блоков
-mme_Nid_HMIU =	0;
-mme_Nid_CU =	1;
-mme_Nid_SL =	2; // может быть и id 9, смотрим в прошивку к блоку
-mme_Nid_GTU =	3;
-mme_Nid_BVT =	4;
-mme_Nid_CUext =	5;
-mme_Nid_CS =	6;
-mme_Nid_CROVU =	7;
-mme_Nid_SCTU =	8;
-mme_Nid_ATU =	9;
-mme_Nid_QRR =	10;
+mme_Nid_HMIU = 0;
+mme_Nid_CU = 1;
+mme_Nid_SL = 2; // может быть и id 9, смотрим в прошивку
+mme_Nid_GTU = 3;
+mme_Nid_BVT = 4;
+mme_Nid_CUext = 5;
+mme_Nid_CS = 6;
+mme_Nid_CROVU = 7;
+mme_Nid_SCTU = 8;
+mme_Nid_ATU = 9;
+mme_Nid_QRR = 10;
+
+//
+mme_GTU_Result_Igt = 0;
+mme_GTU_Result_Vgt = 0;
+mme_GTU_Result_Ih  = 0;
+mme_GTU_Result_Il  = 0;
+mme_GTU_Result_Vgnt = 0;
+mme_GTU_Result_Ignt = 0;
+//
+mme_SL_Result_Utm = 0;
+//
+mme_BVT_Result_Idrm = 0;
+mme_BVT_Result_Irrm = 0;
+//
+mme_QRR_Result_Qrr = 0;
+mme_QRR_Result_trr = 0;
+mme_QRR_Result_Irr = 0;
+mme_QRR_Result_tq = 0;
+mme_QRR_Result_dVdt = 0;
+// 
 
 // settings
 mme_plot = 0;	// Plot graphics
@@ -345,7 +369,6 @@ function MME_CS(Force)
 			dev.c(104);
 			while (dev.r(96) != 3) sleep(500);
 		}
-		// Проверка усилия зажатия на CS для необходимости изменения этого усилия
 		else if (Force == Math.ceil((dev.r(110) / 10)))
 		{
 			print("Already reached this force, kN: " + (dev.r(110) / 10));
@@ -473,6 +496,23 @@ function MME_QRR()
 	}
 }
 
+function MME_QRR_CROVU()
+{
+	if (mme_use_QRR)
+	{
+		dev.nid(mme_Nid_QRR);
+		QRR_Start(2, mme_qrr_current, mme_qrr_current_rate, mme_qrr_voltage, mme_qrr_voltage_rate);
+	}
+}
+
+function MME_VGNT()
+{
+	if (mme_use_GTU && mme_use_BVT)
+	{
+		GTU_Vgnt(mme_vgnt_voltage, mme_vgnt_current);
+	}
+}
+
 function MME_ResetA()
 {
 	GTU_ResetA();
@@ -485,13 +525,13 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 	if (!MME_IsReady())
 	{
 		print("System not ready, exit");
-		print("----------------------");
+		print("-------------");
 		return;
 	}
 	else
 	{
 		print("System is ready");
-		print("---------------");
+		print("-------------");
 	}
 	
 	for (var i = 0; i < Counter; i++)
@@ -506,6 +546,7 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					MME_CU(111);
 					MME_GTU();
 					MME_CU(110);
+					MME_Collect(mme_GTU);
 					break;
 				case mme_SL:
 					print("#SL");
@@ -513,6 +554,7 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					MME_CU(112);
 					MME_SL(SLCurrent);
 					MME_CU(110);
+					MME_Collect(mme_SL);
 					break;
 				case mme_BVTD:
 					print("#BVTD");
@@ -521,6 +563,7 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					MME_CU(113);
 					MME_BVT();
 					MME_CU(110);
+					MME_Collect(mme_BVTD);
 					break;
 				case mme_BVTR:
 					print("#BVTR");
@@ -529,6 +572,7 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					MME_CU(114);
 					MME_BVT();
 					MME_CU(110);
+					MME_Collect(mme_BVTR);
 					break;
 				case mme_CSDEF:
 					print("#CSDEF");
@@ -562,14 +606,31 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					MME_CU(115);
 					MME_QRR();
 					MME_CU(110);
+					MME_Collect(mme_QRR);
+					break;
+				case mme_QRR_CROVU:
+					print("#QRR CROVU");
+					MME_CS(mme_cs_force);
+					MME_CU(115);
+					MME_QRR_CROVU();
+					MME_CU(110);
+					MME_Collect(mme_QRR_CROVU);
 					break;
 				case mme_GTUSL:
 					print("#MME_GTUSL - IH GOST");
-					MME_CS(mme_cs_force);
 					MME_CU(116);
+					MME_CS(mme_cs_force);
 					MME_GTUSL(mme_sl_current_ih);
 					MME_CU(110);
-					break;	
+					break;
+				case mme_VGNT:
+					print("#VGNT");
+					MME_CU(117);
+					MME_CS(mme_cs_force);
+					GTU_Vgnt(mme_vgnt_voltage, mme_vgnt_current);
+					MME_Collect(mme_VGNT);
+					MME_CU(110);
+					break;
 			}
 		}
 		
@@ -586,6 +647,8 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 			print("Temp1, C: " + (dev.r(101) / 10));
 			print("Temp2, C: " + (dev.r(102) / 10));
 		}
+		
+		MME_PrintSummaryResult(UnitArray);
 	
 		print("Global counter: " + (++mme_counter));
 		print("-------------");
@@ -643,4 +706,111 @@ function MME_SafetyClamp(Num, Force)
 		
 		if (anykey()) return;
 	}
+}
+
+function MME_Collect(Unit)
+{
+	switch(Unit)
+	{
+		case mme_GTU:
+			dev.nid(mme_Nid_GTU);
+			mme_GTU_Result_Igt = gtu_igt[0];
+			mme_GTU_Result_Vgt = gtu_vgt[0];
+			mme_GTU_Result_Ih = gtu_ih[0];
+			mme_GTU_Result_Il = gtu_il[0];
+			
+			gtu_igt = [];
+			gtu_vgt = [];
+			gtu_ih = [];
+			gtu_il = [];
+			break;
+			
+		case mme_SL:
+			dev.nid(mme_Nid_SL);
+			mme_SL_Result_Utm = dev.r(198);
+		break;
+		
+		case mme_BVTD:
+			dev.nid(mme_Nid_BVT);
+			mme_BVT_Result_Idrm = dev.r(199) / 10;
+			break;
+			
+		case mme_BVTR:
+			dev.nid(mme_Nid_BVT);
+			mme_BVT_Result_Irrm = dev.r(199) / 10;
+			break;
+			
+		case mme_VGNT:
+			dev.nid(mme_Nid_GTU);
+			mme_GTU_Result_Vgnt = dev.r(205);
+			mme_GTU_Result_Ignt = dev.r(206);
+			break;
+		
+		case mme_QRR:
+			dev.nid(mme_Nid_QRR);
+			mme_QRR_Result_Qrr = dev.r(216) / 10;
+			mme_QRR_Result_Irr = dev.r(211);
+			mme_QRR_Result_trr = dev.r(212) / 10;
+			mme_QRR_Result_tq = dev.r(213) / 10;
+			break;
+			
+		case mme_QRR_CROVU:
+			dev.nid(mme_Nid_QRR);
+			mme_QRR_Result_dVdt = dev.r(198);
+			break;
+	}
+}
+
+function MME_PrintSummaryResult(UnitArray)
+{
+	var MeasurementTypes = [];
+	var MeasurementValues = [];
+	
+	print("");
+	print("Summary result:");
+	
+	for(i = 0; i < UnitArray.length; i++)
+	{
+		switch(UnitArray[i])
+		{
+			case mme_GTU:
+				print("Vgt	= " + mme_GTU_Result_Vgt);
+				print("Igt	= " + mme_GTU_Result_Igt);
+				print("Ih	= " + mme_GTU_Result_Ih);
+				print("IL	= " + mme_GTU_Result_Il);
+				break;
+			
+			case mme_SL:
+				print("Utm	= " + mme_SL_Result_Utm);
+				break;
+				
+			case mme_BVTD:
+				print("Idrm	= " + mme_BVT_Result_Idrm);
+				break;
+				
+			case mme_BVTR:
+				print("Irrm	= " + mme_BVT_Result_Irrm);
+				break;
+				
+			case mme_VGNT:
+				print("Vgnt	= " + mme_GTU_Result_Vgnt);
+				print("Ignt	= " + mme_GTU_Result_Ignt);
+				break;
+				
+			case mme_QRR:
+				print("Tq	= " + mme_QRR_Result_tq);
+				print("Qrr	= " + mme_QRR_Result_Qrr);
+				print("trr	= " + mme_QRR_Result_trr);
+				print("IrrM	= " + mme_QRR_Result_Irr);
+				break;
+				
+			case mme_QRR_CROVU:
+				if(mme_QRR_Result_dVdt == 1)
+					print("dVdt	= OK");
+				if(mme_QRR_Result_dVdt == 2)
+					print("dVdt	= Fail");
+				break;
+		}
+	}
+	print("");
 }
