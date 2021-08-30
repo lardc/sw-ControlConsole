@@ -715,15 +715,10 @@ function MME_Collect(Unit)
 	{
 		case mme_GTU:
 			dev.nid(mme_Nid_GTU);
-			mme_GTU_Result_Igt = gtu_igt[0];
-			mme_GTU_Result_Vgt = gtu_vgt[0];
-			mme_GTU_Result_Ih = gtu_ih[0];
-			mme_GTU_Result_Il = gtu_il[0];
-			
-			gtu_igt = [];
-			gtu_vgt = [];
-			gtu_ih = [];
-			gtu_il = [];
+			mme_GTU_Result_Igt = gtu_igt[gtu_igt.length - 1];
+			mme_GTU_Result_Vgt = gtu_vgt[gtu_vgt.length - 1];
+			mme_GTU_Result_Ih  = gtu_ih[gtu_ih.length - 1];
+			mme_GTU_Result_Il  = gtu_il[gtu_il.length - 1];
 			break;
 			
 		case mme_SL:
