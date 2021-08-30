@@ -114,9 +114,10 @@ function GTU_Holding()
 		if (dev.r(197) == 2) print("#Problem: " + dev.r(196));
 	}
 	
-	print("Ih,   mA: " + dev.r(201));
+	var ih = dev.r(201) + dev.r(231) / 1000; 
+	print("Ih,   mA: " + ih);
 	
-	gtu_ih.push(dev.r(201));
+	gtu_ih.push(ih);
 	
 	if (gtu_plot) plot(dev.rafs(1), 1, 0);
 }
