@@ -765,6 +765,8 @@ function MME_PrintSummaryResult(UnitArray)
 	print("");
 	print("Summary result:");
 	
+	var out_str = "";
+	
 	for(i = 0; i < UnitArray.length; i++)
 	{
 		switch(UnitArray[i])
@@ -774,23 +776,29 @@ function MME_PrintSummaryResult(UnitArray)
 				print("Igt	= " + mme_GTU_Result_Igt);
 				print("Ih	= " + mme_GTU_Result_Ih);
 				print("IL	= " + mme_GTU_Result_Il);
+				out_str += mme_GTU_Result_Vgt + ";" + mme_GTU_Result_Igt + ";" +
+					mme_GTU_Result_Ih + ";" + mme_GTU_Result_Il + ";";
 				break;
 			
 			case mme_SL:
 				print("Utm	= " + mme_SL_Result_Utm);
+				out_str += mme_SL_Result_Utm + ";";
 				break;
 				
 			case mme_BVTD:
 				print("Idrm	= " + mme_BVT_Result_Idrm);
+				out_str += mme_BVT_Result_Idrm + ";";
 				break;
 				
 			case mme_BVTR:
 				print("Irrm	= " + mme_BVT_Result_Irrm);
+				out_str += mme_BVT_Result_Irrm + ";";
 				break;
 				
 			case mme_VGNT:
 				print("Vgnt	= " + mme_GTU_Result_Vgnt);
 				print("Ignt	= " + mme_GTU_Result_Ignt);
+				out_str += mme_GTU_Result_Vgnt + ";" + mme_GTU_Result_Ignt + ";";
 				break;
 				
 			case mme_QRR:
@@ -798,15 +806,23 @@ function MME_PrintSummaryResult(UnitArray)
 				print("Qrr	= " + mme_QRR_Result_Qrr);
 				print("trr	= " + mme_QRR_Result_trr);
 				print("IrrM	= " + mme_QRR_Result_Irr);
+				out_str += mme_QRR_Result_tq + ";" + mme_QRR_Result_Qrr + ";" +
+					mme_QRR_Result_trr + ";" + mme_QRR_Result_Irr + ";";
 				break;
 				
 			case mme_QRR_CROVU:
 				if(mme_QRR_Result_dVdt == 1)
+				{
 					print("dVdt	= OK");
+					out_str += "OK;";
+				}
 				if(mme_QRR_Result_dVdt == 2)
+				{
 					print("dVdt	= Fail");
+					out_str += "FAIL;";
+				}
 				break;
 		}
 	}
-	print("");
+	print("\n" + out_str + "\n");
 }
