@@ -733,12 +733,12 @@ function MME_Collect(Unit)
 		
 		case mme_BVTD:
 			dev.nid(mme_Nid_BVT);
-			mme_BVT_Result_Idrm = dev.r(199) / 10;
+			mme_BVT_Result_Idrm = BVT_ReadCurrent(bvt_use_microamps);
 			break;
 			
 		case mme_BVTR:
 			dev.nid(mme_Nid_BVT);
-			mme_BVT_Result_Irrm = dev.r(199) / 10;
+			mme_BVT_Result_Irrm = BVT_ReadCurrent(bvt_use_microamps);
 			break;
 			
 		case mme_VGNT:
