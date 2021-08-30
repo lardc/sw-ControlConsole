@@ -14,7 +14,8 @@ mme_cs_force = 25; 				// Усилие зажатия максимальная �
 mme_cs_height = 27; 			// Высота прибора в мм
 // BVT HP
 mme_bvt_current = 20; 			// Ток отсечки в мА
-mme_bvt_voltage = 1500; 		// Задание амплитуды напряжения в В
+mme_bvt_vdrm = 1500; 			// Задание амплитуды прямого напряжения в В
+mme_bvt_vrrm = 1500; 			// Задание амплитуды обратного напряжения в В
 // ATU HP
 mme_atu_power = 2000; 			// Ударная мощность обратных потерь в Вт
 mme_atu_precurrent = 150; 		// Задание амплитуды препульса в мА
@@ -448,12 +449,12 @@ function MME_SL(Current)
 	}
 }
 
-function MME_BVT()
+function MME_BVT(Voltage)
 {
 	if (mme_use_BVT)
 	{
 		dev.nid(mme_Nid_BVT);
-		BVT_StartPulse(1, mme_bvt_voltage, mme_bvt_current * 10);
+		BVT_StartPulse(1, Voltage, mme_bvt_current * 10);
 		if (mme_plot) BVT_PlotXY();
 	}
 }
@@ -561,7 +562,7 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					bvt_direct = 1;
 					MME_CS(mme_cs_def_force);
 					MME_CU(113);
-					MME_BVT();
+					MME_BVT(mme_bvt_vdrm);
 					MME_CU(110);
 					MME_Collect(mme_BVTD);
 					break;
@@ -570,7 +571,7 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					bvt_direct = 0;
 					MME_CS(mme_cs_def_force);
 					MME_CU(114);
-					MME_BVT();
+					MME_BVT(mme_bvt_vrrm);
 					MME_CU(110);
 					MME_Collect(mme_BVTR);
 					break;
