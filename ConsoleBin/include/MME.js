@@ -276,10 +276,15 @@ function MME_IsReady()
 {
 	// cu
 	dev.nid(mme_Nid_CU);
-	if (dev.r(96) == 0) dev.c(1);
+	if (dev.r(96) == 0)
+	{
+		print("Starting CU...");
+		dev.c(1);
+	}
 	if (dev.r(96) != 3)
 	{
 		print("CU not ready");
+		PrintStatus();
 		return 0;
 	}
 	
@@ -287,11 +292,16 @@ function MME_IsReady()
 	if (mme_use_SL)
 	{
 		dev.nid(mme_Nid_SL);
-		if (dev.r(192) == 0) dev.c(1);
-		while (dev.r(192) == 3) sleep(500);
+		if (dev.r(192) == 0)
+		{
+			print("Starting SL...");
+			dev.c(1);
+		}
+		while (dev.r(192) == 3 || dev.r(192) == 5) sleep(500);
 		if (dev.r(192) != 4)
 		{
 			print("SL not ready");
+			PrintStatus();
 			return 0;
 		}
 	}
@@ -300,10 +310,15 @@ function MME_IsReady()
 	if (mme_use_BVT)
 	{
 		dev.nid(mme_Nid_BVT);
-		if (dev.r(192) == 0) dev.c(1);
+		if (dev.r(192) == 0)
+		{
+			print("Starting BVT...");
+			dev.c(1);
+		}
 		if (dev.r(192) != 4)
 		{
 			print("BVT not ready");
+			PrintStatus();
 			return 0;
 		}
 	}
@@ -312,11 +327,16 @@ function MME_IsReady()
 	if (mme_use_CS)
 	{
 		dev.nid(mme_Nid_CS);
-		if (dev.r(96) == 0) dev.c(100);
+		if (dev.r(96) == 0)
+		{
+			print("Starting CS...");
+			dev.c(100);
+		}
 		while (dev.r(96) == 5) sleep(500);
 		if (dev.r(96) != 3)
 		{
 			print("CS not ready");
+			PrintStatus();
 			return 0;
 		}
 	}
@@ -325,10 +345,16 @@ function MME_IsReady()
 	if (mme_use_QRR)
 	{
 		dev.nid(mme_Nid_QRR);
-		if (dev.r(192) == 0) dev.c(1);
+		if (dev.r(192) == 0)
+		{
+			print("Starting Qrr...");
+			dev.c(1);
+		}
+		while (dev.r(192) == 3) sleep(500);
 		if (dev.r(192) != 4)
 		{
 			print("QRR not ready");
+			PrintStatus();
 			return 0;
 		}
 	}
@@ -337,10 +363,15 @@ function MME_IsReady()
 	if (mme_use_CROVU)
 	{
 		dev.nid(mme_Nid_CROVU);
-		if (dev.r(192) == 0) dev.c(1);
+		if (dev.r(192) == 0)
+		{
+			print("Starting CROVU...");
+			dev.c(1);
+		}
 		if (dev.r(192) != 3)
 		{
 			print("CROVU not ready");
+			PrintStatus();
 			return 0;
 		}
 	}
@@ -349,10 +380,15 @@ function MME_IsReady()
 	if (mme_use_ATU)
 	{
 		dev.nid(mme_Nid_ATU);
-		if (dev.r(96) == 0) dev.c(1);
+		if (dev.r(96) == 0)
+		{
+			print("Starting ATU...");
+			dev.c(1);
+		}
 		if (dev.r(96) != 4)
 		{
 			print("ATU not ready");
+			PrintStatus();
 			return 0;
 		}
 	}
