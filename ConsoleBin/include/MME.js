@@ -28,10 +28,14 @@ mme_qrr_current_rate = 30;
 mme_qrr_voltage = 1500;
 mme_qrr_voltage_rate = 1000;
 mme_qrr_mode = 1; 				// 0 - QRR, 1 - QRR Tq, 2 - only CROVU
-mme_counter = 0;
+// QRR CROVU
+mme_qrr_crovu_voltage = 1500;
+mme_qrr_crovu_voltage_rate = 1000;
 // VGNT
 mme_vgnt_voltage = 1000;		// Anode voltage (in V)
 mme_vgnt_current = 5;			// Anode current (in mA)
+
+mme_counter = 0;
 
 // definitions for MME_Test()
 mme_GTU   =	0;
@@ -538,7 +542,7 @@ function MME_QRR_CROVU()
 	if (mme_use_QRR)
 	{
 		dev.nid(mme_Nid_QRR);
-		QRR_Start(2, mme_qrr_current, mme_qrr_current_rate, mme_qrr_voltage, mme_qrr_voltage_rate);
+		QRR_Start(2, mme_qrr_current, mme_qrr_current_rate, mme_qrr_crovu_voltage, mme_qrr_crovu_voltage_rate);
 	}
 }
 
