@@ -20,21 +20,64 @@ function Instek_Exec(Request)
 
 
 
-function Instek_SystemBeeperError(Enable)
+function Instek_ConfAuto(Enable)
 {
-	if (Enable == 0)
-	{
-		Instek_Send("SYST:BEEP:ERR OFF");
-	}
-	else if (Enable == 1)
-	{
-		Instek_Send("SYST:BEEP:ERR ON");
-	}
-	else
-	{
-		print("Invalid state for BEEP_ERR");
-	}
+	Instek_Send("CONF:AUTO " + (Enable ? "ON" : "OFF"));
 }
+
+// Rate: "S" - slow , "M" - mid, "H" - high
+function Instek_ConfDetectorRate(Rate)
+{
+	Instek_Send("SENS:DET:RATE " + Rate);
+}
+
+function Instek_ConfVoltageDC(Range)
+{
+	instek_range = Range;
+	
+	Instek_ConfAuto(false);
+	Instek_Send("CONF:VOLT:DC " + instek_range.toExponential(1));
+}
+
+function Instek_ConfCurrentDC(Range)
+{
+	instek_range = Range;
+	
+	Instek_ConfAuto(false);
+	Instek_Send("CONF:CURR:DC " + instek_range.toExponential(1));
+}
+
+function Instek_ConfResistance(Range)
+{
+	instek_range = Range;
+	
+	Instek_ConfAuto(false);
+	Instek_Send("CONF:RES " + instek_range.toExponential(1));
+}
+
+
+
+function Instek_ReadDisplayValue()
+{
+	return parseFloat(Instek_Exec("READ?"));
+}
+
+function Instek_MeasureVolDC()
+{
+	return parseFloat(Instek_Exec("MEAS:VOLT:DC? " + instek_range.toExponential(1)));
+}
+
+function Instek_MeasureCurDC()
+{
+	return parseFloat(Instek_Exec("MEAS:CURR:DC? " + instek_range.toExponential(1)));
+}
+
+function Instek_MeasureRes()
+{
+	return parseFloat(Instek_Exec("MEAS:RES? " + instek_range.toExponential(1)));
+}
+
+
 
 function Instek_SystemLocal()
 {
@@ -49,77 +92,6 @@ function Instek_SystemRemote()
 function Instek_SystemRWLock()
 {
 	Instek_Send("SYST:RWL");
-}
-
-
-
-function Instek_ConfAuto(Enable)
-{
-	if (Enable == 0)
-	{
-		Instek_Send("CONF:AUTO OFF");
-	}
-	else if (Enable == 1)
-	{
-		Instek_Send("CONF:AUTO ON");
-	}
-	else
-	{
-		print("Invalid state for AUTO");
-	}
-}
-
-function Instek_ConfDetectorRate(Rate)
-{
-	Instek_Send("SENS:DET:RATE " + Rate);
-}
-
-function Instek_ConfVoltageDC(Range)
-{
-	instak_range = Range;
-	Instek_Send("CONF:VOLT:DC " + Range.toExponential(1));
-}
-
-function Instek_ConfCurrentDC(Range)
-{
-	instak_range = Range;
-	Instek_Send("CONF:CURR:DC " + Range.toExponential(1));
-}
-
-function Instek_ConfResistance(Range)
-{
-	instak_range = Range;
-	Instek_Send("CONF:RES " + Range.toExponential(1));
-}
-
-function Instek_ConfContinuity()
-{
-	Instek_Send("CONF:CONT");
-}
-
-
-
-function Instek_MeasureVolDC()
-{
-	var Range = instak_range;
-	return parseFloat(Instek_Exec("MEAS:VOLT:DC? " + Range.toExponential(1))).toFixed(5);
-}
-
-function Instek_MeasureCurDC()
-{
-	var Range = instak_range;
-	return parseFloat(Instek_Exec("MEAS:CURR:DC? " + Range.toExponential(1))).toFixed(5);
-}
-
-function Instek_MeasureRes()
-{
-	var Range = instak_range;
-	return parseFloat(Instek_Exec("MEAS:RES? " + Range.toExponential(1))).toFixed(5);
-}
-
-function Instek_MeasureCont()
-{
-	return parseFloat(Instek_Exec("MEAS:CONT?")).toFixed(5);
 }
 
 
@@ -180,18 +152,7 @@ function Instek_CalFunction(FunctionNumber)
 
 function Instek_CalState(Enable)
 {
-	if (Enable == 0)
-	{
-		Instek_Send("CALC:STAT OFF");
-	}
-	else if (Enable == 1)
-	{
-		Instek_Send("CALC:STAT ON");
-	}
-	else
-	{
-		print("Invalid state for CAL");
-	}	
+	Instek_Send("CALC:STAT " + (Enable ? "ON" : "OFF"));
 }
 
 function Instek_CalMin()
@@ -255,11 +216,6 @@ function Instek_CalNullOffset(Ref)
 }
 
 
-
-function Instek_RequestBeepErr()
-{
-	return Instek_Exec("SYST:BEEP:ERR?")
-}
 
 function Instek_RequestErr()
 {
