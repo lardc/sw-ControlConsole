@@ -846,8 +846,8 @@ function MME_PrintSummaryResult(UnitArray)
 				print("Qrr	= " + mme_QRR_Result_Qrr);
 				print("trr	= " + mme_QRR_Result_trr);
 				print("IrrM	= " + mme_QRR_Result_Irr);
-				out_str += mme_QRR_Result_tq + ";" + mme_QRR_Result_Qrr + ";" +
-					mme_QRR_Result_trr + ";" + mme_QRR_Result_Irr + ";";
+				out_str += mme_QRR_Result_tq.toFixed(3) + ";" + mme_QRR_Result_Qrr.toFixed(3) + ";" +
+					mme_QRR_Result_trr.toFixed(3) + ";" + mme_QRR_Result_Irr + ";";
 				break;
 				
 			case mme_QRR_CROVU:
