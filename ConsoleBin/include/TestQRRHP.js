@@ -12,6 +12,7 @@ function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
 {	
 	if (dev.r(192) == 1)
 	{
+		QRR_Status();
 		dev.c(3);
 		print("Clear fault");
 		sleep(500);
@@ -171,7 +172,7 @@ function QRR_Status()
 	if (dev.r(8) == 0)
 	{
 		QSU_NodeStatus(0, 192);
-		print("Fault ex. r.:	" + QSU_ReadReg(0, 197));
+		print("Op. result:	" + QSU_ReadReg(0, 197));
 	}
 	else
 		print("Emulation");
