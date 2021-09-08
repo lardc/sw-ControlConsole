@@ -285,7 +285,7 @@ function MME_IsReady()
 		print("Starting CU...");
 		dev.c(1);
 	}
-	if (dev.r(96) != 3)
+	if (dev.r(96) != 3 && dev.r(96) != 4)
 	{
 		print("CU not ready");
 		PrintStatus();
@@ -679,8 +679,7 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 		MME_CS(0);
 		
 		// get time
-		var d = new Date();
-		print(d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds());
+		print(new Date());
 		
 		// get temperature
 		if (mme_use_CS)
