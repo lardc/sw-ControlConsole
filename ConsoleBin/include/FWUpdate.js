@@ -347,3 +347,20 @@ function FWU_HMIU(Version)
 	FWUpdate("../../hw-ControlUnitBoard/Firmware/Release/ControlUnitBoard.hex");
 }
 //------------------------
+
+// BVT
+function FWU_ZTH()
+{
+	FWUpdate('../../hw-ZthControlBoard/Firmware/Release/ZthControlBoard.hex');
+}
+
+function FWU_DumpZTH()
+{
+	dev.Dump('../../hw-ZthControlBoard/Firmware/ZthControlBoard.regdump', 0, 126);
+}
+
+function FWU_RestoreZTH()
+{
+	dev.Restore('../../hw-ZthControlBoard/Firmware/ZthControlBoard.regdump');
+}
+//------------------------
