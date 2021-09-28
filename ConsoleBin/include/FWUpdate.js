@@ -342,13 +342,13 @@ function FWU_RestoreQSU(Version)
 //------------------------
 
 // HMIU
-function FWU_HMIU(Version)
+function FWU_HMIU()
 {
 	FWUpdate("../../hw-ControlUnitBoard/Firmware/Release/ControlUnitBoard.hex");
 }
 //------------------------
 
-// BVT
+// ZTH
 function FWU_ZTH()
 {
 	FWUpdate('../../hw-ZthControlBoard/Firmware/Release/ZthControlBoard.hex');
