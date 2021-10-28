@@ -630,10 +630,10 @@ function CGTU_PrintIPowerSetCal()
 function CGTU_SetLimits()
 {
 	// Set limits
-	dev.w(128 + cgtu_CompatibleMode ? 3 : 0, cgtu_Vdmax);
-	dev.w(129 + cgtu_CompatibleMode ? 3 : 0, cgtu_Imax);
-	dev.w(130 + cgtu_CompatibleMode ? 3 : 0, cgtu_Vgmax);
-	dev.w(131 + cgtu_CompatibleMode ? 3 : 0, cgtu_Imax);
+	dev.w(128 + (cgtu_CompatibleMode ? 3 : 0) , cgtu_Vdmax);
+	dev.w(129 + (cgtu_CompatibleMode ? 3 : 0) , cgtu_Imax);
+	dev.w(130 + (cgtu_CompatibleMode ? 3 : 0) , cgtu_Vgmax);
+	dev.w(131 + (cgtu_CompatibleMode ? 3 : 0) , cgtu_Imax);
 }
 
 function CGTU_ResetVGateCal()
