@@ -20,7 +20,11 @@ cal_IhMin = [50, 501];
 cal_IhMax = [500, 2500];
 cal_IhStp = (cal_IhMax[cal_IhRange] - cal_IhMin[cal_IhRange]) / cal_Points;
 
-cal_Iterations = 3;
+cal_UdMin = 300;	
+cal_UdMax = 4500;
+cal_UdStp = (cal_UdMax - cal_UdMin) / cal_Points;
+
+cal_Iterations = 10;
 //		
 
 // Counters
@@ -28,6 +32,7 @@ cal_CntTotal = 0;
 cal_CntDone = 0;
 
 // Results storage
+cal_Ud = [];
 cal_Im = [];
 cal_Ih = [];
 cal_ImSet = [];
@@ -35,11 +40,13 @@ cal_IhSet = [];
 cal_IgSet = [];
 
 // Instek data
+cal_UdInst = [];
 cal_ImInst = [];
 cal_IgInst = [];
 cal_IhInst = [];
 
 // Relative error
+cal_UdErr = [];
 cal_ImErr = [];
 cal_IhErr = [];
 cal_ImSetErr = [];
@@ -47,9 +54,36 @@ cal_IhSetErr = [];
 cal_IgSetErr = [];
 
 // Correction
+cal_UdCorr = [];
 cal_ImCorr = [];
 cal_IgCorr = [];
 cal_IhCorr = [];
+
+
+ErrorArray = [];
+VoltageArray = [];
+
+function Zth_Test(Voltage, N)
+{	
+	VoltageArray = [];
+	ErrorArray = [];
+	
+	for(i = 0; i < N; i++)
+	{
+		Zth_TSP(Voltage);
+		sleep(1500);
+		dev.c(12);		
+		
+		var Vinst = (Instek_ReadDisplayValue() * 1000).toFixed(2);
+		var Vdev = dev.r(150) / 10;
+		var Error = ((Vdev - Vinst) / Vinst * 100).toFixed(2);
+		ErrorArray.push(Error);
+		VoltageArray.push(Voltage);
+		
+		p(Vdev);
+	}
+	scattern(VoltageArray, ErrorArray, "Current (in mA)", "Error (in %)", "Current relative error");
+}
 
 function CAL_Init(portDevice, portInstek)
 {
@@ -60,6 +94,29 @@ function CAL_Init(portDevice, portInstek)
 	// Init Instek port
 	TEK_PortInit(portInstek);
 
+}
+//--------------------
+
+function CAL_CalibrateUd()
+{		
+	CAL_ResetA();
+	CAL_ResetUdCal();
+
+	// Reload values
+	var VoltageArray = CGEN_GetRange(cal_UdMin, cal_UdMax, cal_UdStp);
+
+	if (CAL_CollectUd(VoltageArray, cal_Iterations))
+	{
+		CAL_SaveUd("Zth_Ud");
+
+		// Plot relative error distribution
+		scattern(cal_UdInst, cal_UdErr, "Voltage (in mV)", "Error (in %)", "Voltage relative error");
+
+		// Calculate correction
+		cal_UdCorr = CGEN_GetCorrection2("Zth_Ud");
+		CAL_SetCoefUd(cal_UdCorr[0], cal_UdCorr[1], cal_UdCorr[2]);
+		CAL_PrintCoefUd();
+	}
 }
 //--------------------
 
@@ -132,6 +189,23 @@ function CAL_CalibrateIh()
 }
 //--------------------
 
+function CAL_VerifyUd()
+{		
+	CAL_ResetA();
+
+	// Reload values
+	var VoltageArray = CGEN_GetRange(cal_UdMin, cal_UdMax, cal_UdStp);
+
+	if (CAL_CollectUd(VoltageArray, cal_Iterations))
+	{
+		CAL_SaveUd("Zth_Ud_fixed");
+
+		// Plot relative error distribution
+		scattern(cal_UdInst, cal_UdErr, "Voltage (in mV)", "Error (in %)", "Voltage relative error");
+	}
+}
+//--------------------
+
 function CAL_VerifyIm()
 {		
 	CAL_ResetA();
@@ -185,6 +259,55 @@ function CAL_VerifyIh()
 }
 //--------------------
 
+function CAL_CollectUd(VoltageValues, IterationsCount)
+{
+	cal_CntTotal = IterationsCount * VoltageValues.length;
+	cal_CntDone = 1;
+	
+	
+	for (var i = 0; i < IterationsCount; i++)
+	{
+		for (var j = 0; j < VoltageValues.length; j++)
+		{
+			//CAL_InstekSetVoltageRange(VoltageValues[j]);
+
+			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+			//
+
+			dev.w(150, VoltageValues[j] * 0.83);
+			dev.c(21);
+			sleep(1500);
+			dev.c(12);
+
+			// Unit data
+			var UdRead = dev.r(150) / 10;
+			cal_Ud.push(UdRead);
+			print("UdRead,   mV: " + UdRead);
+
+			// Instek data
+			var UdInstek = (Instek_ReadDisplayValue() * 1000).toFixed(2);
+			cal_UdInst.push(UdInstek);
+			print("UdInstek, mV: " + UdInstek);
+
+			// Relative error
+			var UdErr = ((UdRead - UdInstek) / UdInstek * 100).toFixed(2);
+			cal_UdErr.push(UdErr);
+			print("Uderr,   %: " + UdErr);
+			print("--------------------");
+
+			if (anykey()) return 0;
+		}
+		
+		dev.w(150, 0);
+		dev.c(21);
+		sleep(1500);
+		dev.c(12);
+	}
+
+	return 1;
+}
+//--------------------
+
 function CAL_CollectIm(CurrentValues, IterationsCount)
 {
 	cal_CntTotal = IterationsCount * CurrentValues.length;
@@ -195,7 +318,7 @@ function CAL_CollectIm(CurrentValues, IterationsCount)
 	{
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
-			CAL_InstekSetRange(CurrentValues[j]);
+			CAL_InstekSetCurrentRange(CurrentValues[j]);
 
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
@@ -245,7 +368,7 @@ function CAL_CollectIg(CurrentValues, IterationsCount)
 	{
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
-			CAL_InstekSetRange(CurrentValues[j]);
+			CAL_InstekSetCurrentRange(CurrentValues[j]);
 
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
@@ -289,7 +412,7 @@ function CAL_CollectIh(CurrentValues, IterationsCount)
 	{
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
-			CAL_InstekSetRange(CurrentValues[j]);
+			CAL_InstekSetCurrentRange(CurrentValues[j]);
 
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
@@ -331,15 +454,22 @@ function CAL_CollectIh(CurrentValues, IterationsCount)
 }
 //--------------------
 
-function CAL_InstekSetRange(Current)
+function CAL_InstekSetCurrentRange(Current)
 {
 	Instek_ConfVoltageDC(Current * cal_Rshunt / 1e6);
+}
+//--------------------
+
+function CAL_InstekSetVoltageRange(Voltage)
+{
+	Instek_ConfVoltageDC(Voltage / 1000);
 }
 //--------------------
 
 function CAL_ResetA()
 {	
 	// Results storage
+	cal_Ud = [];
 	cal_Im = [];
 	cal_Ih = [];
 	cal_ImSet = [];
@@ -347,11 +477,13 @@ function CAL_ResetA()
 	cal_IhSet = [];
 
 	// Instek data
+	cal_UdInst = [];
 	cal_ImInst = [];
 	cal_IgInst = [];
 	cal_IhInst = [];
 
 	// Relative error
+	cal_UdErr = [];
 	cal_ImErr = [];
 	cal_IhErr = [];
 	cal_ImSetErr = [];
@@ -359,9 +491,16 @@ function CAL_ResetA()
 	cal_IhSetErr = [];
 
 	// Correction
+	cal_UdCorr = [];
 	cal_ImCorr = [];
 	cal_IgCorr = [];
 	cal_IhCorr = [];
+}
+//--------------------
+
+function CAL_SaveUd(NameUd)
+{
+	CGEN_SaveArrays(NameUd, cal_Ud, cal_UdInst, cal_UdErr);
 }
 //--------------------
 
@@ -383,6 +522,12 @@ function CAL_SaveIh(NameIh)
 }
 //--------------------
 
+function CAL_ResetUdCal()
+{
+	CAL_SetCoefUd(0, 1, 0);
+}
+//--------------------
+
 function CAL_ResetImCal()
 {
 	CAL_SetCoefIm(0, 1, 0);
@@ -398,6 +543,14 @@ function CAL_ResetIgCal()
 function CAL_ResetIhCal()
 {
 	CAL_SetCoefIh(0, 1, 0);
+}
+//--------------------
+
+function CAL_SetCoefUd(P2, P1, P0)
+{
+	dev.ws(25, Math.round(P2 * 1e6));
+	dev.w(26, Math.round(P1 * 1000));
+	dev.ws(27, Math.round(P0 * 100));	
 }
 //--------------------
 
@@ -431,6 +584,14 @@ function CAL_SetCoefIh(P2, P1, P0)
 		dev.w(11, Math.round(P1 * 1000));
 		dev.ws(12, Math.round(P0 * 100));
 	}
+}
+//--------------------
+
+function CAL_PrintCoefUd()
+{
+	print("Ud P2 x1e6	: " + dev.rs(25));
+	print("Ud P1 x1000	: " + dev.r(26));
+	print("Ud P0 x100	: " + dev.rs(27));
 }
 //--------------------
 
