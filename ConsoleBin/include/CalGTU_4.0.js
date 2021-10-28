@@ -3,6 +3,8 @@ include("Tektronix.js")
 include("CalGeneral.js")
 
 // Global definitions
+cgtu_CompatibleMode = 1;
+//
 cgtu_ResGate  = 10;	// in Ohms
 cgtu_ResPower = 10;	// in Ohms
 cgtu_CurrentValues = [];
@@ -404,7 +406,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						sleep(1000);
 						
 						// Configure GTU
-						dev.w(130, cgtu_Values[j]);
+						dev.w(130 + cgtu_CompatibleMode ? 3 : 0, cgtu_Values[j]);
 						CGTU_Probe(ProbeCMD);
 						break;
 						
@@ -415,7 +417,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						sleep(1000);
 						
 						// Configure GTU
-						dev.w(131, cgtu_Values[j]);
+						dev.w(131 + cgtu_CompatibleMode ? 3 : 0, cgtu_Values[j]);
 						CGTU_Probe(ProbeCMD);
 						break;
 						
@@ -425,7 +427,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						sleep(1000);
 						
 						// Configure GTU
-						dev.w(128, cgtu_Values[j]);
+						dev.w(128 + cgtu_CompatibleMode ? 3 : 0, cgtu_Values[j]);
 						CGTU_Probe(ProbeCMD);
 						break;
 						
@@ -435,7 +437,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						sleep(1000);
 						
 						// Configure GTU
-						dev.w(129, cgtu_Values[j]);
+						dev.w(129 + cgtu_CompatibleMode ? 3 : 0, cgtu_Values[j]);
 						CGTU_Probe(ProbeCMD);
 						break;
 				}
@@ -531,7 +533,7 @@ function CGTU_Probe(ProbeCMD)
 		f = CGTU_Measure(cgtu_chMeasurePower);
 		var vd = (dev.r(204) + dev.r(233) / 1000).toFixed(2);
 		var vd_sc = f;
-		var vd_set = dev.r(128);
+		var vd_set = dev.r(128 + cgtu_CompatibleMode ? 3 : 0);
 		
 		// gtu data
 		cgtu_vd.push(vd);
@@ -556,7 +558,7 @@ function CGTU_Probe(ProbeCMD)
 		f = CGTU_Measure(cgtu_chMeasurePower);
 		var id = (dev.r(204) + dev.r(233) / 1000).toFixed(2);
 		var id_sc = (f / cgtu_ResPower).toFixed(2);
-		var id_set = dev.r(129);
+		var id_set = dev.r(129 + cgtu_CompatibleMode ? 3 : 0);
 		
 		// gtu data
 		cgtu_id.push(id);
@@ -627,14 +629,11 @@ function CGTU_PrintIPowerSetCal()
 
 function CGTU_SetLimits()
 {
-	// Set alowed error to 30%
-	dev.w(3, 30);
-	
 	// Set limits
-	dev.w(128, cgtu_Vdmax);
-	dev.w(129, cgtu_Imax);
-	dev.w(130, cgtu_Vgmax);
-	dev.w(131, cgtu_Imax);
+	dev.w(128 + cgtu_CompatibleMode ? 3 : 0, cgtu_Vdmax);
+	dev.w(129 + cgtu_CompatibleMode ? 3 : 0, cgtu_Imax);
+	dev.w(130 + cgtu_CompatibleMode ? 3 : 0, cgtu_Vgmax);
+	dev.w(131 + cgtu_CompatibleMode ? 3 : 0, cgtu_Imax);
 }
 
 function CGTU_ResetVGateCal()
