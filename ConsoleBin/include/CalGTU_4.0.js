@@ -406,7 +406,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						sleep(1000);
 						
 						// Configure GTU
-						dev.w(130 + cgtu_CompatibleMode ? 3 : 0, cgtu_Values[j]);
+						dev.w(130 + (cgtu_CompatibleMode ? 3 : 0) , cgtu_Values[j]);
 						CGTU_Probe(ProbeCMD);
 						break;
 						
@@ -417,7 +417,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						sleep(1000);
 						
 						// Configure GTU
-						dev.w(131 + cgtu_CompatibleMode ? 3 : 0, cgtu_Values[j]);
+						dev.w(131 + (cgtu_CompatibleMode ? 3 : 0) , cgtu_Values[j]);
 						CGTU_Probe(ProbeCMD);
 						break;
 						
@@ -427,7 +427,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						sleep(1000);
 						
 						// Configure GTU
-						dev.w(128 + cgtu_CompatibleMode ? 3 : 0, cgtu_Values[j]);
+						dev.w(128 + (cgtu_CompatibleMode ? 3 : 0) , cgtu_Values[j]);
 						CGTU_Probe(ProbeCMD);
 						break;
 						
@@ -437,7 +437,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						sleep(1000);
 						
 						// Configure GTU
-						dev.w(129 + cgtu_CompatibleMode ? 3 : 0, cgtu_Values[j]);
+						dev.w(129 + (cgtu_CompatibleMode ? 3 : 0) , cgtu_Values[j]);
 						CGTU_Probe(ProbeCMD);
 						break;
 				}
@@ -482,7 +482,7 @@ function CGTU_Probe(ProbeCMD)
 		f = CGTU_Measure(cgtu_chMeasureGate);
 		var vgt = (dev.r(204) + dev.r(233) / 1000).toFixed(2);
 		var vgt_sc = f;
-		var vgt_set = dev.r(130);
+		var vgt_set = dev.r(130 + (cgtu_CompatibleMode ? 3 : 0));
 		
 		// gtu data
 		cgtu_vgt.push(vgt);
@@ -507,7 +507,7 @@ function CGTU_Probe(ProbeCMD)
 		f = CGTU_Measure(cgtu_chMeasureGate);
 		var igt = (dev.r(204) + dev.r(233) / 1000).toFixed(2);
 		var igt_sc = (f / cgtu_ResGate).toFixed(2);
-		var igt_set = dev.r(131);
+		var igt_set = dev.r(131 + (cgtu_CompatibleMode ? 3 : 0));
 		
 		// gtu data
 		cgtu_igt.push(igt);
@@ -533,7 +533,7 @@ function CGTU_Probe(ProbeCMD)
 		f = CGTU_Measure(cgtu_chMeasurePower);
 		var vd = (dev.r(204) + dev.r(233) / 1000).toFixed(2);
 		var vd_sc = f;
-		var vd_set = dev.r(128 + cgtu_CompatibleMode ? 3 : 0);
+		var vd_set = dev.r(128 + (cgtu_CompatibleMode ? 3 : 0));
 		
 		// gtu data
 		cgtu_vd.push(vd);
@@ -558,7 +558,7 @@ function CGTU_Probe(ProbeCMD)
 		f = CGTU_Measure(cgtu_chMeasurePower);
 		var id = (dev.r(204) + dev.r(233) / 1000).toFixed(2);
 		var id_sc = (f / cgtu_ResPower).toFixed(2);
-		var id_set = dev.r(129 + cgtu_CompatibleMode ? 3 : 0);
+		var id_set = dev.r(129 + (cgtu_CompatibleMode ? 3 : 0));
 		
 		// gtu data
 		cgtu_id.push(id);
