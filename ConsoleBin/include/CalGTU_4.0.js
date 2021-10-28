@@ -117,7 +117,7 @@ function CGTU_Init(portGate, portTek, channelMeasureGate, channelMeasurePower)
 	TEK_TriggerPulseInit(cgtu_chMeasureGate, "1");
 	CGTU_TriggerTune();
 	// Horizontal settings
-	TEK_Horizontal("10e-3", "-40e-3");
+	TEK_Horizontal("1e-3", "-4e-3");
 	
 	// Display channels
 	for (var i = 1; i <= 4; i++)
@@ -771,14 +771,14 @@ function CGTU_SaveIPower(NameId, NameId_Set)
 function CGTU_TriggerTune()
 {
 	TEK_Send("trigger:main:pulse:width:polarity negative");
-	TEK_Send("trigger:main:pulse:width:width 50e-3");
+	TEK_Send("trigger:main:pulse:width:width 5e-3");
 }
 
 function CGTU_TekCursor(Channel)
 {
 	TEK_Send("cursor:select:source ch" + Channel);
 	TEK_Send("cursor:function vbars");
-	TEK_Send("cursor:vbars:position1 -60e-3");
+	TEK_Send("cursor:vbars:position1 -6e-3");
 	TEK_Send("cursor:vbars:position2 0");
 }
 
