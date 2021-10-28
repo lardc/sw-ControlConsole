@@ -89,14 +89,6 @@ EUosc = 3;
 ER = 0.5;
 E0 = 0;
 
-// Variables
-var AlowedError = 0;
-var R1 = 0;
-var R2 = 0;
-var R3 = 0;
-var R4 = 0;
-
-
 function CGTU_Init(portGate, portTek, channelMeasureGate, channelMeasurePower)
 {
 	if (channelMeasureGate < 1 || channelMeasureGate > 4 ||
@@ -166,9 +158,6 @@ function CGTU_CalibrateIGate()
 		// Print correction
 		CGTU_PrintIGateCal();
 		CGTU_PrintIGateSetCal();
-		
-		// Restore alowed error
-		dev.w(3,AlowedError);
 	}
 }
 
@@ -197,9 +186,6 @@ function CGTU_CalibrateIPower()
 		// Print correction
 		CGTU_PrintIPowerCal();
 		CGTU_PrintIPowerSetCal();
-		
-		// Restore alowed error
-		dev.w(3,AlowedError);
 	}
 }
 
@@ -224,9 +210,6 @@ function CGTU_CalibrateVGate()
 		
 		// Print correction
 		CGTU_PrintVGateCal();
-		
-		// Restore alowed error
-		dev.w(3,AlowedError);
 	}
 }
 
@@ -253,9 +236,6 @@ function CGTU_CalibrateVPower()
 		
 		// Print correction
 		CGTU_PrintVPowerCal();
-		
-		// Restore alowed error
-		dev.w(3,AlowedError);
 	}
 }
 
@@ -660,35 +640,23 @@ function CGTU_SetLimits()
 function CGTU_ResetVGateCal()
 {
 	CGTU_CalVGT(0, 1, 0);
-	
-	AlowedError = dev.r(3);
-	dev.w(3,30);
 }
 
 function CGTU_ResetIGateCal()
 {
 	CGTU_CalIGT(0, 1, 0);
 	CGTU_CalIGT_SET(0, 1, 0);
-	
-	AlowedError = dev.r(3);
-	dev.w(3,30);
 }
 
 function CGTU_ResetVPowerCal()
 {
 	CGTU_CalVD(0, 1, 0);
-	
-	AlowedError = dev.r(3);
-	dev.w(3,30);
 }
 
 function CGTU_ResetIPowerCal()
 {
 	CGTU_CalID(0, 1, 0);
 	CGTU_CalID_SET(0, 1, 0);
-	
-	AlowedError = dev.r(3);
-	dev.w(3,30);
 }
 
 function CGTU_CalVGT(P2, P1, P0)
