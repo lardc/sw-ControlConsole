@@ -1,6 +1,8 @@
 include("PrintStatus.js")
 include("TestBVT.js")
-
+//
+cgtu_CompatibleMode = 1;
+//
 gtu_vg_lim	= 12000;
 gtu_vd_lim	= 12000;
 gtu_ig_lim 	= 1000;
@@ -50,10 +52,10 @@ function GTU_Kelvin()
 
 function GTU_Gate()
 {
-	dev.w(128, gtu_vd_lim);
-	dev.w(129, gtu_id_lim);
-	dev.w(130, gtu_vg_lim);
-	dev.w(131, gtu_ig_lim);
+	dev.w(128 + (cgtu_CompatibleMode ? 3 : 0), gtu_vd_lim);
+	dev.w(129 + (cgtu_CompatibleMode ? 3 : 0), gtu_id_lim);
+	dev.w(130 + (cgtu_CompatibleMode ? 3 : 0), gtu_vg_lim);
+	dev.w(131 + (cgtu_CompatibleMode ? 3 : 0), gtu_ig_lim);
 	
 	dev.c(101);
 	
@@ -99,10 +101,10 @@ function GTU_Holding()
 {
 	if (gtu_diag) print("\n#Holding current");
 
-	dev.w(128, gtu_vd_lim);
-	dev.w(129, gtu_id_lim);
-	dev.w(130, gtu_vg_lim);
-	dev.w(131, gtu_ig_lim);
+	dev.w(128 + (cgtu_CompatibleMode ? 3 : 0), gtu_vd_lim);
+	dev.w(129 + (cgtu_CompatibleMode ? 3 : 0), gtu_id_lim);
+	dev.w(130 + (cgtu_CompatibleMode ? 3 : 0), gtu_vg_lim);
+	dev.w(131 + (cgtu_CompatibleMode ? 3 : 0), gtu_ig_lim);
 	
 	dev.c(102);
 	
@@ -126,10 +128,10 @@ function GTU_Latching()
 {
 	if (gtu_diag) print("\n#Latching current");
 	
-	dev.w(128, gtu_vd_lim);
-	dev.w(129, gtu_id_lim);
-	dev.w(130, gtu_vg_lim);
-	dev.w(131, gtu_ig_lim);
+	dev.w(128 + (cgtu_CompatibleMode ? 3 : 0), gtu_vd_lim);
+	dev.w(129 + (cgtu_CompatibleMode ? 3 : 0), gtu_id_lim);
+	dev.w(130 + (cgtu_CompatibleMode ? 3 : 0), gtu_vg_lim);
+	dev.w(131 + (cgtu_CompatibleMode ? 3 : 0), gtu_ig_lim);
 	
 	dev.c(103);
 	
@@ -175,10 +177,10 @@ function GTU_Vgnt(DirectVoltage, DirectCurrent)
 	
 	// Конфигурация GTU
 	dev.nid(3);
-	dev.w(128, gtu_vd_lim);
-	dev.w(129, gtu_id_lim);
-	dev.w(130, gtu_vg_lim);
-	dev.w(131, gtu_ig_lim);
+	dev.w(128 + (cgtu_CompatibleMode ? 3 : 0), gtu_vd_lim);
+	dev.w(129 + (cgtu_CompatibleMode ? 3 : 0), gtu_id_lim);
+	dev.w(130 + (cgtu_CompatibleMode ? 3 : 0), gtu_vg_lim);
+	dev.w(131 + (cgtu_CompatibleMode ? 3 : 0), gtu_ig_lim);
 	
 	// Запуск формирования прямого напряжения
 	dev.nid(4);
@@ -371,8 +373,8 @@ function GTU_HeatingTest(Voltage, Current)
 	dev.w(10,0);
 	dev.w(11,0);
 	dev.w(61,100);
-	dev.w(130,Voltage);
-	dev.w(131,Current);
+	dev.w(130 + (cgtu_CompatibleMode ? 3 : 0),Voltage);
+	dev.w(131 + (cgtu_CompatibleMode ? 3 : 0),Current);
 	
 	dev.c(107);
 	
@@ -393,25 +395,25 @@ function GTU_HeatingTest(Voltage, Current)
 
 function GTU_PulseVd(Voltage)
 {
-	dev.w(128, Voltage);
+	dev.w(128 + (cgtu_CompatibleMode ? 3 : 0), Voltage);
 	dev.c(112);
 }
 
 function GTU_PulseId(Current)
 {
-	dev.w(129, Current);
+	dev.w(129 + (cgtu_CompatibleMode ? 3 : 0), Current);
 	dev.c(113);
 }
 
 function GTU_PulseVg(Voltage)
 {
-	dev.w(130, Voltage);
+	dev.w(130 + (cgtu_CompatibleMode ? 3 : 0), Voltage);
 	dev.c(110);
 }
 
 function GTU_PulseIg(Current)
 {
-	dev.w(131, Current);
+	dev.w(131 + (cgtu_CompatibleMode ? 3 : 0), Current);
 	dev.c(111);
 }
 
