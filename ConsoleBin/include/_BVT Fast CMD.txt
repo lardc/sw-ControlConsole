@@ -2,6 +2,12 @@
 CBVT_Init(portBVT, portTek, channelMeasureV, channelMeasureI);
 BVT_StartPulse(N, Voltage, Current);
 
+// Посмотреть версию прошивки
+dev.co(7); //  номер COM-порта блока pp()
+dev.nid(4);
+i("PrintStatus.js");
+PrintFWInfo();
+
 // Обновление прошивки
 dev.co(7); //  номер COM-порта блока pp()
 dev.nid(4);
@@ -18,33 +24,38 @@ bvt_start_v = 200;
 // Измерение
 BVT_StartPulse(1,500,50);
 
-// Диапазон 300 - 999В (AC)
+// Вывод графиков тока и напряжения на одном
+a = BVT_Plot();
+plot2(a.Voltage, a.Current, 1, 0);
+
+
+// Диапазон 200 - 999В (AC)
 / (Offset: -) (K: 28/29)
 / [P0: 114] [P1: 105] [P2: 104]
 i("CalBVT.js");
-cbvt_Iterations = 1;
+cbvt_Iterations = 3;
 cbvt_RangeV = 1;
-cbvt_VstpAC = 70;
+cbvt_VstpAC = 100;
 cbvt_VmaxAC = 999;
-cbvt_VminAC = 300;
-bvt_start_v = 300;
-CBVT_Init(7,6,1,2);
+cbvt_VminAC = 200;
+bvt_start_v = 200;
+CBVT_Init(7,2,1,2);
 dev.nid(4);
 
 CBVT_VerifyV();
 CBVT_CalibrateV();
 
-// Диапазон 1000 - 8000В (AC)
+// Диапазон 1001 - 8000В (AC)
 / (Offset: -) (K: 30/31)
 / [P0: 115] [P1: 107] [P2: 106]
 i("CalBVT.js");
-cbvt_Iterations = 1;
+cbvt_Iterations = 3;
 cbvt_RangeV = 2;
-cbvt_VstpAC = 700;
+cbvt_VstpAC = 1000;
 cbvt_VmaxAC = 8000;
 cbvt_VminAC = 1001;
 bvt_start_v = 500;
-CBVT_Init(7,6,1,2);
+CBVT_Init(7,2,1,2);
 dev.nid(4);
 
 CBVT_VerifyV();
@@ -57,12 +68,12 @@ i("CalBVT.js");
 cbvt_Iterations = 1;
 cbvt_RangeI = 1;
 cbvt_UseMicroAmps = 1;
-bvt_start_v = 108;
+bvt_start_v = 110;
 cbvt_VmaxAC = 6400; 
-cbvt_VminAC = 108;
-cbvt_R = 216400;
-cbvt_Shunt = 99.48;
-CBVT_Init(7,6,1,2);
+cbvt_VminAC = 110;
+cbvt_R = 215980;
+cbvt_Shunt = 99.46;
+CBVT_Init(7,2,1,2);
 dev.nid(4);
 
 CBVT_VerifyI();
@@ -78,9 +89,9 @@ cbvt_UseMicroAmps = 1;
 bvt_start_v = 650;
 cbvt_VmaxAC = 6500; 
 cbvt_VminAC = 650;
-cbvt_R = 21686;
-cbvt_Shunt = 9.92;
-CBVT_Init(7,6,1,2);
+cbvt_R = 21655;
+cbvt_Shunt = 9.91;
+CBVT_Init(7,2,1,2);
 dev.nid(4);
 
 CBVT_VerifyIP();
