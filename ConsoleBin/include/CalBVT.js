@@ -400,7 +400,6 @@ function CBVT_Collect(VoltageValues, IterationsCount, PrintMode)
 			dev.w(134, (VoltageValues[j] < 1000) ? cbvt_StartVLow : cbvt_StartVHigh);	// Start voltage
 			dev.w(131, VoltageValues[j]);	// Target voltage
 			CBVT_Probe(PrintMode);
-			
 			if (anykey()) return 0;
 		}
 	}
@@ -496,7 +495,6 @@ function CBVT_Probe(PrintMode)
 	while (dev.r(192) == 5) sleep(100);
 	
 	sleep(500);
-	
 	var f_v = CBVT_MeasureV(cbvt_chMeasureV);
 	var f_i = CBVT_MeasureI(cbvt_chMeasureI);
 	
@@ -522,11 +520,13 @@ function CBVT_Probe(PrintMode)
 		case 1:
 			print("V,     V: " + v);
 			print("Vtek,  V: " + f_v);
+			print("Погр,  %: " + ((v - f_v) / f_v * 100).toFixed(2));
 			break;
 		
 		case 2:
 			print("I,    mA: " + i.toFixed(cbvt_UseMicroAmps ? 3 : 1));
 			print("Itek, mA: " + f_i.toFixed(3));
+			print("Погр,  %: " + ((i - f_i) / f_i * 100).toFixed(2));
 			break;
 	}
 	
@@ -636,6 +636,7 @@ function CBVT_TekMeasurement(Channel)
 
 function CBVT_TekScale(Channel, Value)
 {
+	Value = Value * 0.85
 	TEK_ChannelScale(Channel, Value);
 }
 

@@ -6,8 +6,8 @@ bvt_idrm = [];
 bvt_irrm = [];
 
 bvt_direct = 1;
-bvt_use_microamps = 0;		// use microampere precision
-bvt_start_v = 500;			// in V
+bvt_use_microamps = 1;		// use microampere precision
+bvt_start_v = 200;			// in V
 bvt_rate = 20;				// in kV/s x10
 bvt_test_time = 3000;		// in ms
 bvt_pulse_sleep = 1000;		// in ms
@@ -15,6 +15,9 @@ bvt_5hz_current = 50;		// in mA
 
 function BVT_StartPulse(N, Voltage, Current)
 {	
+
+	var csv_array = [];
+
 	dev.w(128, 3);				// Test type - reverse pulse
 	dev.w(130, Current);
 	dev.w(131, Voltage);
@@ -69,7 +72,10 @@ function BVT_StartPulse(N, Voltage, Current)
 			sleep(bvt_pulse_sleep);
 		
 		if (anykey()) return;
+			
+		csv_array.push(bvt_vdrm[i] + ";" + bvt_idrm[i]);
 	}
+	save("data/BVT_ResourceTest.csv", csv_array);
 }
 
 function BVT_StartDC(N, Voltage, Current)
@@ -187,9 +193,9 @@ function BVT_Test(Voltage, Current)
 
 function BVT_ReadCurrent(UseMicroAmps)
 {
-	var CoarseI = Math.abs(dev.r(199) / 10);
+	var CoarseI = Math.abs(dev.rs(199) / 10);
 	if (UseMicroAmps)
-		return Math.floor(CoarseI) + dev.r(200) / 1000;
+		return Math.floor(CoarseI) + dev.rs(200) / 1000;
 	else
 		return CoarseI;
 }
