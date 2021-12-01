@@ -8,6 +8,7 @@ Commands:
 	- p(@any) - same as "print"
 	- sleep(@milliseconds) - pause for specified time
 	- save(@filename, [@values]) - write array values to file
+	- append(@filename, [@values]) - append array values to file
 	- load(@filename) : [@values] - read array values from file
 	- loadtihex(@filename) : [@values] - read array of hex values from file
 	- loadbin(@filename) : [@values] - read binary file
