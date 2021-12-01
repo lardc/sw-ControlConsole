@@ -5,10 +5,11 @@ include("CalGeneral.js")
 // Calibration setup parameters
 cal_Points = 10;
 
-cal_Rshunt = 250;			// мкОм
-cal_Rload = 1000;			// мкОм
-cal_GateRshunt = 100;		// мОм
+cal_Rshunt = 750;			// мкОм
+cal_Rload = 3333;			// мкОм
+cal_GateRshunt = 10000;		// мОм
 cal_GatePulseWidth = 100;	// мкс
+
 
 cal_CurrentRange = 0;	// 0 = 100 - 1000A; 1 = 1000 - 6500A;
 
@@ -16,12 +17,12 @@ cal_UtmMin = 500;		// мВ
 cal_UtmMax = 5000;		// мВ
 cal_UtmStp = (cal_UtmMax - cal_UtmMin) / cal_Points;
 
-cal_ItmMin = [100, 1001];	
-cal_ItmMax = [1000, 6000];
+cal_ItmMin = [100, 301];	
+cal_ItmMax = [300, 1650];
 cal_ItmStp = (cal_ItmMax[cal_CurrentRange] - cal_ItmMin[cal_CurrentRange]) / cal_Points;
 
 cal_IsetMin = 100;	
-cal_IsetMax = 6000;
+cal_IsetMax = 1650;
 cal_IsetStp = (cal_IsetMax - cal_IsetMin) / cal_Points;
 
 cal_IgMin = 100;	
@@ -29,7 +30,7 @@ cal_IgMax = 1000;
 cal_IgStp = (cal_IgMax - cal_IgMin) / cal_Points;
 
 cal_UgMin = 1000;	
-cal_UgMax = 10000;
+cal_UgMax = 11000;
 cal_UgStp = (cal_UgMax - cal_UgMin) / cal_Points;
 
 cal_Iterations = 1;
@@ -202,6 +203,8 @@ function CAL_CalibrateIg()
 {		
 	CAL_ResetA();
 	CAL_ResetIgCal();
+	GateVoltage 	= 12000;	// mV
+	GateCurrent 	= 1000;		// mA
 	
 	// Tektronix init
 	CAL_GateTekInit(cal_chMeasureI);
@@ -228,6 +231,8 @@ function CAL_CalibrateUg()
 {
 	CAL_ResetA();
 	CAL_ResetUgCal();
+	GateVoltage 	= 12000;	// mV
+	GateCurrent 	= 1000;		// mA
 	
 	// Tektronix init
 	CAL_GateTekInit(cal_chMeasureU);
@@ -572,10 +577,15 @@ function CAL_CollectIg(CurrentValues, IterationsCount)
 			//
 			LSL_TekScale(cal_chMeasureI, CurrentValues[j] * cal_GateRshunt / 1000000);
 			LSL_TriggerInit(cal_chSync, 2);
-			
+			GateCurrent = CurrentValues[j];
+			LSL_TekScale(cal_chMeasureU, CurrentValues[j] / 1000);
+			LSL_TriggerInit(cal_chSync)
+			TEK_Send("trigger:main:edge:slope rise");
+			TEK_Send("horizontal:position " + 0.0001);
+			p(dev.r(151));
 			for (var k = 0; k < AvgNum; k++)
 			{
-				if(!LSLH_GD_Pulse(CurrentValues[j], cal_UgMax, cal_GatePulseWidth))
+				if(!LSLH_StartMeasure(100))
 				sleep(500);
 			}
 			
@@ -626,13 +636,14 @@ function CAL_CollectUg(VoltageValues, IterationsCount)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
-			
+			GateVoltage = VoltageValues[j];
 			LSL_TekScale(cal_chMeasureU, VoltageValues[j] / 1000);
 			LSL_TriggerInit(cal_chSync)
-			
+			TEK_Send("trigger:main:edge:slope rise");
+			TEK_Send("horizontal:position " + 0.0001);
 			for (var k = 0; k < AvgNum; k++)
 			{
-				if(!LSLH_GD_Pulse(cal_IgMax, VoltageValues[j], cal_GatePulseWidth))
+				if(!LSLH_StartMeasure(100))
 				sleep(500);
 			}
 			
