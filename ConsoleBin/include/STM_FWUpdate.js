@@ -149,6 +149,23 @@ function FWU_RestoreATUHP()
 	dev.Restore("../../hw-ATUControlBoard/atuhp.regdump");
 }
 
+// TOMU
+function FWU_TOMU()
+{
+	FWUpdateSTM("../../hw-TOMUControlBoard/Firmware/Release/TOMUControlBoard.binary");
+}
+
+function FWU_DumpTOMU()
+{
+	dev.Dump("../../hw-TOMUControlBoard/tomuhp.regdump", 0, 126);
+}
+
+function FWU_RestoreTOMU()
+{
+	dev.Restore("../../hw-TOMUControlBoard/tomuhp.regdump");
+}
+//------------------------
+
 // TOMU HP
 function FWU_TOMUHP()
 {
