@@ -30,12 +30,13 @@ TOU_Measure(Current);
 // Диапазон тока 160 - 1250А
 / (Offset: -) (K: 4)
 / [P0: 5] [P1: 6] [P2: 7]
+dev.c(1);
 i("CalTOU.js");
 ctou_Imax = 1250;
 ctou_Imin = 160;
 ctou_Istp = 60;
-ctou_Ri = 1e-3;
-ctou_Iterations = 1;
+ctou_Ri = 0.22/73;
+ctou_Iterations = 3;
 CTOU_Init(13,14,1,2);
 
 CTOU_VerifyI();
