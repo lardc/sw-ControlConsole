@@ -1,7 +1,7 @@
 include("PrintStatus.js")
 
 tou_print = 1;
-tou_printError = 1;
+tou_printError = 0;
 
 // Timings
 ctou_t_on = [];
@@ -49,8 +49,11 @@ function TOU_Measure(Current)
 	}
 	else
 	{
+		if (tou_printError)
+		{
 		print("OpResult fail");
-		PrintStatus();
+		PrintStatus();	
+		}		
 	}
 }
 
