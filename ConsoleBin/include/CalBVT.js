@@ -379,7 +379,7 @@ function CBVT_Collect(VoltageValues, IterationsCount, PrintMode)
 	dev.w(130, CBVT_GetILim() * 10);											// Current limit
 	dev.w(132, bvt_test_time);													// Plate time
 	dev.w(133, 30);																// Rise rate
-	dev.w(136, Math.round(50 / ((cbvt_MaxP == 0) ? cbvt_Freq1 : cbvt_Freq2)));	// Frequency divisor
+	dev.w(136, Math.round(50 / ((cbvt_MaxP == 0) ? cbvt_Freq2 : cbvt_Freq1)));	// Frequency divisor
 	
 	CBVT_TekScale(cbvt_chMeasureV, cbvt_Vmax);
 	CBVT_TekScale(cbvt_chMeasureI, (cbvt_MaxP == 0) ? (cbvt_Vmax / cbvt_R * cbvt_Shunt) : (cbvt_Vmax / cbvt_RP * cbvt_ShuntP));

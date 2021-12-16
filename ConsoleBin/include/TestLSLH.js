@@ -3,7 +3,7 @@
 GatePulseTime 	= 100;		// us
 GateVoltage 	= 10000;	// mV
 GateCurrent 	= 1000;		// mA
-GatePulseDelay	= 500;		// uS
+GatePulseDelay	= 0;		// uS
 //
 LSLH_Print = 1;
 

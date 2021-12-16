@@ -206,7 +206,9 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			var i_sc = Math.round(CTOU_Measure(ctou_chMeasureI, "4") / ctou_Ri, 3);
 			ctou_i_sc.push(i_sc);
 			print("Itek, A: " + i_sc);
-
+			print("Погр изм, A: " + ((i_read - i_sc) / i_sc * 100).toFixed(2));
+			print("Погр set, A: " + ((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
+			
 			// Relative error
 			ctou_i_err.push(((i_read - i_sc) / i_sc * 100).toFixed(2));
 			ctou_iset_err.push(((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));

@@ -36,6 +36,7 @@ namespace PE.ControlConsole
             EngineContext.SetParameter(@"p", new Action<object>(Print));
             EngineContext.SetParameter(@"sleep", new Action<object>(Sleep));
             EngineContext.SetParameter(@"save", new Action<string, IList<object>>(Save));
+            EngineContext.SetParameter(@"append", new Action<string, IList<object>>(Append));
             EngineContext.SetParameter(@"load", new Func<string, object[]>(Load));
             EngineContext.SetParameter(@"loadtihex", new Func<string, object[]>(LoadTIHex));
             EngineContext.SetParameter(@"loadbin", new Func<string, object[]>(LoadBin));
@@ -116,11 +117,11 @@ namespace PE.ControlConsole
                 Console.WriteLine(@"Bad argument: " + TimemSec);
         }
 
-        private void Save(string FileName, IList<object> Array)
+        private void SaveX(string FileName, IList<object> Array, FileMode Mode)
         {
             try
             {
-                using (var stream = new FileStream(FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
+                using (var stream = new FileStream(FileName, Mode, FileAccess.Write, FileShare.Read))
                     using (var writer = new StreamWriter(stream, Encoding.ASCII))
                         foreach (var t in Array)
                             writer.WriteLine("{0}", t);
@@ -129,6 +130,16 @@ namespace PE.ControlConsole
             {
                 Console.WriteLine(e.Message);
             }             
+        }
+
+        private void Save(string FileName, IList<object> Array)
+        {
+            SaveX(FileName, Array, FileMode.Create);
+        }
+
+        private void Append(string FileName, IList<object> Array)
+        {
+            SaveX(FileName, Array, FileMode.Append);
         }
 
         private object[] Load(string FileName)

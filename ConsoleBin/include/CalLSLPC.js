@@ -5,15 +5,15 @@ include("CalGeneral.js")
 // Calibration setup parameters
 cal_Points = 10;
 
-cal_Rshunt = 250;	// uOhm
+cal_Rshunt = 750;	// uOhm
 
 cal_CurrentRange = 0;
 
-cal_IdMin = [100, 1000.1];	
-cal_IdMax = [1000, 6500];
+cal_IdMin = [100, 300.1];	
+cal_IdMax = [300, 1650];
 cal_IdStp = (cal_IdMax[cal_CurrentRange] - cal_IdMin[cal_CurrentRange]) / cal_Points;
 
-cal_Iterations = 3;
+cal_Iterations = 1;
 cal_UseAvg = 1;
 //		
 

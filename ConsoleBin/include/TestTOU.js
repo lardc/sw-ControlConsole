@@ -1,7 +1,7 @@
 include("PrintStatus.js")
 
 tou_print = 1;
-tou_printError = 1;
+tou_printError = 0;
 
 // Timings
 ctou_t_on = [];
@@ -11,6 +11,27 @@ ctou_t_gd = [];
 function _TOU_Active()
 {
 	return (dev.r(192) == 5);
+}
+
+// Cycle test
+function TOU_DBG(Min, Max, Step)
+{
+	tou_min_current = Min;
+	tou_max_current = Max;
+	tou_step_current = Step;
+	
+	for(var i = tou_min_current; i < tou_max_current; i = i + tou_step_current)
+	{
+		dev.w(128, i);
+ 		dev.c(24);
+ 		print("Задание " + i);
+ 		print("Измерил блок " + dev.r(201));
+ 		if (anykey()) return;
+ 		sleep(1000);
+ 		while (dev.r(200) < 299)
+ 			sleep(100);
+	}
+	
 }
 
 // One measure [A]
@@ -28,8 +49,11 @@ function TOU_Measure(Current)
 	}
 	else
 	{
+		if (tou_printError)
+		{
 		print("OpResult fail");
-		PrintStatus();
+		PrintStatus();	
+		}		
 	}
 }
 
@@ -42,7 +66,6 @@ function TOU_ResourceTest(Current, Num, Sleep)
 		print("I set, A: " + Current);
 		TOU_Measure(Current);
 		sleep(Sleep);
-		if (anykey()) return;
 	}
 }
 
