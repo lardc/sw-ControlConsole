@@ -17,6 +17,7 @@ Commands:
 	- plot([@Y], @stepX, @initX) - plot graph of values in array Y using X axis which is set by step and origin
 	  <pl>
 	- plot2([@Y1], [@Y2], @stepX, @initX) - plot graphs of values in arrays Y1 and Y2 using X axis which is set by step and origin
+	- plot2s([@Y1], [@Y2], @stepX, @initX) - plot graphs of values in arrays Y1 and Y2 using X axis which is set by step and origin in same Y scale
 	- plot3([@Y1], [@Y2], [@Y3], @stepX, @initX) - plot graphs of values in arrays Y1, Y2 and Y3 using X axis which is set by step and origin
 	- plotXY([@X], [@Y]) - plot graph of values in array Y using array X as X axis values
 	- scatter([@X], [@Y]) - plot scatter graph of values in array Y using array X as X axis values

@@ -44,6 +44,7 @@ namespace PE.ControlConsole
             EngineContext.SetParameter(@"pl", new Action<IEnumerable<object>>(Plot));
             EngineContext.SetParameter(@"plot", new Action<IEnumerable<object>, double, double>(Plot));
             EngineContext.SetParameter(@"plot2", new Action<IEnumerable<object>, IEnumerable<object>, double, double>(Plot));
+            EngineContext.SetParameter(@"plot2s", new Action<IEnumerable<object>, IEnumerable<object>, double, double>(PlotSame));
             EngineContext.SetParameter(@"plot3", new Action<IEnumerable<object>, IEnumerable<object>, IEnumerable<object>, double, double>(Plot));
             EngineContext.SetParameter(@"plotXY", new Action<IEnumerable<object>, IEnumerable<object>>(PlotXY));
             EngineContext.SetParameter(@"scatter", new Action<IEnumerable<object>, IEnumerable<object>>(PlotScatter));
@@ -263,6 +264,19 @@ namespace PE.ControlConsole
             try
             {
                 PlotForm.RunPlot(YValues1.Select(m => Convert.ToDouble(m, CultureInfo.InvariantCulture)).ToList(),
+                                 YValues2.Select(m => Convert.ToDouble(m, CultureInfo.InvariantCulture)).ToList(), Step, InitX);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        private void PlotSame(IEnumerable<object> YValues1, IEnumerable<object> YValues2, double Step, double InitX)
+        {
+            try
+            {
+                PlotForm.RunPlotSame(YValues1.Select(m => Convert.ToDouble(m, CultureInfo.InvariantCulture)).ToList(),
                                  YValues2.Select(m => Convert.ToDouble(m, CultureInfo.InvariantCulture)).ToList(), Step, InitX);
             }
             catch (Exception e)
