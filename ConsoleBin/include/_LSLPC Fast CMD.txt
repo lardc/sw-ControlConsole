@@ -1,10 +1,10 @@
 // Пояснения
 CAL_Init(portDevice, portTek, channelMeasureId);
-LSLPC_Pulse(Current);
+LSLPC_Start(Current);
+Nid = 150...
 
 // Обновление прошивки
-dev.co(7); //  номер COM-порта блока pp()
-dev.nid(150); // 151 для второго блока в связке
+dev.co(1); //  номер COM-порта блока pp()
 i("STM_FWUpdate.js");
 FWU_LSLPC();
 
@@ -15,7 +15,7 @@ dev.c(1);
 i("TestLSLPC.js");
 
 // Измерение
-LSLPC_Pulse(200);
+LSLPC_Start(200);
 
 // 0 диапазон 100 - 999 А
 / (Offset: 36) (K: 34/35)
