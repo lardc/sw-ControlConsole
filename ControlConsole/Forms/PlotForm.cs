@@ -23,6 +23,11 @@ namespace PE.ControlConsole.Forms
             RunPlotInternal(() => new PlotForm(YValues1, YValues2, Step, InitX));
         }
 
+        internal static void RunPlotSame(IList<double> YValues1, IList<double> YValues2, double Step, double InitX)
+        {
+            RunPlotInternal(() => new PlotForm(YValues1, YValues2, Step, InitX, false));
+        }
+
         internal static void RunPlot(IList<double> YValues1, IList<double> YValues2, IList<double> YValues3, double Step, double InitX)
         {
             RunPlotInternal(() => new PlotForm(YValues1, YValues2, YValues3, Step, InitX));
@@ -69,47 +74,53 @@ namespace PE.ControlConsole.Forms
             ms_PlotCounter = 1;
         }
 
-        private PlotForm(int CurvesNum, bool Scatter)
+        private PlotForm(int CurvesNum, bool Scatter, bool SeparateAxes)
         {
             InitializeComponent();
 
-            AdjustGraph(ms_PlotCounter, CurvesNum, Scatter);
+            AdjustGraph(CurvesNum, Scatter, SeparateAxes);
             SetName(ms_PlotCounter);
             ms_PlotCounter++;
         }
 
         private PlotForm(IEnumerable<double> YValues, double Step, double InitX)
-            : this(1, false)
+            : this(1, false, true)
         {
             PlotData(YValues, Step, InitX);
         }
 
         private PlotForm(IList<double> YValues1, IList<double> YValues2, double Step, double InitX)
-            : this(2, false)
+            : this(2, false, true)
+        {
+            PlotData(YValues1, YValues2, Step, InitX);
+        }
+
+        private PlotForm(IList<double> YValues1, IList<double> YValues2, double Step, double InitX, bool dummy)
+            : this(2, false, false)
         {
             PlotData(YValues1, YValues2, Step, InitX);
         }
 
         private PlotForm(IList<double> YValues1, IList<double> YValues2, IList<double> YValues3, double Step, double InitX)
-            : this(3, false)
+            : this(3, false, true)
         {
             PlotData(YValues1, YValues2, YValues3, Step, InitX);
         }
 
         private PlotForm(IList<double> XValues, IList<double> YValues)
-            : this(1, false)
+            : this(1, false, true)
         {
             PlotData(XValues, YValues);
         }
 
         private PlotForm(IList<double> XValues, IList<double> YValues, bool Scatter)
-            : this(1, true)
+            : this(1, true, true)
         {
             PlotData(XValues, YValues);
         }
 
         private PlotForm(IList<double> XValues, IList<double> YValues, bool Scatter, string XName, string YName, string PlotName)
-            : this(1, true)
+            : this(1, true, true)
         {
             OverrideNames(XName, YName, PlotName);
             PlotData(XValues, YValues);
@@ -196,7 +207,7 @@ namespace PE.ControlConsole.Forms
             zedGraph.Refresh();
         }
 
-        private void AdjustGraph(int PlotNumber, int CurvesNum, bool Scatter)
+        private void AdjustGraph(int CurvesNum, bool Scatter, bool SeparateAxes)
         {
             var gpMain = zedGraph.GraphPane;
 
@@ -224,23 +235,28 @@ namespace PE.ControlConsole.Forms
             if (CurvesNum > 1)
             {
                 LineItem Curve2 = zedGraph.GraphPane.AddCurve("DATA2", new PointPairList(), Color.Red, SymbolType.None);
-                Curve2.YAxisIndex = gpMain.AddYAxis("Y2 axis");
-                // Make the Y2 axis scale red
-                gpMain.YAxisList[Curve2.YAxisIndex].Scale.FontSpec.FontColor = Color.Red;
-                gpMain.YAxisList[Curve2.YAxisIndex].Title.FontSpec.FontColor = Color.Red;
-
+                if (SeparateAxes)
+                {
+                    Curve2.YAxisIndex = gpMain.AddYAxis("Y2 axis");
+                    // Make the Y2 axis scale red
+                    gpMain.YAxisList[Curve2.YAxisIndex].Scale.FontSpec.FontColor = Color.Red;
+                    gpMain.YAxisList[Curve2.YAxisIndex].Title.FontSpec.FontColor = Color.Red;
+                }
             }
-
+            
             if (CurvesNum > 2)
             {
                 LineItem Curve3 = zedGraph.GraphPane.AddCurve("DATA3", new PointPairList(), Color.Green, SymbolType.None);
-                Curve3.YAxisIndex = gpMain.AddYAxis("Y3 axis");
-                // Make the Y3 axis scale green
-                gpMain.YAxisList[Curve3.YAxisIndex].Scale.FontSpec.FontColor = Color.Green;
-                gpMain.YAxisList[Curve3.YAxisIndex].Title.FontSpec.FontColor = Color.Green;
+                if (SeparateAxes)
+                {
+                    Curve3.YAxisIndex = gpMain.AddYAxis("Y3 axis");
+                    // Make the Y3 axis scale green
+                    gpMain.YAxisList[Curve3.YAxisIndex].Scale.FontSpec.FontColor = Color.Green;
+                    gpMain.YAxisList[Curve3.YAxisIndex].Title.FontSpec.FontColor = Color.Green;
+                }
             }
 
-            for (var i = 0; i < gpMain.YAxisList.Count; ++i )
+            for (var i = 0; i < gpMain.YAxisList.Count; ++i)
             {
                 // Turn off the opposite tics so the Y tics don't show up on the Y2 axis
                 gpMain.YAxisList[i].MajorTic.IsOpposite = false;
