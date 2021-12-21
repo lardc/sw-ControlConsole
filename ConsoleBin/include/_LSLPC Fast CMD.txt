@@ -1,0 +1,48 @@
+// Пояснения
+CAL_Init(portDevice, portTek, channelMeasureId);
+LSLPC_Pulse(Current);
+
+// Обновление прошивки
+dev.co(7); //  номер COM-порта блока pp()
+dev.nid(150); // 151 для второго блока в связке
+i("STM_FWUpdate.js");
+FWU_LSLPC();
+
+// Подготовка блока
+dev.co(7); //  номер COM-порта блока pp()
+dev.nid(150); // 151 для второго блока в связке
+dev.c(1);
+i("TestLSLPC.js");
+
+// Измерение
+LSLPC_Pulse(200);
+
+// 0 диапазон 100 - 999 А
+/ (Offset: 36) (K: 34/35)
+/ [P0: 33] [P1: 32] [P2: 31]
+i("CalLSLPC.js");
+cal_IdMin = [100, 1001];	
+cal_IdMax = [999, 6500];
+cal_Rshunt = 750; // на 100А шунте
+cal_CurrentRange = 0;
+cal_UseAvg = 1;
+cal_Iterations = 1;
+CAL_Init(1,2,1);
+
+CAL_VerifyId();
+CAL_CalibrateId();
+
+// 1 диапазон 1001 - 6500 А
+/ (Offset: 42) (K: 40/41)
+/ [P0: 39] [P1: 38] [P2: 37]
+i("CalLSLPC.js");
+cal_IdMin = [100, 1001];	
+cal_IdMax = [999, 6500];
+cal_Rshunt = 250; // на 300А шунте
+cal_CurrentRange = 1;
+cal_UseAvg = 1;
+cal_Iterations = 1;
+CAL_Init(1,2,1);
+
+CAL_VerifyId();
+CAL_CalibrateId();

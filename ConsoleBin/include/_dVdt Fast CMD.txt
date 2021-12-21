@@ -1,0 +1,27 @@
+// Пояснения
+CdVdt_Init(portdVdt, portTek, channelMeasure)
+
+// Обновление прошивки
+dev.co(7); //  номер COM-порта блока pp()
+dev.nid(7);
+i("FWUpdate.js");
+FWU_CROVU();
+
+// Подготовка блока
+dev.co(7); //  номер COM-порта блока pp()
+dev.nid(7);
+dev.c(1);
+i("TestdVdt.js");
+
+500-4400В
+i(“CaldVdt.js”);
+cdvdt_SelectedRange = cdvdt_def_NO_RANGE;
+cdvdt_DeviderRate = 1;
+cdvdt_Vmin = 500;
+cdvdt_Vmax = 4400;
+cdvdt_Vstp = 500;
+cdvdt_def_UseHandMeasure = 0; // ручной - 1, авто - 0
+CdVdt_Init(1,2,1);
+
+CdVdt_CollectFixedRate(1); 
+CdVdt_SaveA(“500_4400_verify”);

@@ -5,13 +5,16 @@ bvt_vrrm = [];
 bvt_idrm = [];
 bvt_irrm = [];
 
+csv_array = [];
+
 bvt_direct = 1;
-bvt_use_microamps = 0;		// use microampere precision
-bvt_start_v = 500;			// in V
+bvt_use_microamps = 1;		// use microampere precision
+bvt_start_v = 200;			// in V
 bvt_rate = 20;				// in kV/s x10
 bvt_test_time = 3000;		// in ms
 bvt_pulse_sleep = 1000;		// in ms
 bvt_5hz_current = 50;		// in mA
+bvt_resource_test = 8; 		// Продолжительность ресурсного теста в часах
 
 function BVT_StartPulse(N, Voltage, Current)
 {	
@@ -69,6 +72,36 @@ function BVT_StartPulse(N, Voltage, Current)
 			sleep(bvt_pulse_sleep);
 		
 		if (anykey()) return;
+	}
+}
+
+
+function BVT_ResourceTest(Voltage, Current)
+{
+	csv_array = [];
+
+	bvt_vdrm = [];
+	bvt_vrrm = [];
+	bvt_idrm = [];
+	bvt_irrm = [];
+
+	var i = 0;
+	var today = new Date();								// Узнаем и сохраняем текущее время
+	var hours = today.getHours() + bvt_resource_test;	// Узнаем кол-во часов в текущем времени и прибавляем к нему продолжительность ресурсного теста
+	today.setHours(hours);								// Задаем новое количество часов в дату
+
+	while((new Date()).getTime() < today.getTime())		// Сравниваем текущее время на компьютере в мс, с конечным временем в мс
+	{
+		BVT_StartPulse(1, Voltage, Current);
+		var left_time = new Date((today.getTime()) - ((new Date()).getTime()));
+		print("#" + i + " Осталось " + (left_time.getHours()-3) + " ч и " + left_time.getMinutes() + " мин");
+		
+		csv_array.push((new Date()) + ";" + bvt_vdrm[i] + ";" + bvt_idrm[i]);
+		save("data/BVT_ResourceTest" + today.getTime() + ".csv", csv_array);
+
+		i++;
+		sleep(bvt_pulse_sleep);
+		if (anykey()) break;
 	}
 }
 
@@ -187,9 +220,9 @@ function BVT_Test(Voltage, Current)
 
 function BVT_ReadCurrent(UseMicroAmps)
 {
-	var CoarseI = Math.abs(dev.r(199) / 10);
+	var CoarseI = Math.abs(dev.rs(199) / 10);
 	if (UseMicroAmps)
-		return Math.floor(CoarseI) + dev.r(200) / 1000;
+		return Math.floor(CoarseI) + dev.rs(200) / 1000;
 	else
 		return CoarseI;
 }

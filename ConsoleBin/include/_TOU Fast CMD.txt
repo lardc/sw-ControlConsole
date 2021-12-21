@@ -1,0 +1,44 @@
+// Пояснения
+CTOU_Init(portTOU, portTek, channelMeasureI, channelSync);
+TOU_Measure(Current);
+TOU_DBG(Min, Max, Step);
+
+// Посмотреть версию прошивки
+dev.co(13);
+dev.nid(0);
+i("PrintStatus.js");
+PrintFWInfo();
+
+// Обновление прошивки
+dev.co(13);
+dev.nid(0);
+i("STM_FWUpdate.js");
+FWU_TOMU();
+
+// Подготовка блока
+dev.co(13);
+dev.nid(0);
+dev.c(1);
+i("TestTOU.js");
+
+//Ресурсный тест
+TOU_ResourceTest(Current, Num, Sleep);
+
+// Измерение
+TOU_Measure(Current);
+
+// Диапазон тока 160 - 1250А
+/ (Offset: -) (K: 4)
+/ [P0: 5] [P1: 6] [P2: 7]
+dev.c(1);
+i("CalTOU.js");
+ctou_Imax = 1250;
+ctou_Imin = 160;
+ctou_Istp = 60;
+ctou_Ri = 0.22/73;
+ctou_Iterations = 3;
+CTOU_Init(13,14,1,2);
+
+CTOU_VerifyI();
+
+CTOU_CalibrateI();

@@ -1,0 +1,78 @@
+// Пояснения
+CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU, channelSync);
+LSLH_StartMeasure(Current);
+
+// Обновление прошивки LSLH
+dev.co(7); //  номер COM-порта блока pp()
+dev.nid(9);
+i("STM_FWUpdate.js");
+FWU_LSLH();
+
+// Подготовка блока
+dev.co(7); //  номер COM-порта блока pp()
+dev.nid(9);
+dev.c(1);
+i("TestLSLH.js");
+
+// Измерение
+LSLH_StartMeasure(200);
+
+// 0 диапазон 100 - 1300 А
+/ (Offset: 2) (K: 3)
+/ [P0: 4] [P1: 5] [P2: 6]
+i("CalLSL.js");
+cal_ItmMin = [100, 1301];
+cal_ItmMax = [1299, 13000];
+cal_Rshunt = 750; // на 100А шунте
+cal_CurrentRange = 0;
+cal_UseAvg = 1;
+cal_Iterations = 3;
+CAL_Init(2,15,1,2,3);
+
+CAL_CalibrateItm();
+CAL_VerifyItm();
+
+// 1 диапазон 1301 - 13000А
+/ (Offset: 7) (K: 8)
+/ [P0: 9] [P1: 10] [P2: 11]
+i("CalLSL.js");
+cal_ItmMin = [100, 1301];
+cal_ItmMax = [1299, 13000];
+cal_Rshunt = 250; // на 300А шунте
+cal_CurrentRange = 1;
+cal_Iterations = 1;
+cal_UseAvg = 0
+CAL_Init(2,15,1,2,3);
+
+CAL_CalibrateItm();
+CAL_VerifyItm();
+
+// Задание 100-13000А
+/ (Offset: ) (K: )
+/ [P0: 41] [P1: 42] [P2: 43]
+i("CalLSL.js");
+cal_ItmMin = [100, 1301];
+cal_ItmMax = [1299, 13000];
+cal_Rshunt = 250; // на 300А шунте
+cal_CurrentRange = 0;
+cal_Iterations = 1;
+cal_UseAvg = 1;
+CAL_Init(2,15,1,2,3);
+
+CAL_CalibrateIset();
+CAL_VerifyIset();
+
+// Напряжение 0.5 - 4
+/ (Offset: 12) (K: 13)
+/ [P0: 14] [P1: 15] [P2: 16]
+i("CalLSL.js");
+cal_UtmMin = 500
+cal_UtmMax = 4000;
+cal_Rload = 1000; // сопротивление нагрузки дл Utm
+cal_CurrentRange = 0;
+cal_Iterations = 1;
+cal_UseAvg = 0;
+CAL_Init(2,15,1,2,3);
+
+CAL_VerifyUtm();
+CAL_CalibrateUtm();
