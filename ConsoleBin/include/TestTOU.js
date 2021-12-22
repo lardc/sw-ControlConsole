@@ -2,10 +2,17 @@ include("PrintStatus.js")
 
 tou_print = 1;
 tou_printError = 0;
-
+counter1 = 0;
 // Timings
 ctou_t_on = [];
 ctou_t_gd = [];
+//Graph arrays
+cal_TOUabs1 = [];
+cal_TOUabs2 = [];
+cal_TOUabs3 = [];
+cal_TOUerr1 = [];
+cal_TOUerr2 = [];
+cal_TOUerr3 = [];
 
 // Status check
 function _TOU_Active()
@@ -14,24 +21,65 @@ function _TOU_Active()
 }
 
 // Cycle test
-function TOU_DBG(Min, Max, Step)
+function TOU_DBG(Min, Max, Step, Count)
 {
 	tou_min_current = Min;
 	tou_max_current = Max;
 	tou_step_current = Step;
-	
+	for (;Count>0;Count--){
 	for(var i = tou_min_current; i < tou_max_current; i = i + tou_step_current)
 	{
 		dev.w(128, i);
- 		dev.c(24);
+ 		dev.c(100);
+			while (_TOU_Active())
+		sleep(100);
  		print("Задание " + i);
  		print("Измерил блок " + dev.r(201));
  		if (anykey()) return;
  		sleep(1000);
  		while (dev.r(200) < 299)
  			sleep(100);
+	cal_TOUabs1.push(dev.r(250));
+	cal_TOUabs2.push(dev.r(251)/1000);
+	cal_TOUabs3.push(dev.r(252)/1000);
 	}
-	
+	}
+}
+//Clears graph arrays
+function ResetArray()
+{
+cal_TOUabs1 = [];
+cal_TOUabs2 = [];
+cal_TOUabs3 = [];
+cal_TOUerr1 = [];
+cal_TOUerr2 = [];
+cal_TOUerr3 = [];
+}
+
+//Pulses with graphs [A, A, A]
+function TOU_DBG_Graph(Min, Max, Step)
+{	
+	if(anykey()) return 0;
+	TOU_DBG(Min, Max, Step)
+	plot((cal_TOUabs1),1,1);
+	plot((cal_TOUabs2),1,1);
+	plot((cal_TOUabs3),1,1);
+
+}
+// Pack of pulses with iterations with graphs [Num1, Num2, A, A, A]
+function TOU_DBG_GraphIter(TimesTotal, TimesEach, Min, Max, Step) // Total cycles, every step iteration, min and max TOCU current
+{	
+
+	p(counter1>TimesTotal);
+	for(counter1=0; counter1<TimesTotal;counter1++){
+	if(anykey()) return 0;
+	TOU_DBG(Min, Max, Step, TimesEach);
+	}
+	plot((cal_TOUabs1),1,1);
+	plot((cal_TOUabs2),1,1);
+	plot((cal_TOUabs3),1,1);
+	scattern(cal_TOUabs1, cal_TOUabs2, "I_dut (A)", "tgd (us)", "Idut by tgd");
+	scattern(cal_TOUabs1, cal_TOUabs3, "I_dut (A)", "tgt (us))", "Idut by tgt");
 }
 
 // One measure [A]
@@ -41,7 +89,7 @@ function TOU_Measure(Current)
 	dev.c(100);
 	while (_TOU_Active())
 		sleep(100);
-	
+	p(dev.r(197)); //Status of formation 1 ok, 2 failed
 	if (dev.r(197) == 1)
 	{
 		TOU_getVal();

@@ -9,21 +9,27 @@ i("PrintStatus.js");
 PrintFWInfo();
 
 // Обновление прошивки LSLH
-dev.co(7); //  номер COM-порта блока pp()
-dev.nid(9);
+dev.co(1);
+dev.nid(0);
 i("STM_FWUpdate.js");
 FWU_LSLH();
 
+// Скачать дамп регистров LSLH
+dev.co(1);
+dev.nid(0);
+i("STM_FWUpdate.js");
+FWU_DumpLSLH();
+
 // Подготовка блока
-dev.co(1); //  номер COM-порта блока pp()
+dev.co(1);
 dev.nid(0);
 dev.c(1);
 i("TestLSLH.js");
 
-// Измерение
+// Формирование сигнала и измерение
 LSLH_StartMeasure(200);
 
-// 0 диапазон 160 - 300 А
+// 0 диапазон 160 - 299 А
 / (Offset: 2) (K: 3)
 / [P0: 4] [P1: 5] [P2: 6]
 i("CalLSL.js");
@@ -39,11 +45,11 @@ CAL_VerifyItm();
 
 CAL_CalibrateItm();
 
-// 1 диапазон 300 - 1300А
+// 1 диапазон 301 - 1500А
 / (Offset: 7) (K: 8)
 / [P0: 9] [P1: 10] [P2: 11]
 i("CalLSL.js");
-cal_ItmMin = [160, 305];
+cal_ItmMin = [160, 301];
 cal_ItmMax = [299, 1500];
 cal_Rshunt = 0.22/66*1000000;
 cal_CurrentRange = 1;
@@ -55,7 +61,7 @@ CAL_VerifyItm();
 
 CAL_CalibrateItm();
 
-// Задание 160-1500А
+// Задание тока 160-1500А
 / (Offset: ) (K: )
 / [P0: 41] [P1: 42] [P2: 43]
 i("CalLSL.js");
@@ -87,10 +93,13 @@ CAL_VerifyUtm();
 
 CAL_CalibrateUtm();
 
-
-// Управление напряжение 1 - 10В
-/ (Offset: ) (K: )
-/ [P0: ] [P1: ] [P2: ]
+/// Управление напряжением 1 - 10В
+// Регистры измерения ADC
+/ (Offset: 22) (K: 23)
+/ [P0: 24] [P1: 25] [P2: 26]
+// Регистры задания DAC
+/ (Offset: 50) (K: 51)
+/ [P0: 52] [P1: 53] [P2: 54]
 i("CalLSL.js");
 cal_UgMin = 1000;	
 cal_UgMax = 10000;
@@ -102,10 +111,13 @@ CAL_VerifyUg();
 
 CAL_CalibrateUg();
 
-
-// Управление током 0.1 - 1А
-/ (Offset: 50) (K: 51)
-/ [P0: ] [P1: ] [P2: ]
+/// Управление током 0.1 - 1А
+// Регистры измерения ADC
+/ (Offset: 17) (K: 18)
+/ [P0: 19] [P1: 20] [P2: 21]
+// Регистры задания DAC
+/ (Offset: 55) (K: 56)
+/ [P0: 57] [P1: 58] [P2: 59]
 i("CalLSL.js");
 cal_IgMin = 100;	
 cal_IgMax = 950;
