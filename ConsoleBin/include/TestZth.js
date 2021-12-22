@@ -202,17 +202,17 @@ function CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU)
 }
 //--------------------
 
-function Zth_TestPulseSquareness(Current, PulseWidth)
+function Zth_TestPulseSquareness(TurnOnTime, Current, PulseWidth)
 {
 	var CurrentWaveform = [];
 	var VoltageWaveform = [];
 	var PowerWaveform = [];
 	var PowerWaveformRef = [];
-	var Error, RefPowerPulse, ZthPowerPulse, AvgVoltageDUT, AvgCounter;
+	var Error, RefPowerPulse, ZthPowerPulse, AvgPowerDUT, AvgCounter;
 	var StartIndex, StopIndex, TimeCounter;
 	
 	ZthPowerPulse = 0;
-	AvgVoltageDUT = 0;
+	AvgPowerDUT = 0;
 	AvgCounter = 0;
 	TimeCounter = 0;
 	StartIndex = 0;
@@ -233,49 +233,48 @@ function Zth_TestPulseSquareness(Current, PulseWidth)
 			PowerWaveform[i] = PowerWaveform[i] * (-1);
 	}
 	
-	// Pulse integration
-	for(i = 0; i < PowerWaveform.length; i++)
+	// Find pulse
+	for(i = 0; i < CurrentWaveform.length; i++)
 	{
-		if((PowerWaveform[i]) > (PowerWaveform[0] * 3))
-		{
-			ZthPowerPulse += Math.floor(PowerWaveform[i]);
-			
-			if(!StartIndex)
-				StartIndex = i;
+		if((CurrentWaveform[i]) > (Current / 10))
+		{			
 			StopIndex = i;
-			
 			TimeCounter++;
 		}
 	}
 	
-	// Voltage averaging 
-	for(i = StopIndex - 200; i < StopIndex - 100; i++)
+	TimeCounter = Math.floor(TimeCounter * ((PulseWidth - TurnOnTime) / PulseWidth));
+	StartIndex = StopIndex - TimeCounter;
+	
+	for(i = StartIndex; i <= StopIndex; i++)
+		ZthPowerPulse += PowerWaveform[i];
+	
+	// Power dissapation averaging 
+	for(i = Math.floor(StopIndex * 0.8); i < Math.floor(StopIndex * 0.9); i++)
 	{
-		AvgVoltageDUT += VoltageWaveform[i];
+		AvgPowerDUT += PowerWaveform[i];
 		AvgCounter++;
 	}
-	AvgVoltageDUT = AvgVoltageDUT / AvgCounter;
 	
+	AvgPowerDUT = AvgPowerDUT / AvgCounter;
 	
 	for(i = 0; i < PowerWaveform.length; i++)
 	{
 		if((i >= StartIndex) && (i <= StopIndex))
-			PowerWaveformRef[i] = Math.floor(AvgVoltageDUT * Current);
+			PowerWaveformRef[i] = AvgPowerDUT;
 		else
 			PowerWaveformRef[i] = 0;
 	}
 	
-	RefPowerPulse = Math.floor(AvgVoltageDUT * Current * TimeCounter);
+	RefPowerPulse = AvgPowerDUT * TimeCounter;
 	Error = ((ZthPowerPulse - RefPowerPulse) / RefPowerPulse * 100).toFixed(2);
 	
 	p("");
-	p("");
-	p("RefPowerPulse : " + RefPowerPulse);
-	p("ZthPowerPulse : " + ZthPowerPulse);
+	p("RefPowerPulse : " + Math.floor(RefPowerPulse));
+	p("ZthPowerPulse : " + Math.floor(ZthPowerPulse));
 	p("Error         : " + Error);
 	p("--------------------------------");
-	p("");
-	p("");
-	plot2(PowerWaveform, PowerWaveformRef, 1, 0)
+	
+	plot2s(PowerWaveform, PowerWaveformRef, 1, 0)
 }
 //------------------------------
