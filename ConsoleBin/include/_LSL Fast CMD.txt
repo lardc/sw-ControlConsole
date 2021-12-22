@@ -2,77 +2,131 @@
 CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU, channelSync);
 LSLH_StartMeasure(Current);
 
+// Посмотреть версию прошивки
+dev.co(1);
+dev.nid(0);
+i("PrintStatus.js");
+PrintFWInfo();
+
 // Обновление прошивки LSLH
-dev.co(7); //  номер COM-порта блока pp()
-dev.nid(9);
+dev.co(1);
+dev.nid(0);
 i("STM_FWUpdate.js");
 FWU_LSLH();
 
+// Скачать дамп регистров LSLH
+dev.co(1);
+dev.nid(0);
+i("STM_FWUpdate.js");
+FWU_DumpLSLH();
+
 // Подготовка блока
-dev.co(7); //  номер COM-порта блока pp()
-dev.nid(9);
+dev.co(1);
+dev.nid(0);
 dev.c(1);
 i("TestLSLH.js");
 
-// Измерение
+// Формирование сигнала и измерение
 LSLH_StartMeasure(200);
 
-// 0 диапазон 100 - 1300 А
+// 0 диапазон 160 - 299 А
 / (Offset: 2) (K: 3)
 / [P0: 4] [P1: 5] [P2: 6]
 i("CalLSL.js");
-cal_ItmMin = [100, 1301];
-cal_ItmMax = [1299, 13000];
-cal_Rshunt = 750; // на 100А шунте
+cal_ItmMin = [160, 301];
+cal_ItmMax = [299, 1500];
+cal_Rshunt = 0.22/66*1000000;
 cal_CurrentRange = 0;
-cal_UseAvg = 1;
+cal_UseAvg = 0;
 cal_Iterations = 3;
-CAL_Init(2,15,1,2,3);
+CAL_Init(1,2,1,2,3);
 
-CAL_CalibrateItm();
 CAL_VerifyItm();
 
-// 1 диапазон 1301 - 13000А
+CAL_CalibrateItm();
+
+// 1 диапазон 301 - 1500А
 / (Offset: 7) (K: 8)
 / [P0: 9] [P1: 10] [P2: 11]
 i("CalLSL.js");
-cal_ItmMin = [100, 1301];
-cal_ItmMax = [1299, 13000];
-cal_Rshunt = 250; // на 300А шунте
+cal_ItmMin = [160, 301];
+cal_ItmMax = [299, 1500];
+cal_Rshunt = 0.22/66*1000000;
 cal_CurrentRange = 1;
-cal_Iterations = 1;
-cal_UseAvg = 0
-CAL_Init(2,15,1,2,3);
+cal_Iterations = 3;
+cal_UseAvg = 0;
+CAL_Init(1,2,1,2,3);
 
-CAL_CalibrateItm();
 CAL_VerifyItm();
 
-// Задание 100-13000А
+CAL_CalibrateItm();
+
+// Задание тока 160-1500А
 / (Offset: ) (K: )
 / [P0: 41] [P1: 42] [P2: 43]
 i("CalLSL.js");
-cal_ItmMin = [100, 1301];
-cal_ItmMax = [1299, 13000];
-cal_Rshunt = 250; // на 300А шунте
-cal_CurrentRange = 0;
-cal_Iterations = 1;
-cal_UseAvg = 1;
-CAL_Init(2,15,1,2,3);
-
-CAL_CalibrateIset();
-CAL_VerifyIset();
-
-// Напряжение 0.5 - 4
-/ (Offset: 12) (K: 13)
-/ [P0: 14] [P1: 15] [P2: 16]
-i("CalLSL.js");
-cal_UtmMin = 500
-cal_UtmMax = 4000;
-cal_Rload = 1000; // сопротивление нагрузки дл Utm
+cal_IsetMin = 160;	
+cal_IsetMax = 1500;
+cal_Rshunt = 0.22/66*1000000;
 cal_CurrentRange = 0;
 cal_Iterations = 1;
 cal_UseAvg = 0;
-CAL_Init(2,15,1,2,3);
+CAL_Init(1,2,1,2,3);
+
+CAL_VerifyIset();
+
+CAL_CalibrateIset();
+
+// Напряжение 0.5 - 5В
+/ (Offset: 12) (K: 13)
+/ [P0: 14] [P1: 15] [P2: 16]
+i("CalLSL.js");
+cal_UtmMin = 500;
+cal_UtmMax = 5000;
+cal_Rload = 0.22/66*1000000;
+cal_CurrentRange = 0;
+cal_Iterations = 3;
+cal_UseAvg = 0;
+CAL_Init(1,2,1,2,3);
 
 CAL_VerifyUtm();
+
 CAL_CalibrateUtm();
+
+/// Управление напряжением 1 - 10В
+// Регистры измерения ADC
+/ (Offset: 22) (K: 23)
+/ [P0: 24] [P1: 25] [P2: 26]
+// Регистры задания DAC
+/ (Offset: 50) (K: 51)
+/ [P0: 52] [P1: 53] [P2: 54]
+i("CalLSL.js");
+cal_UgMin = 1000;	
+cal_UgMax = 10000;
+cal_Iterations = 1;
+cal_UseAvg = 0;
+CAL_Init(1,2,1,2,3);
+
+CAL_VerifyUg();
+
+CAL_CalibrateUg();
+
+/// Управление током 0.1 - 1А
+// Регистры измерения ADC
+/ (Offset: 17) (K: 18)
+/ [P0: 19] [P1: 20] [P2: 21]
+// Регистры задания DAC
+/ (Offset: 55) (K: 56)
+/ [P0: 57] [P1: 58] [P2: 59]
+i("CalLSL.js");
+cal_IgMin = 100;	
+cal_IgMax = 950;
+cal_GateRshunt = 9890;
+cal_Iterations = 1;
+cal_UseAvg = 0;
+CAL_Init(1,2,1,2,3);
+
+CAL_VerifyIg();
+
+CAL_CalibrateIg();
+
