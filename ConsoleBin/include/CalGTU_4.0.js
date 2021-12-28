@@ -412,7 +412,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						
 					case 111:	// IG
 						CGTU_TekScale(cgtu_chMeasureGate, cgtu_Values[j] * Resistance / 1000);
-						TEK_TriggerLevelF(cgtu_Values[j] * Resistance / (1000 * 2));
+						TEK_TriggerLevelF(cgtu_Values[j] * Resistance / (600 * 2));
 						
 						sleep(1000);
 						
@@ -433,7 +433,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						
 					case 113:	// ID
 						CGTU_TekScale(cgtu_chMeasurePower, cgtu_Values[j] * Resistance / 1000);
-						TEK_TriggerLevelF(cgtu_Values[j] * Resistance / (1000 * 2));
+						TEK_TriggerLevelF(cgtu_Values[j] * Resistance / (600 * 2));
 						sleep(1000);
 						
 						// Configure GTU
