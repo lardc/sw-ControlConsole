@@ -24,7 +24,16 @@ cal_UdMin = 300;
 cal_UdMax = 4500;
 cal_UdStp = (cal_UdMax - cal_UdMin) / cal_Points;
 
-cal_Iterations = 10;
+cal_Tmin  = 30;
+cal_Tmax  = 200;
+cal_TmaxStp = (cal_Tmax - cal_Tmin) / cal_Points;
+
+cal_Calibrate_Tcase1 = 1;
+cal_Calibrate_Tcool1 = 1;
+cal_Calibrate_Tcase2 = 1;
+cal_Calibrate_Tcool2 = 1;
+
+cal_Iterations = 1;
 //		
 
 // Counters
@@ -35,6 +44,10 @@ cal_CntDone = 0;
 cal_Ud = [];
 cal_Im = [];
 cal_Ih = [];
+cal_Tcase1 = [];
+cal_Tcool1 = [];
+cal_Tcase2 = [];
+cal_Tcool2 = [];
 cal_ImSet = [];
 cal_IhSet = [];
 cal_IgSet = [];
@@ -44,11 +57,16 @@ cal_UdInst = [];
 cal_ImInst = [];
 cal_IgInst = [];
 cal_IhInst = [];
+cal_TFluke = [];
 
 // Relative error
 cal_UdErr = [];
 cal_ImErr = [];
 cal_IhErr = [];
+cal_Tcase1Err = [];
+cal_Tcool1Err = [];
+cal_Tcase2Err = [];
+cal_Tcool2Err = [];
 cal_ImSetErr = [];
 cal_IhSetErr = [];
 cal_IgSetErr = [];
@@ -58,32 +76,10 @@ cal_UdCorr = [];
 cal_ImCorr = [];
 cal_IgCorr = [];
 cal_IhCorr = [];
-
-
-ErrorArray = [];
-VoltageArray = [];
-
-function Zth_Test(Voltage, N)
-{	
-	VoltageArray = [];
-	ErrorArray = [];
-	
-	for(i = 0; i < N; i++)
-	{
-		Zth_TSP(Voltage);
-		sleep(1500);
-		dev.c(12);		
-		
-		var Vinst = (Instek_ReadDisplayValue() * 1000).toFixed(2);
-		var Vdev = dev.r(150) / 10;
-		var Error = ((Vdev - Vinst) / Vinst * 100).toFixed(2);
-		ErrorArray.push(Error);
-		VoltageArray.push(Voltage);
-		
-		p(Vdev);
-	}
-	scattern(VoltageArray, ErrorArray, "Current (in mA)", "Error (in %)", "Current relative error");
-}
+cal_Tcase1Corr = [];
+cal_Tcool1Corr = [];
+cal_Tcase2Corr = [];
+cal_Tcool2Corr = [];
 
 function CAL_Init(portDevice, portInstek)
 {
@@ -189,6 +185,63 @@ function CAL_CalibrateIh()
 }
 //--------------------
 
+function CAL_CalibrateT()
+{		
+	CAL_ResetA();
+	CAL_ResetTCal();
+
+	// Reload values
+	var TemperatureArray = CGEN_GetRange(cal_TMin, cal_TMax, cal_TStp);
+
+	if (CAL_CollectT(TemperatureArray, cal_Iterations))
+	{
+		if(cal_Calibrate_Tcase1)
+		{
+			CAL_SaveTcase1("Zth_Tcase1");
+			scattern(cal_TFluke, cal_Tcase1Err, "Device case temperature 1 (in C)", "Error (in %)", "Temperature relative error");
+			
+			// Calculate correction
+			cal_Tcase1Corr = CGEN_GetCorrection2("Zth_Tcase1");
+			CAL_SetCoefTcase1(cal_Tcase1Corr[0], cal_Tcase1Corr[1], cal_Tcase1Corr[2]);
+			CAL_PrintCoefT();
+		}
+		
+		if(cal_Calibrate_Tcool1)
+		{
+			CAL_SaveTcool1("Zth_Tcool1");
+			scattern(cal_TFluke, cal_Tcool1Err, "Cooler temperature 1 (in C)", "Error (in %)", "Temperature relative error");
+			
+			// Calculate correction
+			cal_Tcool1Corr = CGEN_GetCorrection2("Zth_Tcool1");
+			CAL_SetCoefTcool1(cal_Tcool1Corr[0], cal_Tcool1Corr[1], cal_Tcool1Corr[2]);
+			CAL_PrintCoefT();
+		}
+		
+		if(cal_Calibrate_Tcase2)
+		{
+			CAL_SaveTcase2("Zth_Tcase2");
+			scattern(cal_TFluke, cal_Tcase2Err, "Device case temperature 2 (in C)", "Error (in %)", "Temperature relative error");
+			
+			// Calculate correction
+			cal_Tcase2Corr = CGEN_GetCorrection2("Zth_Tcase2");
+			CAL_SetCoefTcase2(cal_Tcase2Corr[0], cal_Tcase2Corr[1], cal_Tcase2Corr[2]);
+			CAL_PrintCoefT();
+		}
+		
+		if(cal_Calibrate_Tcool2)
+		{
+			CAL_SaveTcool2("Zth_Tcool2");
+			scattern(cal_TFluke, cal_Tcool2Err, "Cooler temperature 2 (in C)", "Error (in %)", "Temperature relative error");
+			
+			// Calculate correction
+			cal_Tcool2Corr = CGEN_GetCorrection2("Zth_Tcool2");
+			CAL_SetCoefTcool2(cal_Tcool2Corr[0], cal_Tcool2Corr[1], cal_Tcool2Corr[2]);
+			CAL_PrintCoefT();
+		}
+	}
+}
+//--------------------
+
 function CAL_VerifyUd()
 {		
 	CAL_ResetA();
@@ -255,6 +308,43 @@ function CAL_VerifyIh()
 		// Plot relative error distribution
 		scattern(cal_IhInst, cal_IhErr, "Current (in A)", "Error (in %)", "Current relative error");
 		scattern(cal_IhSet, cal_IhSetErr, "Current (in A)", "Error (in %)", "Set current relative error");
+	}
+}
+//--------------------
+
+function CAL_VerifyT()
+{		
+	CAL_ResetA();
+
+	// Reload values
+	var TemperatureArray = CGEN_GetRange(cal_TMin, cal_TMax, cal_TStp);
+
+	if (CAL_CollectT(TemperatureArray, cal_Iterations))
+	{
+		if(cal_Calibrate_Tcase1)
+		{
+
+			CAL_SaveTcase1("Zth_Tcase1_fixed");
+			scattern(cal_TFluke, cal_Tcase1Err, "Device case temperature 1 (in C)", "Error (in %)", "Temperature relative error");
+		}
+		
+		if(cal_Calibrate_Tcool1)
+		{
+			CAL_SaveTcool1("Zth_Tcool1_fixed");
+			scattern(cal_TFluke, cal_Tcool1Err, "Cooler temperature 1 (in C)", "Error (in %)", "Temperature relative error");
+		}
+		
+		if(cal_Calibrate_Tcase2)
+		{
+			CAL_SaveTcase2("Zth_Tcase2_fixed");
+			scattern(cal_TFluke, cal_Tcase2Err, "Device case temperature 2 (in C)", "Error (in %)", "Temperature relative error");
+		}
+		
+		if(cal_Calibrate_Tcool2)
+		{
+			CAL_SaveTcool2("Zth_Tcool2_fixed");
+			scattern(cal_TFluke, cal_Tcool2Err, "Cooler temperature 2 (in C)", "Error (in %)", "Temperature relative error");
+		}
 	}
 }
 //--------------------
@@ -454,6 +544,86 @@ function CAL_CollectIh(CurrentValues, IterationsCount)
 }
 //--------------------
 
+function CAL_CollectT(TemperatureValues, IterationsCount)
+{
+	var key, CurrentTemperature;
+	
+	cal_CntTotal = IterationsCount * TemperatureValues.length;
+	cal_CntDone = 1;
+	
+	
+	for (var i = 0; i < IterationsCount; i++)
+	{
+		for (var j = 0; j < TemperatureValues.length; j++)
+		{
+			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+			//
+
+			p("Press y, if the temperature reached " + TemperatureValues[j] + " C, or n, if current temperature is already lower,");
+			p("or s to interrupt the process.");
+			
+			while(key != "y" && key != "n" && key != "s")
+			{
+				key = readline();
+			}
+			
+			if(key == "s")
+				return 0;
+			
+			if(key == "Y")
+				CurrentTemperature = TemperatureValues[j];
+			else
+			{
+				p("Enter current temperature in C");
+				CurrentTemperature = readline();
+			}
+			
+			if(cal_Calibrate_Tcase1)
+			{
+				var TempTcase1 = Zth_Tcase1();
+				var Tcase1Err = TempTcase1 - CurrentTemperature;
+				cal_Tcase1.push(TempTcase1);
+				
+				print("Tcase1,       C: " + TempTcase1);
+				print("Tcase1 Error, C: " + Tcase1Err);
+			}
+			
+			if(cal_Calibrate_Tcool1)
+			{
+				var TempTcool1 = Zth_Tcool1();
+				var Tcool1Err = TempTcool1 - CurrentTemperature;
+				cal_Tcool1.push(TempTcool1);
+				
+				print("Tcool1,       C: " + TempTcool1);
+				print("Tcool1 Error, C: " + Tcool1Err);
+			}
+			
+			if(cal_Calibrate_Tcase2)
+			{
+				var TempTcase2 = Zth_Tcase2();
+				var Tcase2Err = TempTcase2 - CurrentTemperature;
+				cal_Tcase2.push(TempTcase2);
+				
+				print("Tcase2,       C: " + TempTcase2);
+				print("Tcase2 Error, C: " + Tcase2Err);
+			}
+			
+			if(cal_Calibrate_Tcool2)
+			{
+				var TempTcool2 = Zth_Tcool2();
+				var Tcool2Err = TempTcool2 - CurrentTemperature;
+				cal_Tcool2.push(TempTcool2);
+				
+				print("Tcool2,  C: " + TempTcool2);
+				print("Tcool2 Error, C: " + Tcool2Err);
+			}
+		}
+	}
+
+	return 1;
+}
+//--------------------
+
 function CAL_InstekSetCurrentRange(Current)
 {
 	Instek_ConfVoltageDC(Current * cal_Rshunt / 1e6);
@@ -472,6 +642,10 @@ function CAL_ResetA()
 	cal_Ud = [];
 	cal_Im = [];
 	cal_Ih = [];
+	cal_Tcase1 = [];
+	cal_Tcool1 = [];
+	cal_Tcase2 = [];
+	cal_Tcool2 = [];
 	cal_ImSet = [];
 	cal_IgSet = [];
 	cal_IhSet = [];
@@ -481,11 +655,16 @@ function CAL_ResetA()
 	cal_ImInst = [];
 	cal_IgInst = [];
 	cal_IhInst = [];
+	cal_TFluke = [];
 
 	// Relative error
 	cal_UdErr = [];
 	cal_ImErr = [];
 	cal_IhErr = [];
+	cal_Tcase1Err = [];
+	cal_Tcool1Err = [];
+	cal_Tcase2Err = [];
+	cal_Tcool2Err = [];
 	cal_ImSetErr = [];
 	cal_IgSetErr = [];
 	cal_IhSetErr = [];
@@ -495,6 +674,10 @@ function CAL_ResetA()
 	cal_ImCorr = [];
 	cal_IgCorr = [];
 	cal_IhCorr = [];
+	cal_Tcase1Corr = [];
+	cal_Tcool1Corr = [];
+	cal_Tcase2Corr = [];
+	cal_Tcool2Corr = [];
 }
 //--------------------
 
@@ -522,6 +705,30 @@ function CAL_SaveIh(NameIh)
 }
 //--------------------
 
+function CAL_SaveTcase1(NameT)
+{
+	CGEN_SaveArrays(NameT, cal_Tcase1, cal_TFluke, cal_Tcase1Err);
+}
+//--------------------
+
+function CAL_SaveTcool1(NameT)
+{
+	CGEN_SaveArrays(NameT, cal_Tcool1, cal_TFluke, cal_Tcool1Err);
+}
+//--------------------
+
+function CAL_SaveTcase2(NameT)
+{
+	CGEN_SaveArrays(NameT, cal_Tcase2, cal_TFluke, cal_Tcase2Err);
+}
+//--------------------
+
+function CAL_SaveTcool2(NameT)
+{
+	CGEN_SaveArrays(NameT, cal_Tcool2, cal_TFluke, cal_Tcool2Err);
+}
+//--------------------
+
 function CAL_ResetUdCal()
 {
 	CAL_SetCoefUd(0, 1, 0);
@@ -543,6 +750,22 @@ function CAL_ResetIgCal()
 function CAL_ResetIhCal()
 {
 	CAL_SetCoefIh(0, 1, 0);
+}
+//--------------------
+
+function CAL_ResetTCal()
+{
+	if(cal_Calibrate_Tcase1)
+		CAL_SetCoefTcase1(0, 1, 0);
+	
+	if(cal_Calibrate_Tcool1)
+		CAL_SetCoefTcool1(0, 1, 0);
+	
+	if(cal_Calibrate_Tcase2)
+		CAL_SetCoefTcase2(0, 1, 0);
+	
+	if(cal_Calibrate_Tcool2)
+		CAL_SetCoefTcool2(0, 1, 0);
 }
 //--------------------
 
@@ -587,6 +810,38 @@ function CAL_SetCoefIh(P2, P1, P0)
 }
 //--------------------
 
+function CAL_SetCoefTcase1(P2, P1, P0)
+{
+	dev.ws(32, Math.round(P2 * 1e6));
+	dev.w(33, Math.round(P1 * 1000));
+	dev.ws(34, Math.round(P0 * 100));	
+}
+//--------------------
+
+function CAL_SetCoefTcool1(P2, P1, P0)
+{
+	dev.ws(38, Math.round(P2 * 1e6));
+	dev.w(39, Math.round(P1 * 1000));
+	dev.ws(40, Math.round(P0 * 100));	
+}
+//--------------------
+
+function CAL_SetCoefTcase2(P2, P1, P0)
+{
+	dev.ws(35, Math.round(P2 * 1e6));
+	dev.w(36, Math.round(P1 * 1000));
+	dev.ws(37, Math.round(P0 * 100));	
+}
+//--------------------
+
+function CAL_SetCoefTcool2(P2, P1, P0)
+{
+	dev.ws(41, Math.round(P2 * 1e6));
+	dev.w(42, Math.round(P1 * 1000));
+	dev.ws(43, Math.round(P0 * 100));	
+}
+//--------------------
+
 function CAL_PrintCoefUd()
 {
 	print("Ud P2 x1e6	: " + dev.rs(25));
@@ -624,6 +879,38 @@ function CAL_PrintCoefIh()
 		print("Ih P2 x1e6	: " + dev.rs(10));
 		print("Ih P1 x1000	: " + dev.rs(11));
 		print("Ih P0 x100	: " + dev.rs(12));
+	}
+}
+//--------------------
+
+function CAL_PrintCoefT()
+{
+	if(cal_Calibrate_Tcase1)
+	{
+		print("Tcase1 P2 x1e6	: " + dev.rs(32));
+		print("Tcase1 P1 x1000	: " + dev.rs(33));
+		print("Tcase1 P0 x100	: " + dev.rs(34));
+	}
+	
+	if(cal_Calibrate_Tcool1)
+	{
+		print("Tcool1 P2 x1e6	: " + dev.rs(38));
+		print("Tcool1 P1 x1000	: " + dev.rs(39));
+		print("Tcool1 P0 x100	: " + dev.rs(40));
+	}
+	
+	if(cal_Calibrate_Tcase2)
+	{
+		print("Tcase2 P2 x1e6	: " + dev.rs(35));
+		print("Tcase2 P1 x1000	: " + dev.rs(36));
+		print("Tcase2 P0 x100	: " + dev.rs(37));
+	}
+	
+	if(cal_Calibrate_Tcool2)
+	{
+		print("Tcool2 P2 x1e6	: " + dev.rs(41));
+		print("Tcool2 P1 x1000	: " + dev.rs(42));
+		print("Tcool2 P0 x100	: " + dev.rs(43));
 	}
 }
 //--------------------

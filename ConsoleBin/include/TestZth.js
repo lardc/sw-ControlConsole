@@ -117,6 +117,34 @@ function Zth_Ih(Current, PulseWidth_us)
 }
 //------------------------------
 
+function Zth_Tcase1()
+{
+	dev.c(13);
+	return (dev.r(150) / 100);
+}
+//------------------------------
+
+function Zth_Tcool1()
+{
+	dev.c(15);
+	return (dev.r(150) / 100);
+}
+//------------------------------
+
+function Zth_Tcase2()
+{
+	dev.c(14);
+	return (dev.r(150) / 100);
+}
+//------------------------------
+
+function Zth_Tcool2()
+{
+	dev.c(16);
+	return (dev.r(150) / 100);
+}
+//------------------------------
+
 function Zth_DRCU_Pulse(Current)
 {
 	dev.w(128, Current);
@@ -278,3 +306,39 @@ function Zth_TestPulseSquareness(TurnOnTime, Current, PulseWidth)
 	plot2s(PowerWaveform, PowerWaveformRef, 1, 0)
 }
 //------------------------------
+
+function Zth_CollectT()
+{
+	var ErrT1 = [];
+	var ErrT2 = [];
+	var TFluke = [];
+	var Counter = 0;
+	var key = 0;
+	var Tcase, Tcool;
+	
+	while(key != "s")
+	{
+		print("Enter temperature (in C):");
+		TFluke[Counter] = readline();
+		
+		Tcase = Zth_Tcase1();
+		Tcool = Zth_Tcool1();
+		
+		ErrT1[Counter] = (Tcase - TFluke[Counter]).toFixed(2);
+		ErrT2[Counter] = (Tcool - TFluke[Counter]).toFixed(2);
+		
+		p("Tcase,       C : " + Tcase);
+		p("Tcool,       C : " + Tcool);
+		p("Tcase Error, С : " + ErrT1[Counter]);
+		p("Tcool Error, С : " + ErrT2[Counter]);
+		p("------------------------");
+		
+		Counter++;
+		
+		print("Please press s, to stop the test, else press eny key");
+		key = readkey();
+	}
+	
+	scattern(TFluke, ErrT1, "Temperature (in C)", "Error (in %)", "Temperature relative error");
+	scattern(TFluke, ErrT2, "Temperature (in C)", "Error (in %)", "Temperature relative error");
+}
