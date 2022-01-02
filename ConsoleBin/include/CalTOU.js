@@ -16,13 +16,12 @@ ctou_cntTotal = 0;
 ctou_cntDone = 0;
 
 // Iterations
-ctou_Iterations = 2;
+ctou_Iterations = 1;
 
 // Channels
-ctou_chMeasureI = 1;
-ctou_chSync = 2;
-
-ctou_i_array = [];
+ctou_chMeasureV = 1;
+ctou_chMeasureI = 2;
+ctou_chSync = 3;
 
 // Results storage
 ctou_i = [];
@@ -42,9 +41,11 @@ ctou_i_corr = [];
 ctou_t_on = [];
 ctou_t_gd = [];
 
-ctou_UseAvg = 1;
+ctou_measure_time = 0;
 
-function CTOU_Init(portTOU, portTek, channelMeasureI, channelSync)
+ctou_UseAvg = 0;
+
+function CTOU_Init(portTOU, portTek, channelMeasureV, channelMeasureI, channelSync)
 {
 	if (channelMeasureI < 1 || channelMeasureI > 4)
 	{
@@ -53,6 +54,7 @@ function CTOU_Init(portTOU, portTek, channelMeasureI, channelSync)
 	}
 
 	// Copy channel information
+	ctou_chMeasureV = channelMeasureV;
 	ctou_chMeasureI = channelMeasureI;
 	ctou_chSync = channelSync;
 
@@ -65,6 +67,7 @@ function CTOU_Init(portTOU, portTek, channelMeasureI, channelSync)
 
 	// Tektronix init
 	// Init channels
+	TEK_ChannelInit(ctou_chMeasureV, "100", "50");
 	TEK_ChannelInit(ctou_chMeasureI, "1", "0.1");
 	TEK_ChannelInit(ctou_chSync, "1", "1");
 	// Init trigger
@@ -95,6 +98,7 @@ function CTOU_CalibrateI()
 
 	// Reload values
 	var CurrentArray = CGEN_GetRange(ctou_Imin, ctou_Imax, ctou_Istp);
+	ctou_measure_time = 0;
 
 	if (CTOU_Collect(CurrentArray, ctou_Iterations))
 	{
@@ -120,6 +124,7 @@ function CTOU_VerifyI()
 
 	// Collect data
 	var CurrentArray = CGEN_GetRange(ctou_Imin, ctou_Imax, ctou_Istp);
+	ctou_measure_time = 0;
 
 	if (CTOU_Collect(CurrentArray, ctou_Iterations))
 	{
@@ -130,6 +135,27 @@ function CTOU_VerifyI()
 		scattern(ctou_i_sc, ctou_i_err, "Current (in A)", "Error (in %)", "Current relative error");
 		sleep(200);
 		scattern(ctou_i_set, ctou_iset_err, "Current (in A)", "Error (in %)", "Current setpoint relative error");
+	}
+}
+
+function CTOU_VerifyTime()
+{
+	// Collect data
+	CTOU_ResetA();
+
+	// Collect data
+	var CurrentArray = CGEN_GetRange(ctou_Imin, ctou_Imax, ctou_Istp);
+	ctou_measure_time = 1;
+
+	if (CTOU_Collect(CurrentArray, ctou_Iterations))
+	{
+		CTOU_SaveTgd("tou_tgd_fixed");
+		CTOU_SaveTgt("tou_tgt_fixed");
+
+		// Plot relative error distribution
+		scattern(ctou_tgt_sc, ctou_tgt_err, "Time (in us)", "Error (in %)", "tgt relative error");
+		sleep(200);
+		scattern(ctou_tgd_set, ctou_tgd_err, "Time (in us)", "Error (in %)", "tgd relative error");
 	}
 }
 
@@ -177,12 +203,16 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			print("Iset, A: " + CurrentValues[j]);
 			
 			CTOU_TekScale(ctou_chMeasureI, (CurrentValues[j] * ctou_Ri));
+
+			if(ctou_measure_time)
+				CTOU_TekScale(ctou_chMeasureV, 50);
+
 			TEK_TriggerInit(ctou_chSync, 2);
 			sleep(1500);
 
 			ctou_i_set.push(CurrentValues[j]);
 
-			var tou_print_copy		= tou_print;
+			var tou_print_copy = tou_print;
 			var tou_printError_copy	= tou_printError;
 			//
 			tou_print = 0;
@@ -203,22 +233,36 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			sleep(1000);
 
 			// Scope data
-			var i_sc = Math.round(CTOU_Measure(ctou_chMeasureI, "4") / ctou_Ri, 3);
-			ctou_i_sc.push(i_sc);
-			print("Itek, A: " + i_sc);
-			print("Погр изм, A: " + ((i_read - i_sc) / i_sc * 100).toFixed(2));
-			print("Погр set, A: " + ((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
+			if(ctou_measure_time)
+			{
+
+			}
+			else
+			{
+				var i_sc = Math.round(CTOU_Measure(ctou_chMeasureI, "4") / ctou_Ri, 3);
+				ctou_i_sc.push(i_sc);
+				print("Itek, A: " + i_sc);
+				print("Погр изм, A: " + ((i_read - i_sc) / i_sc * 100).toFixed(2));
+				print("Погр set, A: " + ((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
+			}
+			
 			
 			// Relative error
-			ctou_i_err.push(((i_read - i_sc) / i_sc * 100).toFixed(2));
-			ctou_iset_err.push(((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
-			sleep(1000);
+			if(ctou_measure_time)
+			{
+
+			}
+			else
+			{
+				ctou_i_err.push(((i_read - i_sc) / i_sc * 100).toFixed(2));
+				ctou_iset_err.push(((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
+				sleep(1000);
+			}			
 			print("--------------------");
 			
 			if (anykey()) return 0;
 		}
 	}
-
 	return 1;
 }
 
@@ -254,6 +298,16 @@ function CTOU_SaveI(NameI)
 function CTOU_SaveIset(NameIset)
 {
 	CGEN_SaveArrays(NameIset, ctou_i, ctou_i_set, ctou_iset_err);
+}
+
+function CTOU_SaveTgt(NameTgt)
+{
+	CGEN_SaveArrays(NameTgt, ctou_tgt, ctou_tgt_sc, ctou_tgt_err);
+}
+
+function CTOU_SaveTgd(NameTgd)
+{
+	CGEN_SaveArrays(NameTgd, ctou_tgd, ctou_tgd_sc, ctou_tgd_err);
 }
 
 function CTOU_PrintICal()
