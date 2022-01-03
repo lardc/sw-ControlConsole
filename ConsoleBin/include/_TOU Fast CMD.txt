@@ -10,7 +10,7 @@ i("PrintStatus.js");
 PrintFWInfo();
 
 // Обновление прошивки
-dev.co(13);
+dev.co(1);
 dev.nid(0);
 i("STM_FWUpdate.js");
 FWU_TOMU();
@@ -35,9 +35,10 @@ i("CalTOU.js");
 ctou_Imax = 1250;
 ctou_Imin = 160;
 ctou_Istp = 60;
-ctou_Ri = 0.22/73;
-ctou_Iterations = 3;
-CTOU_Init(13,14,1,2);
+ctou_Ri = 0.22/66;
+ctou_Iterations = 1;
+ctou_UseAvg = 0;
+CTOU_Init(1,2,1,2);
 
 CTOU_VerifyI();
 
