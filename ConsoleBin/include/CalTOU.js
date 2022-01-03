@@ -38,6 +38,8 @@ ctou_iset_err = [];
 ctou_i_corr = [];
 
 // Timings
+ctou_tgt = [];
+ctou_tgd = [];
 ctou_tgt_sc = [];
 ctou_tgt_err = [];
 ctou_tgd_sc = [];
@@ -47,6 +49,7 @@ tgd_read = 0;
 tgt_read = 0;
 
 ctou_measure_time = 0;
+tou_measure_time_hand = 0;
 
 ctou_UseAvg = 0;
 
@@ -257,11 +260,51 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 				print("Ton	[us]: " + (tgt_read / 1000));
 				print("------------------");
 
-				print("Enter tgt (in us):");
-				var tgt_sc = readline();	
+				if(tou_measure_time_hand)
+				{
+					print("Enter tgt (in us):");
+					var tgt_sc = readline();	
 
-				print("Enter tgd (in us):");
-				var tgd_sc = readline();			
+					print("Enter tgd (in us):");
+					var tgd_sc = readline();
+				}
+				else
+				{
+					// измерение tgt
+					TEK_Send("cursor:select:source ch" + ctou_chMeasureV);
+					var cursor_place = 10e-6;
+					TEK_Send("cursor:vbars:position2 " + cursor_place);
+
+					var tgt_U = TEK_Exec("cursor:vbars:hpos2?");
+					while(tgt_U < 30)
+					{
+						cursor_place -= 0.2e-6;
+						TEK_Send("cursor:vbars:position2 " + cursor_place);
+						tgt_U = TEK_Exec("cursor:vbars:hpos2?");
+						if (anykey()) return 0;
+					}
+
+					var tgt_sc = TEK_Exec("cursor:vbars:delta?") * 1e6;
+					print("tgt osc = " + tgt_sc.toFixed(2));
+
+					// измерение tgd
+					TEK_Send("cursor:select:source ch" + ctou_chMeasureV);
+					var cursor_place = -5e-6;
+					TEK_Send("cursor:vbars:position2 " + cursor_place);
+
+					var tgd_U = TEK_Exec("cursor:vbars:hpos2?");
+					while(tgd_U < 270)
+					{
+						cursor_place -= 0.1e-6;
+						TEK_Send("cursor:vbars:position2 " + cursor_place);
+						tgd_U = TEK_Exec("cursor:vbars:hpos2?");
+						if (anykey()) return 0;
+					}
+
+					var tgd_sc = TEK_Exec("cursor:vbars:delta?") * 1e6;
+					print("tgd osc = " + tgd_sc.toFixed(2));
+				}
+							
 
 				print("Погр изм tgd, %: " + (((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(2));
 				print("Погр изм tgt, %: " + (((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(2));
@@ -312,13 +355,19 @@ function CTOU_ResetA()
 {
 	// Results storage
 	ctou_i = [];
+	ctou_tgt = [];
+	ctou_tgd = [];
 	ctou_i_set = [];
 
 	// Tektronix data
 	ctou_i_sc = [];
+	ctou_tgt_sc = [];
+	ctou_tgd_sc = [];
 
 	// Relative error
 	ctou_i_err = [];
+	ctou_tgt_err = [];
+	ctou_tgd_err = [];
 
 	// Correction
 	ctou_i_corr = [];
