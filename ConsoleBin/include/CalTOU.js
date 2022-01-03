@@ -38,8 +38,13 @@ ctou_iset_err = [];
 ctou_i_corr = [];
 
 // Timings
-ctou_t_on = [];
-ctou_t_gd = [];
+ctou_tgt_sc = [];
+ctou_tgt_err = [];
+ctou_tgd_sc = [];
+ctou_tgd_err = [];
+
+tgd_read = 0;
+tgt_read = 0;
 
 ctou_measure_time = 0;
 
@@ -71,20 +76,19 @@ function CTOU_Init(portTOU, portTek, channelMeasureV, channelMeasureI, channelSy
 	TEK_ChannelInit(ctou_chMeasureI, "1", "0.1");
 	TEK_ChannelInit(ctou_chSync, "1", "1");
 	// Init trigger
-	TEK_TriggerInit(ctou_chSync, "2");
+	TEK_TriggerInit(ctou_chSync, "2.5");
 	// Horizontal settings
-	TEK_Horizontal("10e-6", "40e-6");
+	TEK_Horizontal("2.5e-6", "0e-6");
 
 	// Display channels
 	for (var i = 1; i <= 4; i++)
 	{
-		if (i == ctou_chMeasureI || i == ctou_chSync)
+		if (i == ctou_chMeasureI || i == ctou_chSync || i == ctou_chMeasureV)
 			TEK_ChannelOn(i);
 		else
 			TEK_ChannelOff(i);
 	}
 
-	CTOU_TekCursor(ctou_chMeasureI);
 	
 	// Init measurement
 	CTOU_Measure(ctou_chMeasureI, "4");
@@ -155,7 +159,7 @@ function CTOU_VerifyTime()
 		// Plot relative error distribution
 		scattern(ctou_tgt_sc, ctou_tgt_err, "Time (in us)", "Error (in %)", "tgt relative error");
 		sleep(200);
-		scattern(ctou_tgd_set, ctou_tgd_err, "Time (in us)", "Error (in %)", "tgd relative error");
+		scattern(ctou_tgd_sc, ctou_tgd_err, "Time (in us)", "Error (in %)", "tgd relative error");
 	}
 }
 
@@ -163,8 +167,8 @@ function CTOU_TekCursor(Channel)
 {
 	TEK_Send("cursor:select:source ch" + Channel);
 	TEK_Send("cursor:function vbars");
-	TEK_Send("cursor:vbars:position1 80e-6");
-	TEK_Send("cursor:vbars:position2 80e-6");
+	TEK_Send("cursor:vbars:position1 -10e-6");
+	TEK_Send("cursor:vbars:position2 0e-6");
 }
 
 function CTOU_Measure(Channel, Resolution)
@@ -202,12 +206,20 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			print("-- result " + ctou_cntDone++ + " of " + ctou_cntTotal + " --");
 			print("Iset, A: " + CurrentValues[j]);
 			
-			CTOU_TekScale(ctou_chMeasureI, (CurrentValues[j] * ctou_Ri));
-
 			if(ctou_measure_time)
-				CTOU_TekScale(ctou_chMeasureV, 50);
+			{
+				CTOU_TekScale(ctou_chMeasureV, 225);
+				TEK_TriggerPulseExtendedInit(ctou_chSync, "2.5", "dc", "10e-6", "positive", "outside");
+				CTOU_TekCursor(ctou_chMeasureV);
+			}
+			else
+			{
+				CTOU_TekScale(ctou_chMeasureI, (CurrentValues[j] * ctou_Ri));
+				TEK_TriggerInit(ctou_chSync, "2.5");
+				CTOU_TekCursor(ctou_chMeasureI);				
+			}
 
-			TEK_TriggerInit(ctou_chSync, 2);
+
 			sleep(1500);
 
 			ctou_i_set.push(CurrentValues[j]);
@@ -220,7 +232,10 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 
 			for (var k = 0; k < AvgNum; k++)
 			{
-				TOU_Measure(CurrentValues[j]);
+				if(ctou_measure_time)
+					TOU_Measure(CurrentValues[j]);
+				else
+					TOU_Current(CurrentValues[j]);
 				sleep(2000);
 			}
 			tou_print = tou_print_copy;
@@ -235,22 +250,41 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			// Scope data
 			if(ctou_measure_time)
 			{
+				tgd_read = dev.r(251);
+				tgt_read = dev.r(252);
 
+				print("Tgd	[us]: " + (tgd_read / 1000));
+				print("Ton	[us]: " + (tgt_read / 1000));
+				print("------------------");
+
+				print("Enter tgt (in us):");
+				var tgt_sc = readline();	
+
+				print("Enter tgd (in us):");
+				var tgd_sc = readline();			
+
+				print("Погр изм tgd, %: " + (((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(2));
+				print("Погр изм tgt, %: " + (((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(2));
+
+				ctou_tgd_sc.push(tgd_sc);
+				ctou_tgt_sc.push(tgt_sc);
 			}
 			else
 			{
 				var i_sc = Math.round(CTOU_Measure(ctou_chMeasureI, "4") / ctou_Ri, 3);
 				ctou_i_sc.push(i_sc);
 				print("Itek, A: " + i_sc);
-				print("Погр изм, A: " + ((i_read - i_sc) / i_sc * 100).toFixed(2));
-				print("Погр set, A: " + ((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
+				print("Погр изм, %: " + ((i_read - i_sc) / i_sc * 100).toFixed(2));
+				print("Погр set, %: " + ((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
 			}
 			
 			
 			// Relative error
 			if(ctou_measure_time)
 			{
-
+				ctou_tgd_err.push(((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(2);
+				ctou_tgt_err.push(((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(2);
+				sleep(1000);
 			}
 			else
 			{

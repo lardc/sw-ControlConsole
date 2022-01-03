@@ -90,7 +90,7 @@ function TOU_Measure(Current)
 	dev.c(100);
 	while (_TOU_Active())
 		sleep(100);
-	p(dev.r(197)); //Status of formation 1 ok, 2 failed
+	
 	if (dev.r(197) == 1 || dev.r(197) == 2)
 	{
 		TOU_getVal();
