@@ -274,41 +274,80 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 				}
 				else
 				{
-					// измерение tgd
-					var tgd_U = TEK_Exec("cursor:vbars:hpos2?");
-					while(tgd_U >= 270)
+					// Измерение tgd
+					var ctou_tgd_u = TEK_Exec("cursor:vbars:hpos2?");
+
+					var ctou_tgd_u_err = 0;
+					var ctou_tgd_u_preverr = 0;
+
+					var ctou_tgd_integral = 0;
+					var ctou_tgd_derivative = 0;
+
+					var ctou_tgd_kp = 0.001e-6;
+					var ctou_tgd_ki = 0.001e-6;
+					var ctou_tgd_kd = 0.001e-6;
+
+					while(ctou_tgd_u >= 270)
 					{
-						cursor_place += 0.005e-6 * (tgd_U - 270) + 0.001e-6;
+						ctou_tgd_u_err = ctou_tgd_u - 270;
+
+						ctou_tgd_integral = ctou_tgd_integral + ctou_tgd_u_err * ctou_tgd_ki;
+
+						ctou_tgd_derivative = ctou_tgd_u_err - ctou_tgd_u_preverr;
+
+						ctou_tgd_u_preverr = ctou_tgd_u_err;
+
+						cursor_place = ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd;
 					
 						TEK_Send("cursor:vbars:position2 " + cursor_place);
-						tgd_U = TEK_Exec("cursor:vbars:hpos2?");
+						ctou_tgd_u = TEK_Exec("cursor:vbars:hpos2?");
 						if (anykey()) return 0;
 					}
 
 					var tgd_sc = TEK_Exec("cursor:vbars:delta?") * 1e6;
 					print("tgd osc = " + tgd_sc.toFixed(2));
+					//.....................................
 
 					// измерение tgt
-					var tgt_U = TEK_Exec("cursor:vbars:hpos2?");
-					while(tgt_U >= 30)
+					var ctou_tgt_u = TEK_Exec("cursor:vbars:hpos2?");
+
+					var ctou_tgt_u_err = 0;
+					var ctou_tgt_u_preverr = 0;
+
+					var ctou_tgt_integral = 0;
+					var ctou_tgt_derivative = 0;
+
+					var ctou_tgt_kp = 0.001e-6;
+					var ctou_tgt_ki = 0.001e-6;
+					var ctou_tgt_kd = 0.001e-6;
+
+					while(ctou_tgt_u >= 30)
 					{
-						cursor_place += 0.005e-6 * (tgt_U - 30) + 0.001e-6;
-						
+						ctou_tgt_u_err = ctou_tgt_u - 30;
+
+						ctou_tgt_integral = ctou_tgt_integral + ctou_tgt_u_err * ctou_tgt_ki;
+
+						ctou_tgt_derivative = ctou_tgt_u_err - ctou_tgt_u_preverr;
+
+						ctou_tgt_u_preverr = ctou_tgt_u_err;
+
+						cursor_place = ctou_tgt_u_err * ctou_tgt_kp + ctou_tgt_integral * ctou_tgt_ki + ctou_tgt_derivative * ctou_tgt_kd;
+					
 						TEK_Send("cursor:vbars:position2 " + cursor_place);
-						tgt_U = TEK_Exec("cursor:vbars:hpos2?");
+						ctou_tgd_t = TEK_Exec("cursor:vbars:hpos2?");
 						if (anykey()) return 0;
 					}
 
 					var tgt_sc = TEK_Exec("cursor:vbars:delta?") * 1e6;
 					print("tgt osc = " + tgt_sc.toFixed(2));
 				}
-							
+				//.....................................			
 
 				print("Погр изм tgd, %: " + (((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(2));
 				print("Погр изм tgt, %: " + (((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(2));
 
-				ctou_tgd_sc.push(tgd_sc);
-				ctou_tgt_sc.push(tgt_sc);
+				ctou_tgd_sc.push(tgd_sc.toFixed(2));
+				ctou_tgt_sc.push(tgt_sc.toFixed(2));
 			}
 			else
 			{
