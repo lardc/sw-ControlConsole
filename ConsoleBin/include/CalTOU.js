@@ -215,9 +215,6 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 				TEK_Send("cursor:select:source ch" + ctou_chMeasureV);
 				CTOU_TekScale(ctou_chMeasureV, 225);
 				TEK_TriggerPulseExtendedInit(ctou_chSync, "2.5", "dc", ctou_scale_osc * 4.5 * 1e-6, "positive", "outside");
-				var cursor_place = ctou_scale_osc * -4.5 * 1e-6;
-				TEK_Send("cursor:vbars:position1 "+ cursor_place);
-				TEK_Send("cursor:vbars:position2 "+ cursor_place);
 			}
 			else
 			{
@@ -264,6 +261,14 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 				print("Ton	[us]: " + (tgt_read / 1000));
 				print("------------------");
 
+				TEK_Send("cursor:vbars:position2 " + ctou_scale_osc * -4.99 * 1e-6);
+				ctou_tgd_u90 = TEK_Exec("cursor:vbars:hpos2?") * 0.9;
+				ctou_tgd_u10 = TEK_Exec("cursor:vbars:hpos2?") * 0.1;
+
+				var cursor_place = ctou_scale_osc * -4.5 * 1e-6;
+				TEK_Send("cursor:vbars:position1 "+ cursor_place);
+				TEK_Send("cursor:vbars:position2 "+ cursor_place);
+
 				if(ctou_measure_time_hand)
 				{
 					print("Enter tgt (in us):");
@@ -287,9 +292,9 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 					var ctou_tgd_ki = 0.001e-6;
 					var ctou_tgd_kd = 0.001e-6;
 
-					while(ctou_tgd_u >= 270)
+					while(ctou_tgd_u >= ctou_tgd_u90)
 					{
-						ctou_tgd_u_err = ctou_tgd_u - 270;
+						ctou_tgd_u_err = ctou_tgd_u - ctou_tgd_u90;
 
 						ctou_tgd_integral = ctou_tgd_integral + ctou_tgd_u_err * ctou_tgd_ki;
 
@@ -321,9 +326,9 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 					var ctou_tgt_ki = 0.001e-6;
 					var ctou_tgt_kd = 0.001e-6;
 
-					while(ctou_tgt_u >= 30)
+					while(ctou_tgt_u >= ctou_tgd_u10)
 					{
-						ctou_tgt_u_err = ctou_tgt_u - 30;
+						ctou_tgt_u_err = ctou_tgt_u - ctou_tgd_u10;
 
 						ctou_tgt_integral = ctou_tgt_integral + ctou_tgt_u_err * ctou_tgt_ki;
 
