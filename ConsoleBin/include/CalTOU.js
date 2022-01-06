@@ -148,6 +148,8 @@ function CTOU_VerifyI()
 
 function CTOU_VerifyTime()
 {
+	var start = new Date();
+
 	// Collect data
 	CTOU_ResetA();
 
@@ -165,6 +167,9 @@ function CTOU_VerifyTime()
 		sleep(200);
 		scattern(ctou_tgd_sc, ctou_tgd_err, "Time (in us)", "Error (in %)", "tgd relative error");
 	}
+
+	var left_time = new Date(((new Date()).getTime()) - (start.getTime()));
+	p("Заняло " + left_time.getMinutes() + " мин и " +left_time.getSeconds() + " сек");
 }
 
 function CTOU_TekCursor(Channel)
@@ -288,24 +293,34 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 					var ctou_tgd_integral = 0;
 					var ctou_tgd_derivative = 0;
 
-					var ctou_tgd_kp = 0.001e-6;
-					var ctou_tgd_ki = 0.001e-6;
-					var ctou_tgd_kd = 0.001e-6;
+					var ctou_tgd_kp = 9e-9;
+					var ctou_tgd_ki = 9e-9;
+					var ctou_tgd_kd = 0e-9;
 
 					while(ctou_tgd_u >= ctou_tgd_u90)
 					{
 						ctou_tgd_u_err = ctou_tgd_u - ctou_tgd_u90;
+						ctou_tgd_u_err.toFixed(8);
 
 						ctou_tgd_integral = ctou_tgd_integral + ctou_tgd_u_err * ctou_tgd_ki;
+						ctou_tgd_integral.toFixed(8);
 
 						ctou_tgd_derivative = ctou_tgd_u_err - ctou_tgd_u_preverr;
+						ctou_tgd_derivative.toFixed(8);
 
 						ctou_tgd_u_preverr = ctou_tgd_u_err;
+						ctou_tgd_u_preverr.toFixed(8);
 
-						cursor_place = ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd;
-					
+						cursor_place_fixed = ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd;
+						cursor_place_fixed.toFixed(8);
+
+						cursor_place = cursor_place_fixed + cursor_place;
+
+						p("cursor_place " + cursor_place);
+
 						TEK_Send("cursor:vbars:position2 " + cursor_place);
 						ctou_tgd_u = TEK_Exec("cursor:vbars:hpos2?");
+
 						if (anykey()) return 0;
 					}
 
@@ -314,39 +329,48 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 					//.....................................
 
 					// измерение tgt
-					var ctou_tgt_u = TEK_Exec("cursor:vbars:hpos2?");
+					ctou_tgt_u = TEK_Exec("cursor:vbars:hpos2?");
 
-					var ctou_tgt_u_err = 0;
-					var ctou_tgt_u_preverr = 0;
+					ctou_tgt_u_err = 0;
+					ctou_tgt_u_preverr = 0;
 
-					var ctou_tgt_integral = 0;
-					var ctou_tgt_derivative = 0;
+					ctou_tgt_integral = 0;
+					ctou_tgt_derivative = 0;
 
-					var ctou_tgt_kp = 0.001e-6;
-					var ctou_tgt_ki = 0.001e-6;
-					var ctou_tgt_kd = 0.001e-6;
+					ctou_tgt_kp = 8e-9;
+					ctou_tgt_ki = 6e-8;
+					ctou_tgt_kd = 5e-10;
 
 					while(ctou_tgt_u >= ctou_tgd_u10)
 					{
 						ctou_tgt_u_err = ctou_tgt_u - ctou_tgd_u10;
+						ctou_tgt_u_err.toFixed(8);
 
 						ctou_tgt_integral = ctou_tgt_integral + ctou_tgt_u_err * ctou_tgt_ki;
+						ctou_tgt_integral.toFixed(8);
 
 						ctou_tgt_derivative = ctou_tgt_u_err - ctou_tgt_u_preverr;
+						ctou_tgt_derivative.toFixed(8);
 
 						ctou_tgt_u_preverr = ctou_tgt_u_err;
+						ctou_tgt_u_preverr.toFixed(8);
 
-						cursor_place = ctou_tgt_u_err * ctou_tgt_kp + ctou_tgt_integral * ctou_tgt_ki + ctou_tgt_derivative * ctou_tgt_kd;
-					
+						cursor_place_fixed = ctou_tgt_u_err * ctou_tgt_kp + ctou_tgt_integral * ctou_tgt_ki + ctou_tgt_derivative * ctou_tgt_kd;
+						cursor_place_fixed.toFixed(8);
+
+						cursor_place = cursor_place_fixed + cursor_place;
+
+						p("cursor_place " + cursor_place);
+
 						TEK_Send("cursor:vbars:position2 " + cursor_place);
-						ctou_tgd_t = TEK_Exec("cursor:vbars:hpos2?");
+						ctou_tgt_u = TEK_Exec("cursor:vbars:hpos2?");
 						if (anykey()) return 0;
 					}
 
 					var tgt_sc = TEK_Exec("cursor:vbars:delta?") * 1e6;
 					print("tgt osc = " + tgt_sc.toFixed(2));
 				}
-				//.....................................			
+				//.....................................
 
 				print("Погр изм tgd, %: " + (((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(2));
 				print("Погр изм tgt, %: " + (((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(2));
