@@ -296,10 +296,8 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 				}
 				else
 				{
-					// Измерение tgd
-					ctou_tgd_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
-					ctou_tgd_u.toFixed(1);
-
+					// Измерение tgd					
+					// Объявление и обнуление переменных
 					var ctou_tgd_u_err = 0;
 					var ctou_tgd_u_preverr = 0;
 
@@ -310,9 +308,13 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 					var ctou_tgd_ki = 9e-9;
 					var ctou_tgd_kd = 0e-9;
 
+					// Первое измерение для расчета буудщей уставки
+					ctou_tgd_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
+					ctou_tgd_u.toFixed(1);
 
 					while(ctou_tgd_u > ctou_tgd_u90)
 					{
+						// ПИД регулятор
 						ctou_tgd_u_err = ctou_tgd_u - ctou_tgd_u90;
 
 						ctou_tgd_integral = ctou_tgd_integral + ctou_tgd_u_err * ctou_tgd_ki;
@@ -322,14 +324,15 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 						ctou_tgd_u_preverr = ctou_tgd_u_err;
 
 						cursor_place_fixed = ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd;
-						
+						//-----------------
+
+						//Если cursor_place_fixed будет выдавать значения менее 10нс, то принудительно сделать шаг 10нс. Иначе при очень маленькой ошибке курсор замирает на долгое время
 						if(cursor_place_fixed < 1e-8)
 							cursor_place_fixed = 1e-8;
 
+						// Корректировка, отправка нового положения курсора и измерение напряжения в этой точке
 						cursor_place = cursor_place_fixed + cursor_place;
-
-						p("cursor_place " + cursor_place * 1e6);
-
+						//p("cursor_place " + cursor_place * 1e6);
 						TEK_Send("cursor:vbars:position2 " + cursor_place);
 						ctou_tgd_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
 						ctou_tgd_u.toFixed(1);
@@ -341,7 +344,8 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 					print("tgd osc = " + tgd_sc.toFixed(2));
 					//.....................................
 
-					// измерение tgt
+					// ИЗМЕРЕНИЕ tgt
+					// Объявление и обнуление переменных
 					ctou_tgt_u_err = 0;
 					ctou_tgt_u_preverr = 0;
 
@@ -352,14 +356,16 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 					ctou_tgt_ki = 6e-9;
 					ctou_tgt_kd = 0e-9;
 
+					// Установка уставки для курсора которая была последней на прошлом шаге
+					// Но немного по времени левее, для ускорения измерения
 					cursor_place = cursor_place_prev10;
 					TEK_Send("cursor:vbars:position2 " + cursor_place);
 					ctou_tgt_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
 					ctou_tgt_u.toFixed(1);
-					p(ctou_tgt_u10);
 
 					while(ctou_tgt_u > ctou_tgt_u10)
 					{
+						// ПИД регулятор
 						ctou_tgt_u_err = ctou_tgt_u - ctou_tgd_u10;
 						
 						ctou_tgt_integral = ctou_tgt_integral + ctou_tgt_u_err * ctou_tgt_ki;
@@ -369,27 +375,28 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 						ctou_tgt_u_preverr = ctou_tgt_u_err;
 						
 						cursor_place_fixed = ctou_tgt_u_err * ctou_tgt_kp + ctou_tgt_integral * ctou_tgt_ki + ctou_tgt_derivative * ctou_tgt_kd;
+						//-----------------
 
+						//Если cursor_place_fixed будет выдавать значения менее 10нс, то принудительно сделать шаг 10нс. Иначе при очень маленькой ошибке курсор замирает на долгое время
 						if(cursor_place_fixed < 1e-8)
 							cursor_place_fixed = 1e-8;
 
+						// Корректировка, отправка нового положения курсора и измерение напряжения в этой точке
 						cursor_place = cursor_place_fixed + cursor_place;
-
-						p("cursor_place " + cursor_place * 1e6);
-
+						// p("cursor_place " + cursor_place * 1e6);
 						TEK_Send("cursor:vbars:position2 " + cursor_place);
 						ctou_tgt_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
 						ctou_tgt_u.toFixed(1);
+						//-----------------
 
-						if (anykey()) return 0;
-						
+						if (anykey()) return 0;						
 					}
-					cursor_place_prev10 = cursor_place - 7e-7; // отнять 700 нс с текущего курсора для следующего измерения
+					cursor_place_prev10 = cursor_place - 8e-7; // отнять 800 нс с текущего курсора для следующего измерения
 
 					var tgt_sc = TEK_Exec("cursor:vbars:delta?") * 1e6;
 					print("tgt osc = " + tgt_sc.toFixed(2));
 				}
-				//.....................................
+				//-----------------
 
 				print("Погр изм tgd, %: " + (((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(3));
 				print("Погр изм tgt, %: " + (((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(3));
