@@ -210,6 +210,8 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 	
 	for (var i = 0; i < IterationsCount; i++)
 	{
+		cursor_place_prev10 = ctou_scale_osc * -4.5 * 1e-6; // для первого значения курсора
+		
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
 			print("-- result " + ctou_cntDone++ + " of " + ctou_cntTotal + " --");
@@ -218,7 +220,7 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			if(ctou_measure_time)
 			{
 				TEK_Send("cursor:select:source ch" + ctou_chMeasureV);
-				CTOU_TekScale(ctou_chMeasureV, 225);
+				//CTOU_TekScale(ctou_chMeasureV, 225);
 				TEK_TriggerPulseExtendedInit(ctou_chSync, "2.5", "dc", ctou_scale_osc * 4.5 * 1e-6, "positive", "outside");
 			}
 			else
@@ -267,8 +269,18 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 				print("------------------");
 
 				TEK_Send("cursor:vbars:position2 " + ctou_scale_osc * -4.99 * 1e-6);
-				ctou_tgd_u90 = TEK_Exec("cursor:vbars:hpos2?") * 0.9;
-				ctou_tgd_u10 = TEK_Exec("cursor:vbars:hpos2?") * 0.1;
+
+				//ctou_tgd_u90 = Math.round(TEK_Exec("cursor:vbars:hpos2?") * 0.9);
+				//ctou_tgd_u90.toFixed(0);
+
+				//ctou_tgt_u10 = Math.round(TEK_Exec("cursor:vbars:hpos2?") * 0.1);
+				//ctou_tgt_u10.toFixed(0);
+
+				
+				//p(ctou_tgd_u90);
+				//p(ctou_tgt_u10);
+				ctou_tgd_u90 = 270;
+				ctou_tgt_u10 = 30;
 
 				var cursor_place = ctou_scale_osc * -4.5 * 1e-6;
 				TEK_Send("cursor:vbars:position1 "+ cursor_place);
@@ -285,7 +297,8 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 				else
 				{
 					// Измерение tgd
-					var ctou_tgd_u = TEK_Exec("cursor:vbars:hpos2?");
+					ctou_tgd_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
+					ctou_tgd_u.toFixed(1);
 
 					var ctou_tgd_u_err = 0;
 					var ctou_tgd_u_preverr = 0;
@@ -293,33 +306,33 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 					var ctou_tgd_integral = 0;
 					var ctou_tgd_derivative = 0;
 
-					var ctou_tgd_kp = 9e-9;
+					var ctou_tgd_kp = 7e-9;
 					var ctou_tgd_ki = 9e-9;
 					var ctou_tgd_kd = 0e-9;
 
-					while(ctou_tgd_u >= ctou_tgd_u90)
+
+					while(ctou_tgd_u > ctou_tgd_u90)
 					{
 						ctou_tgd_u_err = ctou_tgd_u - ctou_tgd_u90;
-						ctou_tgd_u_err.toFixed(8);
 
 						ctou_tgd_integral = ctou_tgd_integral + ctou_tgd_u_err * ctou_tgd_ki;
-						ctou_tgd_integral.toFixed(8);
 
 						ctou_tgd_derivative = ctou_tgd_u_err - ctou_tgd_u_preverr;
-						ctou_tgd_derivative.toFixed(8);
 
 						ctou_tgd_u_preverr = ctou_tgd_u_err;
-						ctou_tgd_u_preverr.toFixed(8);
 
 						cursor_place_fixed = ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd;
-						cursor_place_fixed.toFixed(8);
+						
+						if(cursor_place_fixed < 1e-8)
+							cursor_place_fixed = 1e-8;
 
 						cursor_place = cursor_place_fixed + cursor_place;
 
-						p("cursor_place " + cursor_place);
+						p("cursor_place " + cursor_place * 1e6);
 
 						TEK_Send("cursor:vbars:position2 " + cursor_place);
-						ctou_tgd_u = TEK_Exec("cursor:vbars:hpos2?");
+						ctou_tgd_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
+						ctou_tgd_u.toFixed(1);
 
 						if (anykey()) return 0;
 					}
@@ -329,51 +342,57 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 					//.....................................
 
 					// измерение tgt
-					ctou_tgt_u = TEK_Exec("cursor:vbars:hpos2?");
-
 					ctou_tgt_u_err = 0;
 					ctou_tgt_u_preverr = 0;
 
 					ctou_tgt_integral = 0;
 					ctou_tgt_derivative = 0;
 
-					ctou_tgt_kp = 8e-9;
-					ctou_tgt_ki = 6e-8;
-					ctou_tgt_kd = 5e-10;
+					ctou_tgt_kp = 9e-9;
+					ctou_tgt_ki = 6e-9;
+					ctou_tgt_kd = 0e-9;
 
-					while(ctou_tgt_u >= ctou_tgd_u10)
+					cursor_place = cursor_place_prev10;
+					TEK_Send("cursor:vbars:position2 " + cursor_place);
+					ctou_tgt_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
+					ctou_tgt_u.toFixed(1);
+					p(ctou_tgt_u10);
+
+					while(ctou_tgt_u > ctou_tgt_u10)
 					{
 						ctou_tgt_u_err = ctou_tgt_u - ctou_tgd_u10;
-						ctou_tgt_u_err.toFixed(8);
-
+						
 						ctou_tgt_integral = ctou_tgt_integral + ctou_tgt_u_err * ctou_tgt_ki;
-						ctou_tgt_integral.toFixed(8);
-
+						
 						ctou_tgt_derivative = ctou_tgt_u_err - ctou_tgt_u_preverr;
-						ctou_tgt_derivative.toFixed(8);
-
+						
 						ctou_tgt_u_preverr = ctou_tgt_u_err;
-						ctou_tgt_u_preverr.toFixed(8);
-
+						
 						cursor_place_fixed = ctou_tgt_u_err * ctou_tgt_kp + ctou_tgt_integral * ctou_tgt_ki + ctou_tgt_derivative * ctou_tgt_kd;
-						cursor_place_fixed.toFixed(8);
+
+						if(cursor_place_fixed < 1e-8)
+							cursor_place_fixed = 1e-8;
 
 						cursor_place = cursor_place_fixed + cursor_place;
 
-						p("cursor_place " + cursor_place);
+						p("cursor_place " + cursor_place * 1e6);
 
 						TEK_Send("cursor:vbars:position2 " + cursor_place);
-						ctou_tgt_u = TEK_Exec("cursor:vbars:hpos2?");
+						ctou_tgt_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
+						ctou_tgt_u.toFixed(1);
+
 						if (anykey()) return 0;
+						
 					}
+					cursor_place_prev10 = cursor_place - 7e-7; // отнять 700 нс с текущего курсора для следующего измерения
 
 					var tgt_sc = TEK_Exec("cursor:vbars:delta?") * 1e6;
 					print("tgt osc = " + tgt_sc.toFixed(2));
 				}
 				//.....................................
 
-				print("Погр изм tgd, %: " + (((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(2));
-				print("Погр изм tgt, %: " + (((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(2));
+				print("Погр изм tgd, %: " + (((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(3));
+				print("Погр изм tgt, %: " + (((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(3));
 
 				ctou_tgd_sc.push(tgd_sc.toFixed(2));
 				ctou_tgt_sc.push(tgt_sc.toFixed(2));
@@ -391,8 +410,8 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			// Relative error
 			if(ctou_measure_time)
 			{
-				ctou_tgd_err.push(((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(2);
-				ctou_tgt_err.push(((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(2);
+				ctou_tgd_err.push((((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(2));
+				ctou_tgt_err.push((((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(2));
 				sleep(1000);
 			}
 			else
