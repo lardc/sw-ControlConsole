@@ -17,7 +17,7 @@ cal_TOUerr3 = [];
 // Status check
 function _TOU_Active()
 {
-	return (dev.r(192) == 5);
+	return ((dev.r(192) == 3) || (dev.r(192) == 5));
 }
 
 // Cycle test
