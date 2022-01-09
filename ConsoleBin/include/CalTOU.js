@@ -222,8 +222,10 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			if(ctou_measure_time)
 			{
 				TEK_Send("cursor:select:source ch" + ctou_chMeasureV);
-				//CTOU_TekScale(ctou_chMeasureV, 225);
-				TEK_TriggerPulseExtendedInit(ctou_chSync, "4.5", "dc", ctou_scale_osc * 4.5 * 1e-6, "positive", "outside");
+				//CTOU_TekScale(ctou_chMeasureV, 225);				
+				TEK_TriggerPulseExtendedInit(ctou_chSync, "2", "dc", ctou_scale_osc * 4.5 * 1e-6, "positive", "outside");
+				tgd_read = 0;
+				tgt_read = 0;
 			}
 			else
 			{
@@ -246,10 +248,14 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			for (var k = 0; k < AvgNum; k++)
 			{
 				if(ctou_measure_time)
+				{
 					TOU_Measure(CurrentValues[j]);
+					tgd_read += dev.r(251);
+					tgt_read += dev.r(252);
+				}					
 				else
 					TOU_Current(CurrentValues[j]);
-				sleep(7000);
+				sleep(9000);
 			}
 			tou_print = tou_print_copy;
 			tou_printError = tou_printError_copy;
@@ -263,8 +269,8 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			// Scope data
 			if(ctou_measure_time)
 			{
-				tgd_read = dev.r(251);
-				tgt_read = dev.r(252);
+				tgd_read = tgd_read / AvgNum;
+				tgt_read = tgt_read / AvgNum;
 
 				print("Tgd	[us]: " + (tgd_read / 1000));
 				print("Ton	[us]: " + (tgt_read / 1000));
@@ -406,6 +412,8 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 				print("Погр изм tgd, %: " + (((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(3));
 				print("Погр изм tgt, %: " + (((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(3));
 
+
+
 				ctou_tgd_sc.push(tgd_sc.toFixed(2));
 				ctou_tgt_sc.push(tgt_sc.toFixed(2));
 			}
@@ -424,13 +432,15 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			{
 				ctou_tgd_err.push((((tgd_read / 1000) - tgd_sc) / tgd_sc * 100).toFixed(2));
 				ctou_tgt_err.push((((tgt_read / 1000) - tgt_sc) / tgt_sc * 100).toFixed(2));
-				sleep(1000);
+				tgd_read = 0;
+				tgt_read = 0;
+				//sleep(1000);
 			}
 			else
 			{
 				ctou_i_err.push(((i_read - i_sc) / i_sc * 100).toFixed(2));
 				ctou_iset_err.push(((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
-				sleep(1000);
+				//sleep(1000);
 			}			
 			print("--------------------");
 			
