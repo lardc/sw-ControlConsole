@@ -91,7 +91,7 @@ EUosc = 3;
 ER = 0.5;
 E0 = 0;
 
-function CGTU_Init(portGate, portTek, channelMeasureGate, channelMeasurePower)
+function CGTU_Init(portGate, portTek, channelMeasureGate, channelMeasurePower, channelSync)
 {
 	if (channelMeasureGate < 1 || channelMeasureGate > 4 ||
 		channelMeasurePower < 1 || channelMeasurePower > 4)
@@ -103,7 +103,8 @@ function CGTU_Init(portGate, portTek, channelMeasureGate, channelMeasurePower)
 	// Copy channel information
 	cgtu_chMeasureGate = channelMeasureGate;
 	cgtu_chMeasurePower = channelMeasurePower;
-	
+	cgtu_chSync = channelSync;
+
 	// Init GTU
 	dev.Disconnect();
 	dev.Connect(portGate);
@@ -115,8 +116,9 @@ function CGTU_Init(portGate, portTek, channelMeasureGate, channelMeasurePower)
 	// Init channels
 	TEK_ChannelInit(cgtu_chMeasureGate, "1", "1");
 	TEK_ChannelInit(cgtu_chMeasurePower, "1", "1");
+	TEK_ChannelInit(cgtu_chSync, "1", "1");
 	// Init trigger
-	TEK_TriggerPulseInit(cgtu_chMeasureGate, "1");
+	TEK_TriggerPulseInit(cgtu_chSync, "1");
 	CGTU_TriggerTune();
 	// Horizontal settings
 	TEK_Horizontal("1e-3", "-4e-3");
@@ -124,7 +126,7 @@ function CGTU_Init(portGate, portTek, channelMeasureGate, channelMeasurePower)
 	// Display channels
 	for (var i = 1; i <= 4; i++)
 	{
-		if (i == cgtu_chMeasureGate || i == cgtu_chMeasurePower)
+		if (i == cgtu_chMeasureGate || i == cgtu_chMeasurePower || i == cgtu_chSync)
 			TEK_ChannelOn(i);
 		else
 			TEK_ChannelOff(i);
@@ -367,7 +369,8 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 	cgtu_cntDone = 0;
 	
 	// Init trigger
-	TEK_TriggerPulseInit(((ProbeCMD == 110) || (ProbeCMD == 111)) ? cgtu_chMeasureGate : cgtu_chMeasurePower, "1");
+	//TEK_TriggerPulseInit(((ProbeCMD == 110) || (ProbeCMD == 111)) ? cgtu_chMeasureGate : cgtu_chMeasurePower, "1");
+	TEK_TriggerLevelF(3);
 	CGTU_TriggerTune();
 	
 	// Configure scale
@@ -402,7 +405,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 				{
 					case 110:	// VG
 						CGTU_TekScale(cgtu_chMeasureGate, cgtu_Values[j] / 1000);
-						TEK_TriggerLevelF(cgtu_Values[j] / (1000 * 2));
+						//TEK_TriggerLevelF(cgtu_Values[j] / (1000 * 2));
 						sleep(1000);
 						
 						// Configure GTU
@@ -412,8 +415,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						
 					case 111:	// IG
 						CGTU_TekScale(cgtu_chMeasureGate, cgtu_Values[j] * Resistance / 1000);
-						TEK_TriggerLevelF(cgtu_Values[j] * Resistance / (600 * 2));
-						
+						//TEK_TriggerLevelF(cgtu_Values[j] * Resistance / (580 * 2));
 						sleep(1000);
 						
 						// Configure GTU
@@ -423,7 +425,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						
 					case 112:	// VD
 						CGTU_TekScale(cgtu_chMeasurePower, cgtu_Values[j] / 1000);
-						TEK_TriggerLevelF(cgtu_Values[j] / (1000 * 2));
+						//TEK_TriggerLevelF(cgtu_Values[j] / (1000 * 2));
 						sleep(1000);
 						
 						// Configure GTU
@@ -433,7 +435,7 @@ function CGTU_Collect(ProbeCMD, Resistance, cgtu_Values, IterationsCount)
 						
 					case 113:	// ID
 						CGTU_TekScale(cgtu_chMeasurePower, cgtu_Values[j] * Resistance / 1000);
-						TEK_TriggerLevelF(cgtu_Values[j] * Resistance / (600 * 2));
+						//TEK_TriggerLevelF(cgtu_Values[j] * Resistance / (600 * 2));
 						sleep(1000);
 						
 						// Configure GTU
