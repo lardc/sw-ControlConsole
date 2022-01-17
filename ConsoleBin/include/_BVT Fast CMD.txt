@@ -31,34 +31,34 @@ BVT_StartPulse(1,500,50);
 a = BVT_Plot();
 plot2(a.Voltage, a.Current, 1, 0);
 
-// Диапазон 200 - 999В (AC)
+// Диапазон 500 - 999В (AC)
 / (Offset: -) (K: 28/29)
 / [P0: 114] [P1: 105] [P2: 104]
 i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_RangeV = 1;
-cbvt_VstpAC = 100;
+cbvt_VstpAC = 50;
 cbvt_VmaxAC = 999;
-cbvt_VminAC = 200;
+cbvt_VminAC = 500;
 bvt_start_v = 200;
-CBVT_Init(7,6,1,2);
+CBVT_Init(7,2,1,2);
 dev.nid(4);
 
 CBVT_VerifyV();
 
 CBVT_CalibrateV();
 
-// Диапазон 1001 - 8000В (AC)
+// Диапазон 1001 - 4200В (AC)
 / (Offset: -) (K: 30/31)
 / [P0: 115] [P1: 107] [P2: 106]
 i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_RangeV = 2;
-cbvt_VstpAC = 1000;
-cbvt_VmaxAC = 8000;
+cbvt_VstpAC = 350;
+cbvt_VmaxAC = 4200;
 cbvt_VminAC = 1001;
 bvt_start_v = 500;
-CBVT_Init(7,6,1,2);
+CBVT_Init(7,2,1,2);
 dev.nid(4);
 
 CBVT_VerifyV();
@@ -72,11 +72,11 @@ i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_RangeI = 1;
 cbvt_UseMicroAmps = 1;
-cbvt_VmaxAC = 6400; 
-cbvt_VminAC = 110;
-cbvt_R = 215980;
-cbvt_Shunt = 99.46;
-CBVT_Init(7,6,1,2);
+cbvt_VmaxAC = 4200; 
+cbvt_VminAC = 135;
+cbvt_R = 217250;
+cbvt_Shunt = 99.69;
+CBVT_Init(7,2,1,2);
 dev.nid(4);
 
 CBVT_VerifyI();
@@ -90,11 +90,11 @@ i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_RangeI = 2;
 cbvt_UseMicroAmps = 1;
-cbvt_VmaxAC = 6800; 
-cbvt_VminAC = 685;
-cbvt_RP = 21655;
-cbvt_ShuntP = 9.91;
-CBVT_Init(7,6,1,2);
+cbvt_VmaxAC = 1200; 
+cbvt_VminAC = 239;
+cbvt_RP = 11988;
+cbvt_ShuntP = 9.71;
+CBVT_Init(7,2,1,2);
 dev.nid(4);
 
 CBVT_VerifyIP();
