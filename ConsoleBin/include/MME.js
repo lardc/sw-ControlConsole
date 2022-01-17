@@ -5,6 +5,7 @@ include("TestdVdt.js")
 include("TestGTU_4.0.js")
 include("TestLSLH.js")
 include("TestQRRHP.js")
+include("TestTOU.js")
 
 // SL
 mme_sl_current_ih = 100;
@@ -50,6 +51,7 @@ mme_QRR   =	8;
 mme_GTUSL = 9;
 mme_VGNT  = 10;
 mme_QRR_CROVU = 11;
+mme_TOU = 12;
 
 // active blocks
 mme_use_GTU = 	1;
@@ -58,12 +60,13 @@ mme_use_BVT =	1;
 mme_use_CS = 	0;
 mme_use_CROVU = 0;
 mme_use_ATU = 	0;
-mme_use_QRR = 	1;
+mme_use_QRR = 	0;
+mme_use_TOU = 	1;
 
 // Номера id блоков
 mme_Nid_HMIU = 0;
 mme_Nid_CU = 1;
-mme_Nid_SL = 2; // может быть и id 9, смотрим в прошивку
+mme_Nid_SL = 2; // может быть Nid = 9, смотреть в прошивку
 mme_Nid_GTU = 3;
 mme_Nid_BVT = 4;
 mme_Nid_CUext = 5;
@@ -72,6 +75,7 @@ mme_Nid_CROVU = 7;
 mme_Nid_SCTU = 8;
 mme_Nid_ATU = 9;
 mme_Nid_QRR = 10;
+mme_Nid_TOU = 11;
 
 //
 mme_GTU_Result_Igt = 0;
@@ -91,6 +95,10 @@ mme_QRR_Result_trr = 0;
 mme_QRR_Result_Irr = 0;
 mme_QRR_Result_tq = 0;
 mme_QRR_Result_dVdt = 0;
+
+mme_TOU_Result_Itm = 0;
+mme_TOU_Result_tgd = 0;
+mme_TOU_Result_tgt = 0;
 // 
 
 // settings
@@ -160,7 +168,7 @@ function MME_Units()
 		ret = 0;
 	}
 	
-dev.nid(mme_Nid_CUext);
+	dev.nid(mme_Nid_CUext);
 	try
 	{
 		dev.Read16Silent(0);
@@ -231,6 +239,18 @@ dev.nid(mme_Nid_CUext);
 		print("[Node 10] QRR:	None");
 		ret = 0;
 	}
+
+	dev.nid(mme_Nid_TOU);
+	try
+	{
+		dev.Read16Silent(0);
+		print("[Node 11] TOU:	OK");
+	}
+	catch (e)
+	{
+		print("[Node 11] TOU:	None");
+		ret = 0;
+	}
 	
 	return ret;
 }
@@ -278,7 +298,7 @@ function MME_TestUnits(UnitArray, Num, Pause)
 
 function MME_IsReady()
 {
-	// cu
+	// CU
 	dev.nid(mme_Nid_CU);
 	if (dev.r(96) == 0)
 	{
@@ -292,7 +312,7 @@ function MME_IsReady()
 		return 0;
 	}
 	
-	// sl
+	// SL
 	if (mme_use_SL)
 	{
 		dev.nid(mme_Nid_SL);
@@ -310,7 +330,7 @@ function MME_IsReady()
 		}
 	}
 	
-	// bvt
+	// BVT
 	if (mme_use_BVT)
 	{
 		dev.nid(mme_Nid_BVT);
@@ -327,7 +347,7 @@ function MME_IsReady()
 		}
 	}
 	
-	// cs
+	// CS
 	if (mme_use_CS)
 	{
 		dev.nid(mme_Nid_CS);
@@ -345,7 +365,7 @@ function MME_IsReady()
 		}
 	}
 	
-	// qrr
+	// QRR
 	if (mme_use_QRR)
 	{
 		dev.nid(mme_Nid_QRR);
@@ -363,7 +383,7 @@ function MME_IsReady()
 		}
 	}
 	
-	// dvdt
+	// dVdt
 	if (mme_use_CROVU)
 	{
 		dev.nid(mme_Nid_CROVU);
@@ -380,7 +400,7 @@ function MME_IsReady()
 		}
 	}
 	
-	// atu
+	// ATU
 	if (mme_use_ATU)
 	{
 		dev.nid(mme_Nid_ATU);
@@ -392,6 +412,24 @@ function MME_IsReady()
 		if (dev.r(96) != 4)
 		{
 			print("ATU not ready");
+			PrintStatus();
+			return 0;
+		}
+	}
+
+	// TOU
+	if (mme_use_TOU)
+	{
+		dev.nid(mme_Nid_TOU);
+		if (dev.r(192) == 0)
+		{
+			print("Starting TOU...");
+			dev.c(1);
+		}
+		while (dev.r(192) == 3 || dev.r(192) == 5) sleep(500);
+		if (dev.r(192) != 4)
+		{
+			print("TOU not ready");
 			PrintStatus();
 			return 0;
 		}
@@ -554,6 +592,20 @@ function MME_VGNT()
 	}
 }
 
+function MME_TOU()
+{
+	if (mme_use_TOU)
+	{
+		dev.nid(mme_Nid_TOU);
+		TOU_Measure(160);
+		sleep(4000);
+		TOU_Measure(600);
+		sleep(4000);
+		TOU_Measure(1250);
+		sleep(4000);
+	}
+}
+
 function MME_ResetA()
 {
 	GTU_ResetA();
@@ -672,6 +724,14 @@ function MME_Test(UnitArray, Counter, Pause, SLCurrent)
 					MME_Collect(mme_VGNT);
 					MME_CU(110);
 					break;
+				case mme_TOU:
+					print("#TOU");
+					MME_CS(mme_cs_force);
+					MME_CU(115);
+					MME_TOU();
+					MME_CU(110);
+					MME_Collect(mme_TOU);
+					break;
 			}
 		}
 		
@@ -763,7 +823,7 @@ function MME_Collect(Unit)
 		case mme_SL:
 			dev.nid(mme_Nid_SL);
 			mme_SL_Result_Utm = dev.r(198);
-		break;
+			break;
 		
 		case mme_BVTD:
 			dev.nid(mme_Nid_BVT);
@@ -792,6 +852,13 @@ function MME_Collect(Unit)
 		case mme_QRR_CROVU:
 			dev.nid(mme_Nid_QRR);
 			mme_QRR_Result_dVdt = dev.r(198);
+			break;
+
+		case mme_TOU:
+			dev.nid(mme_Nid_TOU);
+			mme_TOU_Result_Itm = dev.r(250);
+			mme_TOU_Result_tgd = dev.r(251) / 1000;
+			mme_TOU_Result_tgt = dev.r(252) / 1000;
 			break;
 	}
 }
@@ -860,6 +927,11 @@ function MME_PrintSummaryResult(UnitArray)
 					print("dVdt	= Fail");
 					out_str += "FAIL;";
 				}
+				break;
+			case mme_TOU:
+				print("Itm	= " + mme_TOU_Result_Itm);
+				print("tgd	= " + mme_TOU_Result_tgd);
+				print("tgt	= " + mme_TOU_Result_tgt);
 				break;
 		}
 	}
