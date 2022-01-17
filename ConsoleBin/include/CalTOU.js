@@ -52,7 +52,7 @@ ctou_measure_time = 0;
 ctou_measure_time_hand = 0;
 ctou_measure_tgd = 1; // измерять параметр tgd? 1 = да, 0 = нет
 ctou_measure_tgt = 0; // измерять параметр tgt? 1 = да, 0 = нет
-ctou_scale_osc = 0.25; // 0.5мкс, 1мкс, 2.5мкс 
+ctou_scale_osc = 1; // 0.5мкс, 1мкс, 2.5мкс 
 
 ctou_UseAvg = 0;
 
@@ -178,8 +178,8 @@ function CTOU_TekCursor(Channel)
 {
 	TEK_Send("cursor:select:source ch" + Channel);
 	TEK_Send("cursor:function vbars");
-	TEK_Send("cursor:vbars:position1 0e-6");
-	TEK_Send("cursor:vbars:position2 0e-6");
+	TEK_Send("cursor:vbars:position1 40e-6");
+	TEK_Send("cursor:vbars:position2 40e-6");
 }
 
 function CTOU_Measure(Channel, Resolution)
@@ -230,7 +230,7 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			else
 			{
 				CTOU_TekScale(ctou_chMeasureI, (CurrentValues[j] * ctou_Ri));
-				TEK_TriggerInit(ctou_chSync, "2.5");
+				TEK_TriggerInit(ctou_chMeasureI, (CurrentValues[j] * ctou_Ri) / 1.5);
 				CTOU_TekCursor(ctou_chMeasureI);				
 			}
 
@@ -254,8 +254,10 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 					tgt_read += dev.r(252);
 				}					
 				else
+				{
 					TOU_Current(CurrentValues[j]);
-				sleep(9000);
+					sleep(2000);
+				}
 			}
 			tou_print = tou_print_copy;
 			tou_printError = tou_printError_copy;
@@ -473,6 +475,7 @@ function CTOU_ResetA()
 
 	// Relative error
 	ctou_i_err = [];
+	ctou_iset_err = [];
 	ctou_tgt_err = [];
 	ctou_tgd_err = [];
 
