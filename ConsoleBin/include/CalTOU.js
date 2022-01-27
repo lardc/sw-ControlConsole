@@ -102,6 +102,7 @@ function CTOU_Init(portTOU, portTek, channelMeasureV, channelMeasureI, channelSy
 
 function CTOU_CalibrateI()
 {
+	if(dev.r(192) == 0) dev.c(1);
 	// Collect data
 	CTOU_ResetA();
 	CTOU_ResetCal();
@@ -128,7 +129,8 @@ function CTOU_CalibrateI()
 }
 
 function CTOU_VerifyI()
-{
+{	
+	if(dev.r(192) == 0) dev.c(1);
 	// Collect data
 	CTOU_ResetA();
 

@@ -58,12 +58,13 @@ function LSLH_GD_Pulse(Current, Voltage, Tpulse)
 	dev.w(150, Tpulse);
 	
 	dev.w(151, Voltage);
-	dev.c(14);
+	//dev.c(14);
 	
 	dev.w(152, Current);
-	dev.c(15);
-	
-	dev.c(12);
+	//dev.c(15);
+	//dev.w(140, 200);
+	dev.c(100);
+	//dev.c(12);
 }
 //--------------------------
 
