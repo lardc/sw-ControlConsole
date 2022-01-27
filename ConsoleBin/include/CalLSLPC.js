@@ -82,7 +82,7 @@ function CAL_CalibrateId()
 		CAL_SaveId("LSLPC_Id");
 
 		// Plot relative error distribution
-		scattern(cal_IdSc, cal_IdErr, "Current (in A)", "Error (in %)", "Current relative error");
+		scattern(cal_IdSc, cal_IdErr, "Current (in A)", "Error (in %)", "Current setpoint relative error");
 
 		// Calculate correction
 		cal_IdCorr = CGEN_GetCorrection2("LSLPC_Id");
@@ -107,7 +107,7 @@ function CAL_VerifyId()
 		CAL_SaveId("LSLPC_Id_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_IdSc, cal_IdErr, "Current (in A)", "Error (in %)", "Current relative error");
+		scattern(cal_IdSc, cal_IdErr, "Current (in A)", "Error (in %)", "Current setpoint relative error");
 	}
 }
 //--------------------
@@ -158,8 +158,10 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 			// Relative error
 			var IdErr = ((IdSet - IdSc) / IdSc * 100).toFixed(2);
 			cal_IdErr.push(IdErr);
-			print("Iderr, %: " + IdErr);
+			print("IdSetErr, %: " + IdErr);
 			print("--------------------");
+
+
 			
 			if (anykey()) return 0;
 		}
