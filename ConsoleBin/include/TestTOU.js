@@ -17,7 +17,7 @@ cal_TOUerr3 = [];
 // Status check
 function _TOU_Active()
 {
-	return (dev.r(192) == 5);
+	return ((dev.r(192) == 3) || (dev.r(192) == 5));
 }
 
 // Cycle test
@@ -26,25 +26,26 @@ function TOU_DBG(Min, Max, Step, Count)
 	tou_min_current = Min;
 	tou_max_current = Max;
 	tou_step_current = Step;
-	for (;Count>0;Count--){
-	for(var i = tou_min_current; i < tou_max_current; i = i + tou_step_current)
+	for (;Count > 0;Count--)
 	{
-		dev.w(128, i);
- 		dev.c(100);
+		for(var i = tou_min_current; i <= tou_max_current; i = i + tou_step_current)
+		{
+			dev.w(128, i);
+ 			dev.c(100);
 			while (_TOU_Active())
-		sleep(100);
- 		print("Задание " + i);
- 		print("Измерил блок " + dev.r(201));
- 		if (anykey()) return;
- 		sleep(1000);
- 		while (dev.r(200) < 299)
- 			sleep(100);
-	cal_TOUabs1.push(dev.r(250));
-	cal_TOUabs2.push(dev.r(251)/1000);
-	cal_TOUabs3.push(dev.r(252)/1000);
-	}
+			sleep(100);
+ 			TOU_getVal();
+ 			if (anykey()) return;
+ 			sleep(2000);
+ 			while (_TOU_Active())
+ 				sleep(4000);
+			cal_TOUabs1.push(dev.r(250));
+			cal_TOUabs2.push(dev.r(251)/1000);
+			cal_TOUabs3.push(dev.r(252)/1000);
+		}
 	}
 }
+
 //Clears graph arrays
 function ResetArray()
 {
@@ -69,7 +70,7 @@ function TOU_DBG_Graph(Min, Max, Step)
 // Pack of pulses with iterations with graphs [Num1, Num2, A, A, A]
 function TOU_DBG_GraphIter(TimesTotal, TimesEach, Min, Max, Step) // Total cycles, every step iteration, min and max TOCU current
 {	
-
+	ResetArray();
 	p(counter1>TimesTotal);
 	for(counter1=0; counter1<TimesTotal;counter1++){
 	if(anykey()) return 0;
@@ -89,8 +90,8 @@ function TOU_Measure(Current)
 	dev.c(100);
 	while (_TOU_Active())
 		sleep(100);
-	p(dev.r(197)); //Status of formation 1 ok, 2 failed
-	if (dev.r(197) == 1)
+	
+	if (dev.r(197) == 1 || dev.r(197) == 2)
 	{
 		TOU_getVal();
 		TOU_getError();
@@ -103,6 +104,25 @@ function TOU_Measure(Current)
 		PrintStatus();	
 		}		
 	}
+}
+
+function TOU_Current(Current)
+{
+	dev.w(128, Current);
+	dev.c(24);
+	while (_TOU_Active())
+		sleep(200);
+
+	var idut = dev.r(250);
+	var i = dev.r(128);
+	var error = (100 * (idut - i) / i).toFixed(2);
+
+	if (tou_print)
+	{
+		print("Idut	[A]:  " + idut);	
+		print("Idut error [%]: " + error);
+		print("------------------");
+	}	
 }
 
 // Resourse measurements
