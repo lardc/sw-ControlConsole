@@ -24,16 +24,16 @@ cal_UdMin = 300;
 cal_UdMax = 4500;
 cal_UdStp = (cal_UdMax - cal_UdMin) / cal_Points;
 
-cal_Tmin  = 30;
-cal_Tmax  = 200;
-cal_TmaxStp = (cal_Tmax - cal_Tmin) / cal_Points;
+cal_T_IhMin  = 100;
+cal_T_IhMax  = 1000;
+cal_T_IhStp = (cal_T_IhMax - cal_T_IhMin) / cal_Points;
 
 cal_Calibrate_Tcase1 = 1;
-cal_Calibrate_Tcool1 = 1;
-cal_Calibrate_Tcase2 = 1;
-cal_Calibrate_Tcool2 = 1;
+cal_Calibrate_Tcool1 = 0;
+cal_Calibrate_Tcase2 = 0;
+cal_Calibrate_Tcool2 = 0;
 
-cal_Iterations = 1;
+cal_Iterations = 2;
 //		
 
 // Counters
@@ -191,14 +191,14 @@ function CAL_CalibrateT()
 	CAL_ResetTCal();
 
 	// Reload values
-	var TemperatureArray = CGEN_GetRange(cal_TMin, cal_TMax, cal_TStp);
+	var CurrentArray = CGEN_GetRange(cal_T_IhMin, cal_T_IhMax, cal_T_IhStp);
 
-	if (CAL_CollectT(TemperatureArray, cal_Iterations))
+	if (CAL_CollectT(CurrentArray, cal_Iterations))
 	{
 		if(cal_Calibrate_Tcase1)
 		{
 			CAL_SaveTcase1("Zth_Tcase1");
-			scattern(cal_TFluke, cal_Tcase1Err, "Device case temperature 1 (in C)", "Error (in %)", "Temperature relative error");
+			scattern(cal_TFluke, cal_Tcase1Err, "Device case temperature 1 (in C)", "Error (in C)", "Temperature relative error");
 			
 			// Calculate correction
 			cal_Tcase1Corr = CGEN_GetCorrection2("Zth_Tcase1");
@@ -209,7 +209,7 @@ function CAL_CalibrateT()
 		if(cal_Calibrate_Tcool1)
 		{
 			CAL_SaveTcool1("Zth_Tcool1");
-			scattern(cal_TFluke, cal_Tcool1Err, "Cooler temperature 1 (in C)", "Error (in %)", "Temperature relative error");
+			scattern(cal_TFluke, cal_Tcool1Err, "Cooler temperature 1 (in C)", "Error (in C)", "Temperature relative error");
 			
 			// Calculate correction
 			cal_Tcool1Corr = CGEN_GetCorrection2("Zth_Tcool1");
@@ -220,7 +220,7 @@ function CAL_CalibrateT()
 		if(cal_Calibrate_Tcase2)
 		{
 			CAL_SaveTcase2("Zth_Tcase2");
-			scattern(cal_TFluke, cal_Tcase2Err, "Device case temperature 2 (in C)", "Error (in %)", "Temperature relative error");
+			scattern(cal_TFluke, cal_Tcase2Err, "Device case temperature 2 (in C)", "Error (in C)", "Temperature relative error");
 			
 			// Calculate correction
 			cal_Tcase2Corr = CGEN_GetCorrection2("Zth_Tcase2");
@@ -231,7 +231,7 @@ function CAL_CalibrateT()
 		if(cal_Calibrate_Tcool2)
 		{
 			CAL_SaveTcool2("Zth_Tcool2");
-			scattern(cal_TFluke, cal_Tcool2Err, "Cooler temperature 2 (in C)", "Error (in %)", "Temperature relative error");
+			scattern(cal_TFluke, cal_Tcool2Err, "Cooler temperature 2 (in C)", "Error (in C)", "Temperature relative error");
 			
 			// Calculate correction
 			cal_Tcool2Corr = CGEN_GetCorrection2("Zth_Tcool2");
@@ -317,9 +317,9 @@ function CAL_VerifyT()
 	CAL_ResetA();
 
 	// Reload values
-	var TemperatureArray = CGEN_GetRange(cal_TMin, cal_TMax, cal_TStp);
+	var CurrentArray = CGEN_GetRange(cal_T_IhMin, cal_T_IhMax, cal_T_IhStp);
 
-	if (CAL_CollectT(TemperatureArray, cal_Iterations))
+	if (CAL_CollectT(CurrentArray, cal_Iterations))
 	{
 		if(cal_Calibrate_Tcase1)
 		{
@@ -359,15 +359,18 @@ function CAL_CollectUd(VoltageValues, IterationsCount)
 	{
 		for (var j = 0; j < VoltageValues.length; j++)
 		{
-			//CAL_InstekSetVoltageRange(VoltageValues[j]);
+			CAL_InstekSetVoltageRange(VoltageValues[j]);
 
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
 
-			dev.w(150, VoltageValues[j] * 0.83);
-			dev.c(21);
-			sleep(1500);
-			dev.c(12);
+			p("Set voltage to " + VoltageValues[j] + "and press 'y'");
+			
+			key = 0;
+			while(key != "y")
+			{
+				key = readkey();
+			}
 
 			// Unit data
 			var UdRead = dev.r(150) / 10;
@@ -544,45 +547,53 @@ function CAL_CollectIh(CurrentValues, IterationsCount)
 }
 //--------------------
 
-function CAL_CollectT(TemperatureValues, IterationsCount)
+function CAL_CollectT(CurrentValues, IterationsCount)
 {
 	var key, CurrentTemperature;
 	
-	cal_CntTotal = IterationsCount * TemperatureValues.length;
+	cal_CntTotal = IterationsCount * CurrentValues.length;
 	cal_CntDone = 1;
-	
 	
 	for (var i = 0; i < IterationsCount; i++)
 	{
-		for (var j = 0; j < TemperatureValues.length; j++)
+		for (var j = 0; j < CurrentValues.length; j++)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
-
-			p("Press y, if the temperature reached " + TemperatureValues[j] + " C, or n, if current temperature is already lower,");
-			p("or s to interrupt the process.");
 			
-			while(key != "y" && key != "n" && key != "s")
+			PrintProcess = 0;
+			HeatingCurrentAbove10mS = TemperatureValues[j];
+			Zth_Start(2, 200, 100e3, 2000, 1);
+
+			p("When the temperature is stable press 'y' end enter the current value,");
+			p("or press 's' to interrupt the process.");
+			
+			key = 0;
+			while(key != "y" && key != "s")
 			{
-				key = readline();
+				key = readkey();
 			}
 			
 			if(key == "s")
+			{
+				Zth_Start(2, 200, 100e3, 2000, 0);
 				return 0;
-			
-			if(key == "Y")
-				CurrentTemperature = TemperatureValues[j];
-			else
+			}
+		
+			if(key == "y")
 			{
 				p("Enter current temperature in C");
 				CurrentTemperature = readline();
 			}
 			
+			cal_TFluke.push(CurrentTemperature);
+			
 			if(cal_Calibrate_Tcase1)
 			{
 				var TempTcase1 = Zth_Tcase1();
-				var Tcase1Err = TempTcase1 - CurrentTemperature;
+				var Tcase1Err = (TempTcase1 - CurrentTemperature).toFixed(2);
 				cal_Tcase1.push(TempTcase1);
+				cal_Tcase1Err.push(Tcase1Err);
 				
 				print("Tcase1,       C: " + TempTcase1);
 				print("Tcase1 Error, C: " + Tcase1Err);
@@ -591,8 +602,9 @@ function CAL_CollectT(TemperatureValues, IterationsCount)
 			if(cal_Calibrate_Tcool1)
 			{
 				var TempTcool1 = Zth_Tcool1();
-				var Tcool1Err = TempTcool1 - CurrentTemperature;
+				var Tcool1Err = (TempTcool1 - CurrentTemperature).toFixed(2);
 				cal_Tcool1.push(TempTcool1);
+				cal_Tcool1Err.push(Tcool1Err);
 				
 				print("Tcool1,       C: " + TempTcool1);
 				print("Tcool1 Error, C: " + Tcool1Err);
@@ -601,8 +613,9 @@ function CAL_CollectT(TemperatureValues, IterationsCount)
 			if(cal_Calibrate_Tcase2)
 			{
 				var TempTcase2 = Zth_Tcase2();
-				var Tcase2Err = TempTcase2 - CurrentTemperature;
+				var Tcase2Err = (TempTcase2 - CurrentTemperature).toFixed(2);
 				cal_Tcase2.push(TempTcase2);
+				cal_Tcase2Err.push(Tcase2Err);
 				
 				print("Tcase2,       C: " + TempTcase2);
 				print("Tcase2 Error, C: " + Tcase2Err);
@@ -611,12 +624,15 @@ function CAL_CollectT(TemperatureValues, IterationsCount)
 			if(cal_Calibrate_Tcool2)
 			{
 				var TempTcool2 = Zth_Tcool2();
-				var Tcool2Err = TempTcool2 - CurrentTemperature;
+				var Tcool2Err = (TempTcool2 - CurrentTemperature).toFixed(2);
 				cal_Tcool2.push(TempTcool2);
+				cal_Tcool2Err.push(Tcool2Err);
 				
-				print("Tcool2,  C: " + TempTcool2);
+				print("Tcool2,       C: " + TempTcool2);
 				print("Tcool2 Error, C: " + Tcool2Err);
 			}
+			
+			p("");
 		}
 	}
 
@@ -719,7 +735,7 @@ function CAL_SaveTcool1(NameT)
 
 function CAL_SaveTcase2(NameT)
 {
-	CGEN_SaveArrays(NameT, cal_Tcase2, cal_TFluke, cal_Tcase2Err);
+	CGEN_SaveArrays(NameT, cal_TFluke, cal_Tcase2, cal_Tcase2Err);
 }
 //--------------------
 
