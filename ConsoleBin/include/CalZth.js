@@ -5,7 +5,8 @@ include("CalGeneral.js")
 // Calibration setup parameters
 cal_Points = 10;
 
-cal_Rshunt = 50;	// in mOhm
+cal_Im_Rshunt = 50;	// in mOhm
+cal_Ih_Rshunt = 0.075;	// in mOhm
 
 cal_ImMin = 500;	
 cal_ImMax = 5000;
@@ -15,7 +16,7 @@ cal_IgMin = 500;
 cal_IgMax = 3000;
 cal_IgStp = (cal_IgMax - cal_IgMin) / cal_Points;
 
-cal_IhRange = 1;
+cal_IhRange = 0;
 cal_IhMin = [50, 501];	
 cal_IhMax = [500, 2500];
 cal_IhStp = (cal_IhMax[cal_IhRange] - cal_IhMin[cal_IhRange]) / cal_Points;
@@ -24,8 +25,8 @@ cal_UdMin = 300;
 cal_UdMax = 4500;
 cal_UdStp = (cal_UdMax - cal_UdMin) / cal_Points;
 
-cal_T_IhMin  = 100;
-cal_T_IhMax  = 1000;
+cal_T_IhMin  = 50;
+cal_T_IhMax  = 200;
 cal_T_IhStp = (cal_T_IhMax - cal_T_IhMin) / cal_Points;
 
 cal_Calibrate_Tcase1 = 1;
@@ -33,7 +34,7 @@ cal_Calibrate_Tcool1 = 0;
 cal_Calibrate_Tcase2 = 0;
 cal_Calibrate_Tcool2 = 0;
 
-cal_Iterations = 2;
+cal_Iterations = 1;
 //		
 
 // Counters
@@ -89,7 +90,6 @@ function CAL_Init(portDevice, portInstek)
 
 	// Init Instek port
 	TEK_PortInit(portInstek);
-
 }
 //--------------------
 
@@ -364,7 +364,7 @@ function CAL_CollectUd(VoltageValues, IterationsCount)
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
 
-			p("Set voltage to " + VoltageValues[j] + "and press 'y'");
+			p("Set voltage to " + VoltageValues[j] + "mV and press 'y'");
 			
 			key = 0;
 			while(key != "y")
@@ -373,7 +373,8 @@ function CAL_CollectUd(VoltageValues, IterationsCount)
 			}
 
 			// Unit data
-			var UdRead = dev.r(150) / 10;
+			dev.c(12)
+			var UdRead = dev.r(155) + dev.r(156) / 10;
 			cal_Ud.push(UdRead);
 			print("UdRead,   mV: " + UdRead);
 
@@ -411,12 +412,13 @@ function CAL_CollectIm(CurrentValues, IterationsCount)
 	{
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
-			CAL_InstekSetCurrentRange(CurrentValues[j]);
+			CAL_InstekSetVoltageRange(CurrentValues[j] * cal_Im_Rshunt / 1e6);
 
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
 
-			Zth_Im(CurrentValues[j], 1e6);
+			PrintProcess = 0;
+			Zth_Im(CurrentValues[j], 3e6);
 			sleep(1500);
 
 			// Unit data
@@ -424,12 +426,12 @@ function CAL_CollectIm(CurrentValues, IterationsCount)
 			cal_ImSet.push(ImSet);
 			print("ImSet,  mA: " + ImSet);
 			
-			var ImRead = dev.r(203) / 10;
+			var ImRead = dev.r(206) / 10;
 			cal_Im.push(ImRead);
 			print("Imread, mA: " + ImRead);
 
 			// Instek data
-			var ImInstek = (Instek_ReadDisplayValue() / cal_Rshunt * 1e6).toFixed(2);
+			var ImInstek = (Instek_ReadDisplayValue() / cal_Im_Rshunt * 1e6).toFixed(2);
 			cal_ImInst.push(ImInstek);
 			print("Iminst, mA: " + ImInstek);
 
@@ -444,6 +446,8 @@ function CAL_CollectIm(CurrentValues, IterationsCount)
 			print("--------------------");
 
 			if (anykey()) return 0;
+			
+			sleep(1500);
 		}
 	}
 
@@ -456,17 +460,16 @@ function CAL_CollectIg(CurrentValues, IterationsCount)
 	cal_CntTotal = IterationsCount * CurrentValues.length;
 	cal_CntDone = 1;
 	
+	CAL_InstekSetCurrentRange(cal_IgMax);
 	
 	for (var i = 0; i < IterationsCount; i++)
 	{
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
-			CAL_InstekSetCurrentRange(CurrentValues[j]);
-
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
 
-			Zth_Gate(0, CurrentValues[j], true);
+			Zth_Gate(0, CurrentValues[j], 3e6);
 			sleep(1500);
 
 			// Unit data
@@ -475,7 +478,7 @@ function CAL_CollectIg(CurrentValues, IterationsCount)
 			print("IgSet,  mA: " + IgSet);
 
 			// Instek data
-			var IgInstek = (Instek_ReadDisplayValue() / cal_Rshunt * 1e6).toFixed(2);
+			var IgInstek = (Instek_ReadDisplayValue() * 1e3).toFixed(2);
 			cal_IgInst.push(IgInstek);
 			print("Iginst, mA: " + IgInstek);
 
@@ -486,10 +489,10 @@ function CAL_CollectIg(CurrentValues, IterationsCount)
 			print("--------------------");
 
 			if (anykey()) return 0;
+			
+			sleep(1500);
 		}
 	}
-	
-	Zth_Gate(0, cal_IgMin, false);
 
 	return 1;
 }
@@ -500,17 +503,19 @@ function CAL_CollectIh(CurrentValues, IterationsCount)
 	cal_CntTotal = IterationsCount * CurrentValues.length;
 	cal_CntDone = 1;
 	
-	
 	for (var i = 0; i < IterationsCount; i++)
 	{
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
-			CAL_InstekSetCurrentRange(CurrentValues[j]);
+			CAL_InstekSetVoltageRange(CurrentValues[j] * 1.5 * cal_Im_Rshunt / 1e6);
 
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
 
-			Zth_Ih(CurrentValues[j], 1e6);
+			PrintProcess = 0;
+			Zth_Im(CurrentValues[j] * 1.5, 3e6);
+			dev.w(150, cal_IhRange);
+			dev.c(26);
 			sleep(1500);
 
 			// Unit data
@@ -523,7 +528,7 @@ function CAL_CollectIh(CurrentValues, IterationsCount)
 			print("Ihread, A: " + IhRead);
 
 			// Instek data
-			var IhInstek = (Instek_ReadDisplayValue() / cal_Rshunt / 1.5 * 1e6).toFixed(2);
+			var IhInstek = (Instek_ReadDisplayValue() / cal_Im_Rshunt / 1.5 * 1e6).toFixed(2);
 			cal_IhInst.push(IhInstek);
 			print("Ihinst, A: " + IhInstek);
 
@@ -538,6 +543,8 @@ function CAL_CollectIh(CurrentValues, IterationsCount)
 			print("--------------------");
 
 			if (anykey()) return 0;
+			
+			sleep(1500);
 		}
 	}
 	
@@ -562,7 +569,7 @@ function CAL_CollectT(CurrentValues, IterationsCount)
 			//
 			
 			PrintProcess = 0;
-			HeatingCurrentAbove10mS = TemperatureValues[j];
+			HeatingCurrentAbove10mS = CurrentValues[j];
 			Zth_Start(2, 200, 100e3, 2000, 1);
 
 			p("When the temperature is stable press 'y' end enter the current value,");
@@ -590,7 +597,7 @@ function CAL_CollectT(CurrentValues, IterationsCount)
 			
 			if(cal_Calibrate_Tcase1)
 			{
-				var TempTcase1 = Zth_Tcase1();
+				var TempTcase1 = dev.r(207) / 10;
 				var Tcase1Err = (TempTcase1 - CurrentTemperature).toFixed(2);
 				cal_Tcase1.push(TempTcase1);
 				cal_Tcase1Err.push(Tcase1Err);
@@ -601,7 +608,7 @@ function CAL_CollectT(CurrentValues, IterationsCount)
 			
 			if(cal_Calibrate_Tcool1)
 			{
-				var TempTcool1 = Zth_Tcool1();
+				var TempTcool1 = dev.r(209) / 10;
 				var Tcool1Err = (TempTcool1 - CurrentTemperature).toFixed(2);
 				cal_Tcool1.push(TempTcool1);
 				cal_Tcool1Err.push(Tcool1Err);
@@ -612,7 +619,7 @@ function CAL_CollectT(CurrentValues, IterationsCount)
 			
 			if(cal_Calibrate_Tcase2)
 			{
-				var TempTcase2 = Zth_Tcase2();
+				var TempTcase2 = dev.r(208) / 10;
 				var Tcase2Err = (TempTcase2 - CurrentTemperature).toFixed(2);
 				cal_Tcase2.push(TempTcase2);
 				cal_Tcase2Err.push(Tcase2Err);
@@ -623,7 +630,7 @@ function CAL_CollectT(CurrentValues, IterationsCount)
 			
 			if(cal_Calibrate_Tcool2)
 			{
-				var TempTcool2 = Zth_Tcool2();
+				var TempTcool2 = dev.r(210) / 10;
 				var Tcool2Err = (TempTcool2 - CurrentTemperature).toFixed(2);
 				cal_Tcool2.push(TempTcool2);
 				cal_Tcool2Err.push(Tcool2Err);
@@ -635,6 +642,8 @@ function CAL_CollectT(CurrentValues, IterationsCount)
 			p("");
 		}
 	}
+	
+	Zth_Start(2, 200, 100e3, 2000, 0);
 
 	return 1;
 }
@@ -642,7 +651,7 @@ function CAL_CollectT(CurrentValues, IterationsCount)
 
 function CAL_InstekSetCurrentRange(Current)
 {
-	Instek_ConfVoltageDC(Current * cal_Rshunt / 1e6);
+	Instek_ConfCurrentDC(Current / 1000);
 }
 //--------------------
 
@@ -787,25 +796,25 @@ function CAL_ResetTCal()
 
 function CAL_SetCoefUd(P2, P1, P0)
 {
-	dev.ws(25, Math.round(P2 * 1e6));
-	dev.w(26, Math.round(P1 * 1000));
-	dev.ws(27, Math.round(P0 * 100));	
+	dev.ws(32, Math.round(P2 * 1e6));
+	dev.w(33, Math.round(P1 * 1000));
+	dev.ws(34, Math.round(P0 * 100));	
 }
 //--------------------
 
 function CAL_SetCoefIm(P2, P1, P0)
 {
-	dev.ws(20, Math.round(P2 * 1e6));
-	dev.w(21, Math.round(P1 * 1000));
-	dev.ws(22, Math.round(P0 * 100));	
+	dev.ws(27, Math.round(P2 * 1e6));
+	dev.w(28, Math.round(P1 * 1000));
+	dev.ws(29, Math.round(P0 * 100));	
 }
 //--------------------
 
 function CAL_SetCoefIg(P2, P1, P0)
 {
-	dev.ws(0, Math.round(P2 * 1e6));
-	dev.w(1, Math.round(P1 * 1000));
-	dev.ws(2, Math.round(P0 * 100));	
+	dev.ws(10, Math.round(P2 * 1e6));
+	dev.w(11, Math.round(P1 * 1000));
+	dev.ws(12, Math.round(P0 * 100));	
 }
 //--------------------
 
@@ -813,72 +822,90 @@ function CAL_SetCoefIh(P2, P1, P0)
 {
 	if(cal_IhRange)
 	{
-		dev.ws(15, Math.round(P2 * 1e6));
-		dev.w(16, Math.round(P1 * 1000));
-		dev.ws(17, Math.round(P0 * 100));
+		dev.ws(2, Math.round(P2 * 1e6));
+		dev.w(23, Math.round(P1 * 1000));
+		dev.ws(24, Math.round(P0 * 100));
 	}
 	else
 	{
-		dev.ws(10, Math.round(P2 * 1e6));
-		dev.w(11, Math.round(P1 * 1000));
-		dev.ws(12, Math.round(P0 * 100));
+		dev.ws(17, Math.round(P2 * 1e6));
+		dev.w(18, Math.round(P1 * 1000));
+		dev.ws(19, Math.round(P0 * 100));
 	}
 }
 //--------------------
 
 function CAL_SetCoefTcase1(P2, P1, P0)
 {
-	dev.ws(32, Math.round(P2 * 1e6));
-	dev.w(33, Math.round(P1 * 1000));
-	dev.ws(34, Math.round(P0 * 100));	
+	if(Cal_FrontPanelThermocouples)
+	{
+		dev.ws(47, Math.round(P2 * 1e6));
+		dev.w(48, Math.round(P1 * 1000));
+		dev.ws(49, Math.round(P0 * 100));
+	}	
+	else
+	{
+		dev.ws(37, Math.round(P2 * 1e6));
+		dev.w(38, Math.round(P1 * 1000));
+		dev.ws(39, Math.round(P0 * 100));
+	}
 }
 //--------------------
 
 function CAL_SetCoefTcool1(P2, P1, P0)
 {
-	dev.ws(38, Math.round(P2 * 1e6));
-	dev.w(39, Math.round(P1 * 1000));
-	dev.ws(40, Math.round(P0 * 100));	
+	if(Cal_FrontPanelThermocouples)
+	{
+		dev.ws(60, Math.round(P2 * 1e6));
+		dev.w(61, Math.round(P1 * 1000));
+		dev.ws(62, Math.round(P0 * 100));
+	}
+	else
+	{
+		dev.ws(50, Math.round(P2 * 1e6));
+		dev.w(51, Math.round(P1 * 1000));
+		dev.ws(52, Math.round(P0 * 100));
+	}	
 }
 //--------------------
 
 function CAL_SetCoefTcase2(P2, P1, P0)
 {
-	dev.ws(35, Math.round(P2 * 1e6));
-	dev.w(36, Math.round(P1 * 1000));
-	dev.ws(37, Math.round(P0 * 100));	
+	dev.ws(42, Math.round(P2 * 1e6));
+	dev.w(43, Math.round(P1 * 1000));
+	dev.ws(44, Math.round(P0 * 100));	
 }
 //--------------------
 
 function CAL_SetCoefTcool2(P2, P1, P0)
 {
-	dev.ws(41, Math.round(P2 * 1e6));
-	dev.w(42, Math.round(P1 * 1000));
-	dev.ws(43, Math.round(P0 * 100));	
+	dev.ws(55, Math.round(P2 * 1e6));
+	dev.w(56, Math.round(P1 * 1000));
+	dev.ws(57, Math.round(P0 * 100));	
 }
 //--------------------
 
 function CAL_PrintCoefUd()
 {
-	print("Ud P2 x1e6	: " + dev.rs(25));
-	print("Ud P1 x1000	: " + dev.r(26));
-	print("Ud P0 x100	: " + dev.rs(27));
+	print("Ud P2 x1e6	: " + dev.rs(32));
+	print("Ud P1 x1000	: " + dev.r(33));
+	print("Ud P0 x100	: " + dev.rs(34));
 }
 //--------------------
 
 function CAL_PrintCoefIm()
 {
-	print("Im P2 x1e6	: " + dev.rs(20));
-	print("Im P1 x1000	: " + dev.rs(21));
-	print("Im P0 x100	: " + dev.rs(22));
+	print("Im P2 x1e6	: " + dev.rs(27));
+	print("Im P1 x1000	: " + dev.rs(28));
+	print("Im P0 x100	: " + dev.rs(29));
 }
 //--------------------
 
 function CAL_PrintCoefIg()
 {
-	print("Im P2 x1e6	: " + dev.rs(0));
-	print("Im P1 x1000	: " + dev.rs(1));
-	print("Im P0 x100	: " + dev.rs(2));
+	print("Im P2 x1e6	: " + dev.rs(10));
+	print("Im P1 x1000	: " + dev.rs(11));
+	print("Im P0 x100	: " + dev.rs(12));
 }
 //--------------------
 
@@ -886,15 +913,15 @@ function CAL_PrintCoefIh()
 {
 	if(cal_IhRange)
 	{
-		print("Ih P2 x1e6	: " + dev.rs(15));
-		print("Ih P1 x1000	: " + dev.rs(16));
-		print("Ih P0 x100	: " + dev.rs(17));
+		print("Ih P2 x1e6	: " + dev.rs(5));
+		print("Ih P1 x1000	: " + dev.rs(6));
+		print("Ih P0 x100	: " + dev.rs(7));
 	}
 	else
 	{
-		print("Ih P2 x1e6	: " + dev.rs(10));
-		print("Ih P1 x1000	: " + dev.rs(11));
-		print("Ih P0 x100	: " + dev.rs(12));
+		print("Ih P2 x1e6	: " + dev.rs(0));
+		print("Ih P1 x1000	: " + dev.rs(1));
+		print("Ih P0 x100	: " + dev.rs(2));
 	}
 }
 //--------------------
@@ -903,30 +930,48 @@ function CAL_PrintCoefT()
 {
 	if(cal_Calibrate_Tcase1)
 	{
-		print("Tcase1 P2 x1e6	: " + dev.rs(32));
-		print("Tcase1 P1 x1000	: " + dev.rs(33));
-		print("Tcase1 P0 x100	: " + dev.rs(34));
+		if(Cal_FrontPanelThermocouples)
+		{
+			print("Tcase1 P2 x1e6	: " + dev.rs(47));
+			print("Tcase1 P1 x1000	: " + dev.rs(48));
+			print("Tcase1 P0 x100	: " + dev.rs(49));
+		}
+		else
+		{
+			print("Tcase1 P2 x1e6	: " + dev.rs(37));
+			print("Tcase1 P1 x1000	: " + dev.rs(38));
+			print("Tcase1 P0 x100	: " + dev.rs(39));
+		}
 	}
 	
 	if(cal_Calibrate_Tcool1)
 	{
-		print("Tcool1 P2 x1e6	: " + dev.rs(38));
-		print("Tcool1 P1 x1000	: " + dev.rs(39));
-		print("Tcool1 P0 x100	: " + dev.rs(40));
+		if(Cal_FrontPanelThermocouples)
+		{
+			print("Tcool1 P2 x1e6	: " + dev.rs(60));
+			print("Tcool1 P1 x1000	: " + dev.rs(61));
+			print("Tcool1 P0 x100	: " + dev.rs(62));
+		}
+		else
+		{
+			print("Tcool1 P2 x1e6	: " + dev.rs(50));
+			print("Tcool1 P1 x1000	: " + dev.rs(51));
+			print("Tcool1 P0 x100	: " + dev.rs(52));
+		}
 	}
 	
 	if(cal_Calibrate_Tcase2)
 	{
-		print("Tcase2 P2 x1e6	: " + dev.rs(35));
-		print("Tcase2 P1 x1000	: " + dev.rs(36));
-		print("Tcase2 P0 x100	: " + dev.rs(37));
+		print("Tcase2 P2 x1e6	: " + dev.rs(42));
+		print("Tcase2 P1 x1000	: " + dev.rs(43));
+		print("Tcase2 P0 x100	: " + dev.rs(44));
 	}
 	
 	if(cal_Calibrate_Tcool2)
 	{
-		print("Tcool2 P2 x1e6	: " + dev.rs(41));
-		print("Tcool2 P1 x1000	: " + dev.rs(42));
-		print("Tcool2 P0 x100	: " + dev.rs(43));
+		print("Tcool2 P2 x1e6	: " + dev.rs(55));
+		print("Tcool2 P1 x1000	: " + dev.rs(56));
+		print("Tcool2 P0 x100	: " + dev.rs(57));
 	}
 }
 //--------------------

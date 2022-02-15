@@ -104,6 +104,12 @@ function Zth_InProcess()
 				return;
 			}
 		}
+		
+		if(dev.r(192) == 4)
+		{
+			p("Done");
+			return;
+		}
 	}
 }
 //------------------------------
@@ -121,21 +127,25 @@ function Zth_Im(Current, PulseWidth_us)
 	dev.w(140, Current);
 	dev.w(128, 4);
 	dev.c(50);
-	p("Process...");
 	
-	for(i = 0; i < Sleep; i++)
+	if(PrintProcess)
 	{
-		sleep(1000);
-		p("Im, mA: " + dev.r(206) / 10);
+		p("Process...");
 		
-		if(anykey())
+		for(i = 0; i < Sleep; i++)
 		{
-			dev.c(101);
-			return;
+			sleep(1000);
+			p("Im, mA: " + dev.r(206) / 10);
+			
+			if(anykey())
+			{
+				dev.c(101);
+				return;
+			}
+			
+			if(dev.r(192) != 5)
+				return;
 		}
-		
-		if(dev.r(192) != 5)
-			return;
 	}
 }
 //------------------------------
@@ -184,9 +194,7 @@ function Zth_Ih(Current, PulseWidth_us)
 	p("Process...");
 	
 	for(i = 0; i < Sleep; i++)
-	{
-		sleep(1000);
-		
+	{		
 		var ActualPower = dev.r(202) + dev.r(203) / 100;
 		var ActualPowerTarget = dev.r(204) + dev.r(205) / 100;
 		
@@ -206,6 +214,8 @@ function Zth_Ih(Current, PulseWidth_us)
 		
 		if(dev.r(192) != 5)
 			return;
+		
+		sleep(1000);
 	}
 }
 //------------------------------
