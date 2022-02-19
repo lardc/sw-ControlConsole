@@ -9,16 +9,16 @@ i("PrintStatus.js");
 PrintFWInfo();
 
 // Обновление прошивки LSLH
-dev.co(1);
-dev.nid(0);
 i("STM_FWUpdate.js");
 FWU_LSLH();
 
-// Скачать дамп регистров LSLH
-dev.co(1);
-dev.nid(0);
-i("STM_FWUpdate.js");
+// Скачать дамп регистров
+i("FWUpdate.js");
 FWU_DumpLSLH();
+
+// Загрузить дамп регистров
+i("FWUpdate.js");
+FWU_RestoreLSLH();
 
 // Подготовка блока
 dev.co(1);
@@ -35,10 +35,10 @@ LSLH_StartMeasure(200);
 i("CalLSL.js");
 cal_ItmMin = [160, 301];
 cal_ItmMax = [299, 1500];
-cal_Rshunt = 0.22/66*1000000;
+cal_Rshunt = 750;
 cal_CurrentRange = 0;
 cal_UseAvg = 0;
-cal_Iterations = 3;
+cal_Iterations = 1;
 CAL_Init(1,2,1,2,3);
 
 CAL_VerifyItm();
@@ -51,9 +51,9 @@ CAL_CalibrateItm();
 i("CalLSL.js");
 cal_ItmMin = [160, 301];
 cal_ItmMax = [299, 1500];
-cal_Rshunt = 0.22/66*1000000;
+cal_Rshunt = 750;
 cal_CurrentRange = 1;
-cal_Iterations = 3;
+cal_Iterations = 1;
 cal_UseAvg = 0;
 CAL_Init(1,2,1,2,3);
 
@@ -67,7 +67,7 @@ CAL_CalibrateItm();
 i("CalLSL.js");
 cal_IsetMin = 160;	
 cal_IsetMax = 1500;
-cal_Rshunt = 0.22/66*1000000;
+cal_Rshunt = 750;
 cal_CurrentRange = 0;
 cal_Iterations = 1;
 cal_UseAvg = 0;
@@ -85,7 +85,7 @@ cal_UtmMin = 500;
 cal_UtmMax = 5000;
 cal_Rload = 0.22/66*1000000;
 cal_CurrentRange = 0;
-cal_Iterations = 3;
+cal_Iterations = 1;
 cal_UseAvg = 0;
 CAL_Init(1,2,1,2,3);
 
