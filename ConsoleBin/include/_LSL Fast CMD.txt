@@ -13,11 +13,11 @@ i("STM_FWUpdate.js");
 FWU_LSLH();
 
 // Скачать дамп регистров
-i("FWUpdate.js");
+i("STM_FWUpdate.js");
 FWU_DumpLSLH();
 
 // Загрузить дамп регистров
-i("FWUpdate.js");
+i("STM_FWUpdate.js");
 FWU_RestoreLSLH();
 
 // Подготовка блока

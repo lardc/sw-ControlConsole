@@ -4,15 +4,20 @@ LSLPC_Start(Current);
 Nid = 150...
 
 // Посмотреть версию прошивки
-dev.co(1);
-dev.nid(0);
 i("PrintStatus.js");
 PrintFWInfo();
 
 // Обновление прошивки
-dev.co(1); //  номер COM-порта блока pp()
 i("STM_FWUpdate.js");
 FWU_LSLPC();
+
+// Скачать дамп регистров
+i("STM_FWUpdate.js");
+FWU_DumpLSLPC();
+
+// Загрузить дамп регистров
+i("STM_FWUpdate.js");
+FWU_RestoreLSLPC();
 
 // Подготовка блока
 dev.co(7); //  номер COM-порта блока pp()
