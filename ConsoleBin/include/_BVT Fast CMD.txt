@@ -17,7 +17,7 @@ FWU_DumpBVT();
 
 // Загрузить дамп регистров
 i("FWUpdate.js");
-FWU_RestoreBVT()();
+FWU_RestoreBVT();
 
 // Подготовка блока
 dev.co(7);

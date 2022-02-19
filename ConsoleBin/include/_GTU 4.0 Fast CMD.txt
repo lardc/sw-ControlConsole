@@ -1,12 +1,23 @@
 // Пояснения
 CGTU_Init(portGate, portTek, channelMeasureGate, channelMeasurePower);
 GTU_All(Num, Pause);
+GTU_PulseVd(Voltage); //  in mV
+GTU_PulseId(Current); //  in mA
+GTU_PulseVg(Voltage); //  in mV
+GTU_PulseIg(Current); //  in mA
+
 
 // Обновление прошивки
-dev.co(7); //  номер COM-порта блока pp()
-dev.nid(3);
 i("FWUpdate.js");
 FWU_GTU();
+
+// Скачать дамп регистров
+i("FWUpdate.js");
+FWU_DumpGTU();
+
+// Загрузить дамп регистров
+i("FWUpdate.js");
+FWU_RestoreGTU();
 
 // Подготовка блока
 dev.co(7); //  номер COM-порта блока pp()
@@ -20,6 +31,11 @@ GTU_Res();
 GTU_Holding();
 GTU_Latching();
 
+GTU_PulseVd(2000);
+GTU_PulseId(50);
+GTU_PulseVg(100);
+GTU_PulseIg(10);
+
 /// Igt 10 - 49мА
 // Регистры измерения ADC
 / (Offset: 119) (K: 118)
@@ -28,13 +44,13 @@ GTU_Latching();
 / (Offset: 109) (K: 108)
 / [P0: 107] [P1: 106] [P2: 105]
 i("CalGTU_4.0.js");
-cgtu_ResGate = 19.78;
+cgtu_ResGate = 19.75;
 cgtu_Imax = 49;
 cgtu_Imin = 10;
 cgtu_Istp = 5;
-cgtu_Iterations = 3;
+cgtu_Iterations = 1;
 cgtu_UseAvg = 1;
-CGTU_Init(2,15,1,2);
+CGTU_Init(1,2,1,2,3);
 CGTU_VerifyIGate();
 
 /// Igt 50 - 1000мА
@@ -45,13 +61,13 @@ CGTU_VerifyIGate();
 / (Offset: 51) (K: 50)
 / [P0: 49] [P1: 48] [P2: 47]
 i("CalGTU_4.0.js");
-cgtu_ResGate = 9.85;
+cgtu_ResGate = 9.88;
 cgtu_Imax = 1000;
 cgtu_Imin = 50;
-cgtu_Istp = 50;
-cgtu_Iterations = 3;
+cgtu_Istp = 100;
+cgtu_Iterations = 1;
 cgtu_UseAvg = 1;
-CGTU_Init(2,15,1,2);
+CGTU_Init(1,2,1,2,3);
 CGTU_VerifyIGate();
 
 /// Vgt 0.1 - 12В
@@ -62,12 +78,12 @@ CGTU_VerifyIGate();
 / (Offset: 46) (K: 45)
 / [P0: -] [P1: -] [P2: -]
 i("CalGTU_4.0.js");
-cgtu_Vgmax = 12000;
+cgtu_Vgmax = 5000;
 cgtu_Vgmin = 100;
 cgtu_Vgstp = 500;
-cgtu_Iterations = 3;
+cgtu_Iterations = 1;
 cgtu_UseAvg = 1;
-CGTU_Init(2,15,1,2);
+CGTU_Init(1,2,1,2,3);
 CGTU_VerifyVGate();
 
 /// Id 50 - 1000мА
@@ -78,13 +94,13 @@ CGTU_VerifyVGate();
 / (Offset: 44) (K: 43)
 / [P0: 42] [P1: 41] [P2: 40]
 i("CalGTU_4.0.js");
-cgtu_ResPower = 9.85;
+cgtu_ResPower = 9.88;
 cgtu_Imax = 1000;
 cgtu_Imin = 50;
-cgtu_Istp = 50;
-cgtu_Iterations = 3;
-cgtu_UseAvg = 1;
-CGTU_Init(2,15,1,2);
+cgtu_Istp = 100;
+cgtu_Iterations = 1;
+cgtu_UseAvg = 0;
+CGTU_Init(1,2,1,2,3);
 CGTU_VerifyIPower();
 
 /// Vd 2 - 12В
@@ -97,8 +113,8 @@ CGTU_VerifyIPower();
 i("CalGTU_4.0.js");
 cgtu_Vdmax = 12000;
 cgtu_Vdmin = 2000;
-cgtu_Vdstp = 500;
-cgtu_Iterations = 3;
-cgtu_UseAvg = 1;
-CGTU_Init(2,15,1,2);
+cgtu_Vdstp = 1000;
+cgtu_Iterations = 1;
+cgtu_UseAvg = 0;
+CGTU_Init(1,2,1,2,3);
 CGTU_VerifyVPower();
