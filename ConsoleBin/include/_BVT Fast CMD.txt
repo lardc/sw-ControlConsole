@@ -1,21 +1,26 @@
 // Пояснения
 CBVT_Init(portBVT, portTek, channelMeasureV, channelMeasureI);
-BVT_StartPulse(N, Voltage, Current);
+BVT_StartPulse(N, Voltage, Current x10);
+BVT_ResourceTest(Voltage, Current x10);
 
 // Посмотреть версию прошивки
-dev.co(7); //  номер COM-порта блока pp()
-dev.nid(4);
 i("PrintStatus.js");
 PrintFWInfo();
 
 // Обновление прошивки
-dev.co(7); //  номер COM-порта блока pp()
-dev.nid(4);
 i("FWUpdate.js");
 FWU_BVT();
 
+// Скачать дамп регистров
+i("FWUpdate.js");
+FWU_DumpBVT();
+
+// Загрузить дамп регистров
+i("FWUpdate.js");
+FWU_RestoreBVT()();
+
 // Подготовка блока
-dev.co(7); //  номер COM-порта блока pp()
+dev.co(7);
 dev.nid(4);
 dev.c(1);
 i("TestBVT.js");
@@ -83,7 +88,7 @@ CBVT_VerifyI();
 
 CBVT_CalibrateI();
 
-// Диапазон 30 - 300мА (AC)
+// Диапазон 30 - 100мА (AC)
 / (Offset: -) (K: 26/27)
 / [P0: 117] [P1: 99] [P2: 98]
 i("CalBVT.js");
@@ -91,10 +96,10 @@ cbvt_Iterations = 3;
 cbvt_RangeI = 2;
 cbvt_UseMicroAmps = 1;
 cbvt_VmaxAC = 1200; 
-cbvt_VminAC = 239;
+cbvt_VminAC = 400;
 cbvt_RP = 11988;
 cbvt_ShuntP = 9.71;
-CBVT_Init(7,2,1,2);
+CBVT_Init(7,2,3,2);
 dev.nid(4);
 
 CBVT_VerifyIP();
