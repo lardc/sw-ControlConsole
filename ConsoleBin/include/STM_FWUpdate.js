@@ -157,12 +157,12 @@ function FWU_TOMU()
 
 function FWU_DumpTOMU()
 {
-	dev.Dump("../../hw-TOMUControlBoard/tomuhp.regdump", 0, 126);
+	dev.Dump("../../hw-TOMUControlBoard/Firmware/TOMUControlBoard.regdump", 0, 126);
 }
 
 function FWU_RestoreTOMU()
 {
-	dev.Restore("../../hw-TOMUControlBoard/tomuhp.regdump");
+	dev.Restore("../../hw-TOMUControlBoard/Firmware/TOMUControlBoard.regdump");
 }
 //------------------------
 
