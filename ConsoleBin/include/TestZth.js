@@ -2,12 +2,12 @@ include("PrintStatus.js")
 include("Sic_GetData.js")
 include("Tektronix.js")
 
-HeatingCurrentLess2mS	= 100;
-HeatingCurrentLess10mS	= 100;
+HeatingCurrentLess2mS	= 300;
+HeatingCurrentLess10mS	= 200;
 HeatingCurrentAbove10mS	= 100;
 GateCurrent 			= 1000;		// Gate current, in mA
 MeasuringCurrent 		= 1000;		// Measuring current, in mA
-MeasurementDelay		= 100;		// Delay before measurement, in us
+MeasurementDelay		= 750;		// Delay before measurement, in us
 DUT_Type				= 0;		// 0 - thyristor, 1 - IGBT;
 Tmax					= 600;
 //
@@ -75,10 +75,12 @@ function Zth_InProcess()
 		sleep(1000);
 		p("Im,    mA: " + dev.r(206) / 10);
 		p("Ih,     A: " + dev.r(201) / 10);
-		p("P,      W: " + dev.r(202));
-		p("Ps,     W: " + dev.r(204));
+		p("P,      W: " + (dev.r(202) + dev.r(203) / 10));
+		p("Ps,     W: " + (dev.r(204) + dev.r(205) / 10));
 		p("Tcase1, C: " + dev.r(207) / 10);
 		p("Tcool1, C: " + dev.r(209) / 10);
+		p("Udut,   V: " + dev.r(200) / 1000);
+		p("TSP,    V: " + dev.r(211) / 1000);
 		p("-------------------");
 		
 		if(anykey())
@@ -108,6 +110,12 @@ function Zth_InProcess()
 		if(dev.r(192) == 4)
 		{
 			p("Done");
+			return;
+		}
+		
+		if(dev.r(192) == 1)
+		{
+			PrintStatus();
 			return;
 		}
 	}
@@ -199,7 +207,7 @@ function Zth_Ih(Current, PulseWidth_us)
 		var ActualPowerTarget = dev.r(204) + dev.r(205) / 100;
 		
 		p("#" + i);
-		p("U,  V: " + dev.r(200) / 10000);
+		p("U,  V: " + dev.r(200) / 1000);
 		p("I,  A: " + dev.r(201) / 10);
 		p("P,  W: " + ActualPower);
 		p("Pt, W: " + ActualPowerTarget);

@@ -25,12 +25,13 @@ cal_UdMin = 300;
 cal_UdMax = 4500;
 cal_UdStp = (cal_UdMax - cal_UdMin) / cal_Points;
 
-cal_T_IhMin  = 50;
-cal_T_IhMax  = 200;
+cal_T_IhMin  = 100;
+cal_T_IhMax  = 150;
 cal_T_IhStp = (cal_T_IhMax - cal_T_IhMin) / cal_Points;
 
-cal_Calibrate_Tcase1 = 1;
-cal_Calibrate_Tcool1 = 0;
+Cal_FrontPanelThermocouples = 1;
+cal_Calibrate_Tcase1 = 0;
+cal_Calibrate_Tcool1 = 1;
 cal_Calibrate_Tcase2 = 0;
 cal_Calibrate_Tcool2 = 0;
 
@@ -556,7 +557,12 @@ function CAL_CollectIh(CurrentValues, IterationsCount)
 
 function CAL_CollectT(CurrentValues, IterationsCount)
 {
-	var key, CurrentTemperature;
+	var key, CurrentTemperature, PowerStab;
+	
+	PowerStab = dev.r(77);
+	dev.w(77, 0);
+	
+	(Cal_FrontPanelThermocouples) ? dev.w(130, 0) : dev.w(130, 1);
 	
 	cal_CntTotal = IterationsCount * CurrentValues.length;
 	cal_CntDone = 1;
@@ -570,7 +576,7 @@ function CAL_CollectT(CurrentValues, IterationsCount)
 			
 			PrintProcess = 0;
 			HeatingCurrentAbove10mS = CurrentValues[j];
-			Zth_Start(2, 200, 100e3, 2000, 1);
+			Zth_Start(2, 200, 1000e3, 2000, 1);
 
 			p("When the temperature is stable press 'y' end enter the current value,");
 			p("or press 's' to interrupt the process.");
@@ -644,6 +650,8 @@ function CAL_CollectT(CurrentValues, IterationsCount)
 	}
 	
 	Zth_Start(2, 200, 100e3, 2000, 0);
+	
+	dev.w(77, PowerStab);
 
 	return 1;
 }
@@ -744,7 +752,7 @@ function CAL_SaveTcool1(NameT)
 
 function CAL_SaveTcase2(NameT)
 {
-	CGEN_SaveArrays(NameT, cal_TFluke, cal_Tcase2, cal_Tcase2Err);
+	CGEN_SaveArrays(NameT, cal_Tcase2, cal_TFluke, cal_Tcase2Err);
 }
 //--------------------
 
