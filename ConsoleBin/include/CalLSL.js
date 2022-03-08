@@ -8,7 +8,7 @@ cal_Points = 10;
 cal_Rshunt = 750;			// мкОм
 cal_Rload = 3333;			// мкОм
 cal_GateRshunt = 10000;		// мОм
-cal_GatePulseWidth = 100;	// мкс
+cal_GatePulseWidth = 1000;	// мкс
 
 
 cal_CurrentRange = 0;	// 0 = 100 - 1000A; 1 = 1000 - 6500A;
