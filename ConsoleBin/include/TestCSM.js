@@ -102,6 +102,11 @@ function CS_CollectTimeFunc()
 }
 function CS_Temp(Sleep, Temp)
 {
+	csm_csv_array = [];
+	
+	var i = 0;
+	var today = new Date();	
+
 	//---------------------------------------
 
 	CSS_TempStart(Temp)
@@ -136,10 +141,14 @@ function CS_Temp(Sleep, Temp)
 		dev.w(84, 1);
 
 		sleep(Sleep);
+		csm_csv_array.push(cs_time[i] + ";" + cs_t_remote1[i] + ";" + cs_t_remote_ext[i]);
+
+		i++;
 	}
 	//---------------------------------------
 
 	plot2s(cs_t_remote1, cs_t_remote_ext, 10, 0);
+	save("data/CSM_TempTest" + today.getTime() + ".csv", csm_csv_array);
 
 	//---------------------------------------
 }
