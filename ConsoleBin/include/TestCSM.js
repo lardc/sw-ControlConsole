@@ -82,7 +82,7 @@ function CS_CollectTempExtFunc(AddressExt)
 	dev.c(114);
 	t_remote_ext = (dev.r(103) / 10).toFixed(1);
 	
-	print("TremoteExt,C: " + t_remote_ext);
+	print("TremoteExt, C: " + t_remote_ext);
 	cs_t_remote_ext[cs_time.length] = t_remote_ext;
 	
 	return t_remote_ext;
@@ -131,7 +131,9 @@ function CS_Temp(Sleep, Temp)
 		print("-----");
 	}
 	//---------------------------------------
-		
+	
+	csm_csv_array.push("Time in sec ; Tremote1, C; TremoteExt, C");
+
 	while(!anykey())
 	{
 		CS_CollectTempFunc(1);
@@ -141,7 +143,7 @@ function CS_Temp(Sleep, Temp)
 		dev.w(84, 1);
 
 		sleep(Sleep);
-		csm_csv_array.push("Время в сек ; Температура внутр ТРМ; Температура внешн ТРМ");
+		
 		csm_csv_array.push(i * Sleep / 1000 + ";" + cs_t_remote1[i] + ";" + cs_t_remote_ext[i]);
 
 		i++;
