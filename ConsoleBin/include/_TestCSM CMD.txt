@@ -1,4 +1,6 @@
+i("CalCSM.js")
 i("TestCSM.js")
+
 
 dev.c(100)                // Хоуминг
 CSM_Pos(Distance)         // Перемещение на заданную координату Distance
@@ -54,3 +56,10 @@ DeviceSubState
 
 	DSS_ClampingReleaseOperating = 40
 //-------------------------------------
+TRMError (104 регистр)
+
+	TRME_None		= 0,
+	TRME_ResponseTimeout	= 1,
+	TRME_InputBufferOverrun	= 2,
+	TRME_CheckSumError	= 3,
+	TRME_WrongResponse	= 4
