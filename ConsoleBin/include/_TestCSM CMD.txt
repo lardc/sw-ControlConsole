@@ -1,0 +1,65 @@
+i("CalCSM.js")
+i("TestCSM.js")
+
+
+dev.c(100)                // Хоуминг
+CSM_Pos(Distance)         // Перемещение на заданную координату Distance
+CSM_PosAdap (DeviceCase)  // Зажатие прибора для выбранного адаптера DeviceCase
+dev.c(104)                // Разжатие прибора для любого адаптера
+CSM_UNClamp ()		  // Разжатие адаптера
+PrintStatus()		  // Прочитать статус
+dev.c(110)		  // Зажатие адаптера
+dev.c(109)		  // Разжатие адаптера 
+dev.c(119)   		  // Зажатие управления 
+dev.c(120)		  // Разжатие управлегия 
+
+CS_Temp(Sleep, Temp)	  // Проверка нагрева поверхности(внешний датчик) и измерения блоком(внутренний датчик), где Sleep - время между измерениями,Temp - заданная температура.       
+
+//-----------------------------------
+DeviceCase(Код корпуса прибора (71регистр))
+CASE_A2		0	
+CASE_B0		1	
+CASE_C1		2	
+CASE_D		3	
+CASE_E		4	
+CASE_F		5	
+//-----------------------------------
+DeviceState
+
+	DS_None	= 0,
+	DS_Fault = 1,
+	DS_Disabled = 2,
+	DS_Ready = 3,
+	DS_Halt = 4,
+	DS_Homing = 5,
+	DS_Position = 6,
+	DS_Clamping = 7,
+	DS_ClampingDone = 8,
+	DS_ClampingRelease = 10
+//------------------------------------
+DeviceSubState
+
+	DSS_None = 0,
+
+	DSS_Com_CheckControl = 1,
+	DSS_Com_ControlRelease = 2,
+	DSS_Com_ReleaseDone = 3,
+
+	DSS_HomingSearchSensor = 10,
+	DSS_HomingPause = 11,
+	DSS_HomingMakeOffset = 12,
+
+	DSS_PositionOperating = 20,
+
+	DSS_ClampingOperating = 30,
+	DSS_ClampingConnectControl = 31,
+
+	DSS_ClampingReleaseOperating = 40
+//-------------------------------------
+TRMError (104 регистр)
+
+	TRME_None		= 0,
+	TRME_ResponseTimeout	= 1,
+	TRME_InputBufferOverrun	= 2,
+	TRME_CheckSumError	= 3,
+	TRME_WrongResponse	= 4
