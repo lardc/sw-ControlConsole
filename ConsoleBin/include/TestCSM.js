@@ -63,6 +63,7 @@ function CS_CollectTempFunc(Address)
 	var t_remote1;
 
 	dev.w(84, Address);
+	sleep(100);
 	dev.c(115);
 	t_remote1 = (dev.r(101) / 10).toFixed(1);
 	
@@ -137,10 +138,11 @@ function CS_Temp(Sleep, Temp)
 	while(!anykey())
 	{
 		CS_CollectTempFunc(1);
-		CS_CollectTempExtFunc(3);
+		//CS_CollectTempExtFunc(3);
 		CS_CollectTimeFunc();
 		print("-----");
 		dev.w(84, 1);
+
 
 		sleep(Sleep);
 		
@@ -151,6 +153,7 @@ function CS_Temp(Sleep, Temp)
 	//---------------------------------------
 
 	plot2s(cs_t_remote1, cs_t_remote_ext, 10, 0);
+	dev.c(118);
 	save("data/CSM_TempTest.csv", csm_csv_array);
 
 	//---------------------------------------
@@ -181,6 +184,7 @@ function CSS_TempStart(Temp)
 	dev.w(84,1);
 	dev.w(72,Temp);
 	dev.c(108);
+	dev.c(117);
 
 }
 
