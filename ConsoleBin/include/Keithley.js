@@ -5,17 +5,26 @@ function KEI_PortInit(PortNumber)
 	TEK_PortInit(PortNumber, 9600);
 }
 
-function KEI_ZeroCorrect()
+function KEI_Reset()
 {
 	TEK_Send("*RST");
-	TEK_Send("SYST:ZCH ON");
-	//
-	TEK_Send("CURR:RANG 2E-9");
-	TEK_Send("INIT");
-	TEK_Send("SYST:ZCOR:ACQ");
-	//
-	TEK_Send("SYST:ZCH OFF");
-	TEK_Send("SYST:ZCOR ON");
+}
+
+function KEI_ZeroCorrect(State)
+{
+	if(State)
+	{
+		TEK_Send("SYST:ZCH ON");
+		//
+		TEK_Send("CURR:RANG 2E-9");
+		TEK_Send("INIT");
+		TEK_Send("SYST:ZCOR:ACQ");
+		//
+		TEK_Send("SYST:ZCH OFF");
+		TEK_Send("SYST:ZCOR ON");
+	}
+	else
+		TEK_Send("SYST:ZCH OFF");
 }
 
 function KEI_Measure()
@@ -25,7 +34,7 @@ function KEI_Measure()
 
 function KEI_Read()
 {
-	return parseFloat(TEK_Exec("SENSe:DATA?"));
+	return parseFloat(TEK_Exec("SENS:DATA?"));
 }
 
 function KEI_SetRange(Range)
@@ -90,23 +99,83 @@ function KEI_MeasureCorrectedValue()
 
 function KEI_SetTLinkInputLine(Line)
 {
-	TEK_Send("ARM:ASYNchronous:ILINe " + Line);
+	TEK_Send("TRIG:ASYN:ILIN " + Line);
 }
 
 function KEI_SetTLinkOutputLine(Line)
 {
-	TEK_Send("ARM:ASYNchronous:OLINe " + Line);
+	TEK_Send("TRIG:ASYN:OLIN " + Line);
 }
 
-function KEI_SetExtTrigger(ArmCounter, TriggerCounter)
+function KEI_SetOutputTrigType(Type)
 {
-	TEK_Send("ARM:SOURce TLINk");
-	TEK_Send("ARM:COUNt " + ArmCounter);
-	TEK_Send("TRIGger:SOURce TLINk");
-	TEK_Send("TRIGger:COUNt " + TriggerCounter);
+	if(Type)
+		TEK_Send("ARM:ASYN:OUTP TRIG");
+	else
+		TEK_Send("TRIG:ASYN:OUTP SENS");
+}
+
+function KEI_SetExtTrigger(TriggerCounter)
+{
+	TEK_Send("TRIG:DEL 0");
+	TEK_Send("TRIG:SOUR TLINk");
+	TEK_Send("TRIG:COUN " + TriggerCounter);
 }
 
 function KEI_InitTrigWaiting()
 {
-	TEK_Send("INITiate");
+	TEK_Send("INIT");
+}
+
+function KEI_BufferConfig(N)
+{
+	KEI_Reset();
+	KEI_SetExtTrigger(N);
+	KEI_SetTLinkOutputLine(2);
+	KEI_SetOutputTrigType(0);
+	TEK_Send("NPLC 0.01");
+	KEI_SetRange(2e-3);
+	TEK_Send("SYST:ZCH OFF");
+	TEK_Send("SYST:AZER:STAT OFF");
+	
+	TEK_Send("*CLS");
+	
+	TEK_Send("TRAC:POIN " + N);
+	TEK_Send("TRAC:CLE");
+	TEK_Send("TRAC:FEED:CONT NEXT");
+	
+	TEK_Send("STAT:MEAS:ENAB 512");
+	TEK_Send("*SRE 1");
+	
+	p("OPC = " + TEK_Exec("*OPC?"));
+}
+
+function KEI_TestBuffer(N, Width)
+{
+	var Data = [];
+	
+	KEI_InitTrigWaiting();
+	sleep(50);
+	dev.w(130,Width);
+	dev.w(128,N);
+	sleep(1000);
+	
+	Data = TEK_Exec("TRAC:DATA?");
+	
+	TEK_Send("CALC3:FORM MEAN");
+	p("Imean = " + parseFloat(TEK_Exec("CALC3:DATA?")));
+	
+	TEK_Send("CALC3:FORM PKPK");
+	p("Ipk-pk = " + parseFloat(TEK_Exec("CALC3:DATA?")));
+	
+	TEK_Send("CALC3:FORM MIN");
+	p("Imin = " + parseFloat(TEK_Exec("CALC3:DATA?")));
+	
+	TEK_Send("CALC3:FORM MAX");
+	p("Imax = " + parseFloat(TEK_Exec("CALC3:DATA?")));
+	
+	TEK_Send("CALC3:FORM SDEV");
+	p("Idev = " + parseFloat(TEK_Exec("CALC3:DATA?")));
+	
+	//save("Keithley.csv", Data);
 }
