@@ -352,3 +352,20 @@ function FWU_RestoreECDCHighVoltageBoard()
 	dev.Restore("../../hw-ECDCHighVoltageBoard/Firmware/ECDCHighVoltageBoard.regdump");
 }
 //------------------------
+
+// LCTU
+function FWU_LCTU()
+{
+	FWUpdateSTM("../../hw-LCTUControlDev/Firmware/Release/LCTUControlDev.binary");
+}
+
+function FWU_DumpLCTU()
+{
+	dev.Dump("../../hw-LCTUControlDev/Firmware/LCTUControlDev.regdump", 0, 126);
+}
+
+function FWU_RestoreLCTU()
+{
+	dev.Restore("../../hw-LCTUControlDev/Firmware/LCTUControlDev.regdump");
+}
+//------------------------
