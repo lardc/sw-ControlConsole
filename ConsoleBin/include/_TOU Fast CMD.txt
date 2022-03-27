@@ -1,5 +1,5 @@
 // Пояснения
-CTOU_Init(portTOU, portTek, channelMeasureI, channelSync);
+CTOU_Init(portTOU, portTek, channelMeasureV, channelMeasureI, channelSync)
 TOU_Measure(Current);
 TOU_DBG(Min, Max, Step);
 
@@ -10,10 +10,16 @@ i("PrintStatus.js");
 PrintFWInfo();
 
 // Обновление прошивки
-dev.co(1);
-dev.nid(0);
 i("STM_FWUpdate.js");
 FWU_TOMU();
+
+// Скачать дамп регистров
+i("STM_FWUpdate.js");
+FWU_DumpTOMU();
+
+// Загрузить дамп регистров
+i("STM_FWUpdate.js");
+FWU_RestoreTOMU();
 
 // Подготовка блока
 dev.co(1);
@@ -36,7 +42,7 @@ ctou_scale_osc = 10;
 ctou_Imax = 1250;
 ctou_Imin = 160;
 ctou_Istp = 60;
-ctou_Ri = 0.22/66;
+ctou_Ri = 0.001;
 ctou_Iterations = 1;
 ctou_UseAvg = 0;
 CTOU_Init(1,2,1,2,3);
@@ -50,8 +56,8 @@ CTOU_CalibrateI();
 dev.c(1);
 i("CalTOU.js");
 ctou_measure_tgd = 1;
-ctou_measure_tgt = 1;
-ctou_scale_osc = 1;
+ctou_measure_tgt = 0.5;
+ctou_scale_osc = 0.5;
 ctou_Imax = 1250;
 ctou_Imin = 160;
 ctou_Istp = 120;

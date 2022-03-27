@@ -52,7 +52,7 @@ ctou_measure_time = 0;
 ctou_measure_time_hand = 0;
 ctou_measure_tgd = 1; // измерять параметр tgd? 1 = да, 0 = нет
 ctou_measure_tgt = 0; // измерять параметр tgt? 1 = да, 0 = нет
-ctou_scale_osc = 1; // 0.5мкс, 1мкс, 2.5мкс 
+ctou_scale_osc = 1; // 0.5 мкс, 1 мкс, 2.5 мкс 
 
 ctou_UseAvg = 0;
 
@@ -85,6 +85,8 @@ function CTOU_Init(portTOU, portTek, channelMeasureV, channelMeasureI, channelSy
 	TEK_TriggerInit(ctou_chSync, "3");
 	// Horizontal settings
 	TEK_Horizontal(ctou_scale_osc * 1e-6, "0e-6");
+
+	TEK_Send("acquire:stopafter sequence");
 
 	// Display channels
 	for (var i = 1; i <= 4; i++)
@@ -214,7 +216,7 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 	
 	for (var i = 0; i < IterationsCount; i++)
 	{
-		cursor_place_prev10 = ctou_scale_osc * -4.5 * 1e-6; // для первого значения курсора
+		cursor_place_prev10 = -4.5 * ctou_scale_osc * 1e-6; // для первого значения курсора
 		
 		for (var j = 0; j < CurrentValues.length; j++)
 		{
@@ -225,7 +227,7 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			{
 				TEK_Send("cursor:select:source ch" + ctou_chMeasureV);
 				//CTOU_TekScale(ctou_chMeasureV, 225);				
-				TEK_TriggerPulseExtendedInit(ctou_chSync, "2", "dc", ctou_scale_osc * 4.5 * 1e-6, "positive", "outside");
+				TEK_TriggerPulseExtendedInit(ctou_chSync, "4", "dc", 4.5 * ctou_scale_osc * 1e-6 , "positive", "outside");
 				tgd_read = 0;
 				tgt_read = 0;
 			}
@@ -251,6 +253,7 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 			{
 				if(ctou_measure_time)
 				{
+					TEK_Send("acquire:state run");
 					TOU_Measure(CurrentValues[j]);
 					tgd_read += dev.r(251);
 					tgt_read += dev.r(252);
@@ -295,7 +298,7 @@ function CTOU_Collect(CurrentValues, IterationsCount)
 				ctou_tgd_u90 = 270;
 				ctou_tgt_u10 = 30;
 
-				var cursor_place = ctou_scale_osc * -4.5 * 1e-6;
+				var cursor_place = -4.5 * ctou_scale_osc * 1e-6;
 				TEK_Send("cursor:vbars:position1 "+ cursor_place);
 				TEK_Send("cursor:vbars:position2 "+ cursor_place);
 

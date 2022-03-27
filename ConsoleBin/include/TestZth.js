@@ -2,49 +2,168 @@ include("PrintStatus.js")
 include("Sic_GetData.js")
 include("Tektronix.js")
 
+HeatingCurrentLess2mS	= 300;
+HeatingCurrentLess10mS	= 200;
+HeatingCurrentAbove10mS	= 100;
+GateCurrent 			= 1000;		// Gate current, in mA
+MeasuringCurrent 		= 1000;		// Measuring current, in mA
+MeasurementDelay		= 750;		// Delay before measurement, in us
+DUT_Type				= 0;		// 0 - thyristor, 1 - IGBT;
+Tmax					= 600;
+//
+PrintProcess			= 1;
+
+
 var Zth_chMeasureI, Zth_chMeasureU;
+
+function Zth_Start(Mode, PulseWidthMin, PulseWidthMax, Delay, Start)
+{
+	if(Start)
+	{
+		dev.w(128, Mode);
+		dev.w(129, DUT_Type);
+		dev.w(131, PulseWidthMin / 100);
+		dev.w(139, GateCurrent);
+		dev.w(140, MeasuringCurrent);
+		dev.w(141, MeasurementDelay);
+		
+		dev.w(136, HeatingCurrentLess2mS);
+		dev.w(137, HeatingCurrentLess10mS);
+		dev.w(138, HeatingCurrentAbove10mS);
+		dev.w(142, Tmax);
+		
+		if(Mode == 1)
+			dev.w(134, Delay);
+		else
+			dev.w(135, Delay / 100);
+		
+		
+		Zth_PulseWidthSet(PulseWidthMax);
+		
+		if(dev.r(192) == 4)
+		{
+			dev.c(100);
+			p("Start process...");
+		}
+		else
+		{
+			if(dev.r(192) == 5)
+			{
+				dev.c(103);
+				p("Update parameters");
+			}
+		}
+		
+		if(PrintProcess)
+			Zth_InProcess();
+	}
+	else
+	{
+		if(dev.r(192) == 5)
+		{
+			dev.c(101);
+			p("Stop process");
+		}
+	}
+}
+//------------------------------
+
+function Zth_InProcess()
+{
+	while(1)
+	{
+		sleep(1000);
+		p("Im,    mA: " + dev.r(206) / 10);
+		p("Ih,     A: " + dev.r(201) / 10);
+		p("P,      W: " + (dev.r(202) + dev.r(203) / 10));
+		p("Ps,     W: " + (dev.r(204) + dev.r(205) / 10));
+		p("Tcase1, C: " + dev.r(207) / 10);
+		p("Tcool1, C: " + dev.r(209) / 10);
+		p("Udut,   V: " + dev.r(200) / 1000);
+		p("TSP,    V: " + dev.r(211) / 1000);
+		p("-------------------");
+		
+		if(anykey())
+		{
+			key = readkey();
+			
+			if(key == "s")
+			{
+				p("Stop heating");
+				dev.c(102);
+			}
+			
+			if(key == "f")
+			{
+				p("Stop process");
+				dev.c(101);
+				return;
+			}
+			
+			if(key == "e")
+			{
+				p("Exit");
+				return;
+			}
+		}
+		
+		if(dev.r(192) == 4)
+		{
+			p("Done");
+			return;
+		}
+		
+		if(dev.r(192) == 1)
+		{
+			PrintStatus();
+			return;
+		}
+	}
+}
+//------------------------------
 
 function Zth_Im(Current, PulseWidth_us)
 {
-	var PulseWidth_L, PulseWidth_H;
 	var Sleep;
 	
 	Sleep = PulseWidth_us / 1e6;
 	if(Sleep < 1)
 		Sleep = 1;
 	
-	PulseWidth_L = PulseWidth_us & 0xFFFF;
-	PulseWidth_H = (PulseWidth_us >> 16) & 0xFFFF;
+	Zth_PulseWidthSet(PulseWidth_us);
 	
-	dev.w(132, PulseWidth_L);
-	dev.w(133, PulseWidth_H);
 	dev.w(140, Current);
 	dev.w(128, 4);
 	dev.c(50);
-	p("Process...");
 	
-	for(i = 0; i < Sleep; i++)
+	if(PrintProcess)
 	{
-		sleep(1000);
-		p("Im, mA: " + dev.r(203) / 10);
+		p("Process...");
 		
-		if(anykey())
+		for(i = 0; i < Sleep; i++)
 		{
-			dev.c(101);
-			return;
+			sleep(1000);
+			p("Im, mA: " + dev.r(206) / 10);
+			
+			if(anykey())
+			{
+				dev.c(101);
+				return;
+			}
+			
+			if(dev.r(192) != 5)
+				return;
 		}
-		
-		if(dev.r(192) != 5)
-			return;
 	}
 }
 //------------------------------
 
-function Zth_Gate(DUT_Type, Value, State)
+function Zth_Gate(DUT_Type, Value, PulseWidth_us)
 {	
+	dev.w(128, 6);
 	dev.w(129, DUT_Type);
 	
-	if(Type)
+	if(DUT_Type)
 	{
 		if(Value)
 			dev.w(143, 1);
@@ -53,17 +172,15 @@ function Zth_Gate(DUT_Type, Value, State)
 	}
 	else
 		dev.w(139, Value);
+	
+	Zth_PulseWidthSet(PulseWidth_us);
 
-	if(State)
-		dev.c(52);
-	else
-		dev.c(101);
+	dev.c(52);
 }
 //------------------------------
 
 function Zth_Ih(Current, PulseWidth_us)
 {
-	var PulseWidth_L, PulseWidth_H;
 	var Sleep;
 	
 	Sleep = PulseWidth_us / 1e6;
@@ -77,28 +194,20 @@ function Zth_Ih(Current, PulseWidth_us)
 			dev.w(138, Current);
 		else
 			dev.w(137, Current);
-		
-	PulseWidth_us = PulseWidth_us / 100;
 	
-	PulseWidth_L = PulseWidth_us & 0xFFFF;
-	PulseWidth_H = (PulseWidth_us >> 16) & 0xFFFF;
-	
-	dev.w(132, PulseWidth_L);
-	dev.w(133, PulseWidth_H);
+	Zth_PulseWidthSet(PulseWidth_us);
 	
 	dev.w(128, 5);
 	dev.c(51);
 	p("Process...");
 	
 	for(i = 0; i < Sleep; i++)
-	{
-		sleep(1000);
-		
+	{		
 		var ActualPower = dev.r(202) + dev.r(203) / 100;
 		var ActualPowerTarget = dev.r(204) + dev.r(205) / 100;
 		
 		p("#" + i);
-		p("U,  V: " + dev.r(200) / 10000);
+		p("U,  V: " + dev.r(200) / 1000);
 		p("I,  A: " + dev.r(201) / 10);
 		p("P,  W: " + ActualPower);
 		p("Pt, W: " + ActualPowerTarget);
@@ -113,90 +222,58 @@ function Zth_Ih(Current, PulseWidth_us)
 		
 		if(dev.r(192) != 5)
 			return;
+		
+		sleep(1000);
 	}
 }
 //------------------------------
 
+function Zth_Tall()
+{
+	p("Tcase1, C: " + Zth_Tcase1());
+	p("Tcool1, C: " + Zth_Tcool1());
+	p("Tcase2, C: " + Zth_Tcase2());
+	p("Tcool2, C: " + Zth_Tcool2());
+}
+
 function Zth_Tcase1()
 {
 	dev.c(13);
-	return (dev.r(150) / 100);
+	return (dev.r(155) + dev.r(156) / 10);
 }
 //------------------------------
 
 function Zth_Tcool1()
 {
 	dev.c(15);
-	return (dev.r(150) / 100);
+	return (dev.r(155) + dev.r(156) / 10);
 }
 //------------------------------
 
 function Zth_Tcase2()
 {
 	dev.c(14);
-	return (dev.r(150) / 100);
+	return (dev.r(155) + dev.r(156) / 10);
 }
 //------------------------------
 
 function Zth_Tcool2()
 {
 	dev.c(16);
-	return (dev.r(150) / 100);
+	return (dev.r(155) + dev.r(156) / 10);
 }
 //------------------------------
 
-function Zth_DRCU_Pulse(Current)
+function Zth_PulseWidthSet(PulseWidth_us)
 {
-	dev.w(128, Current);
+	var PulseWidth_L, PulseWidth_H;
 	
-	if(dev.r(192) == 4)
-	{
-		dev.c(100);
-		
-		while(dev.r(192) != 4)
-		{
-			if(dev.r(192) == 1)
-			{
-				PrintStatus();
-				return 0;
-			}
-		}
-		
-		dev.c(101);
-	}
-}
-//------------------------------
-
-function Zth_DRCU_DebugPulse(RiseEdge, FallEdge, IntPsVoltage)
-{
-	dev.w(129, IntPsVoltage * 10);
-	dev.w(150, RiseEdge);
-	dev.w(151, FallEdge);
-	dev.c(55);
-}
-//------------------------------
-
-function Zth_DRCU_ReadReg(Address)
-{
-	dev.w(160, Address);
-	dev.c(150);
+	PulseWidth_us = PulseWidth_us / 100;
+	PulseWidth_L = PulseWidth_us & 0xFFFF;
+	PulseWidth_H = (PulseWidth_us >> 16) & 0xFFFF;
 	
-	return(dev.r(161));
-}
-//------------------------------
-
-function Zth_DRCU_WriteReg(Address, Data)
-{
-	dev.w(160, Address);
-	dev.w(161, Data);
-	dev.c(151);
-}
-//------------------------------
-
-function Zth_DRCU_Call(Command)
-{
-	dev.w(160, Command);
-	dev.c(152);
+	dev.w(132, PulseWidth_L);
+	dev.w(133, PulseWidth_H);
 }
 //------------------------------
 
@@ -307,7 +384,32 @@ function Zth_TestPulseSquareness(TurnOnTime, Current, PulseWidth)
 }
 //------------------------------
 
-function Zth_CollectT()
+function Zth_CollectT(N, Pause)
+{
+	var Tcase = [];
+	var Tcool = [];
+	
+	for(i = 0; i < N; i++)
+	{		
+		Tcase[i] = Zth_Tcase2();
+		Tcool[i] = Zth_Tcool2();
+		
+		p("#" + i);
+		p("Tcase,       C : " + Tcase[i]);
+		p("Tcool,       C : " + Tcool[i]);
+		p("------------------------");
+		
+		sleep(Pause);
+		
+		if(anykey())
+			break;
+	}
+	pl(Tcase);
+	pl(Tcool);
+}
+//------------------------------
+
+function Zth_CollectTErr()
 {
 	var ErrT1 = [];
 	var ErrT2 = [];
@@ -321,8 +423,8 @@ function Zth_CollectT()
 		print("Enter temperature (in C):");
 		TFluke[Counter] = readline();
 		
-		Tcase = Zth_Tcase1();
-		Tcool = Zth_Tcool1();
+		Tcase = Zth_Tcase2();
+		Tcool = Zth_Tcool2();
 		
 		ErrT1[Counter] = (Tcase - TFluke[Counter]).toFixed(2);
 		ErrT2[Counter] = (Tcool - TFluke[Counter]).toFixed(2);
@@ -342,3 +444,4 @@ function Zth_CollectT()
 	scattern(TFluke, ErrT1, "Temperature (in C)", "Error (in %)", "Temperature relative error");
 	scattern(TFluke, ErrT2, "Temperature (in C)", "Error (in %)", "Temperature relative error");
 }
+//------------------------------
