@@ -1,0 +1,57 @@
+// Пояснения
+CAL_Init(portDevice, portTek, channelMeasureId);
+DRCU_Pulse(Current, CurrentRate);
+
+// Посмотреть версию прошивки
+i("PrintStatus.js");
+PrintFWInfo();
+
+// Обновление прошивки
+i("STM_FWUpdate.js");
+FWU_DRCU();
+
+// Скачать дамп регистров
+i("STM_FWUpdate.js");
+FWU_DumpDRCU();
+
+// Загрузить дамп регистров
+i("STM_FWUpdate.js");
+FWU_RestoreDRCU();
+
+// Подготовка блока
+dev.co(1);
+i("TestDRCU.js");
+dev.c(1);
+
+// Формирование сигнала и измерение
+DRCU_Pulse(100, 50)
+
+// Диапазон di/dt
+i("CalRCU.js");
+cal_IdMin = 50;	
+cal_IdMax = 500;
+cal_Rshunt = 1001;
+cal_IntPsVmin = 90;
+cal_IntPsVmax = 125;
+cal_Iterations = 1;
+cal_UseAvg = 0;
+cal_UseCursors = 0;
+CAL_Init(1,2,1);
+CurrentRateTest = 0.5;
+
+CAL_VerifyIrate();
+
+// Диапазон Id
+i("CalRCU.js");
+cal_IdMin = 50;	
+cal_IdMax = 500;
+cal_Rshunt = 1001;
+cal_IntPsVmin = 90;
+cal_IntPsVmax = 125;
+cal_Iterations = 1;
+cal_UseAvg = 0;
+cal_UseCursors = 0;
+CAL_Init(1,2,1);
+CurrentRateTest = 10;
+
+CAL_VerifyId()
