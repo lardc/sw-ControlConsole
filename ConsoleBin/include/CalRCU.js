@@ -206,7 +206,7 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 			print("Idtek, A: " + IdSc);
 
 			// Relative error			
-			var IdsetErr = ((IdSet - IdSc) / IdSc * 100).toFixed(2);
+			var IdsetErr = ((IdSc - IdSet) / IdSc * 100).toFixed(2);
 			cal_IdsetErr.push(IdsetErr);
 			print("Idseterr, %: " + IdsetErr);
 			print("--------------------");
@@ -280,9 +280,16 @@ function CAL_CompensationIrate(CurrentValues)
 	var AvgNum, VoltageMin, VoltageMax, Voltage;
 	
 	if (cal_UseAvg)
+	{
 		AvgNum = 4;
+		TEK_AcquireAvg(AvgNum);
+	}		
 	else
+	{
 		AvgNum = 1;
+		TEK_AcquireSample();
+	}
+
 	
 	for (var j = 0; j < CurrentValues.length; j++)
 	{	
@@ -290,12 +297,10 @@ function CAL_CompensationIrate(CurrentValues)
 		VoltageMax = cal_IntPsVmax;
 	
 		RCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
+		sleep(1000);
 		
 		for (var i = 0; i < cal_Points; i++)
-		{
-			TEK_AcquireSample();
-			TEK_AcquireAvg(AvgNum);
-		
+		{		
 			Voltage = Math.round((VoltageMin + (VoltageMax - VoltageMin) / 2) * 10) / 10;
 			
 			dev.w(130, Voltage * 10);
@@ -345,7 +350,7 @@ function RCU_TekScaleId(Channel, Value)
 	Value = Value / 7;
 	TEK_Send("ch" + Channel + ":scale " + Value);
 	
-	TEK_TriggerInit(cal_chMeasureId, Value * 3);
+	TEK_TriggerInit(cal_chMeasureId, Value * 3.1);
 	TEK_Send("trigger:main:edge:slope rise");
 }
 //--------------------
