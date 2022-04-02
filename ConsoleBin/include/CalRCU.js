@@ -8,7 +8,7 @@ cal_Points = 10;
 //
 cal_IdMin = 100;	
 cal_IdMax = 400;
-cal_IdStp = (cal_IdMax - cal_IdMin) / cal_Points;
+cal_IdStp = 0;
 
 cal_IntPsVmin = 90;	// V
 cal_IntPsVmax = 125;
@@ -72,6 +72,7 @@ function CAL_Init(portDevice, portTek, channelMeasureId)
 		else
 			TEK_ChannelOff(i);
 	}
+	cal_IdStp = (cal_IdMax - cal_IdMin) / cal_Points;
 }
 //--------------------
 
@@ -158,7 +159,8 @@ function CAL_VerifyIrate()
 		CAL_SaveVintPS("RCU_Irate_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "Current rate relative error");
+		scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "Current rate relative error " + CurrentRateTest + "A/us");
+		scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "Current set relative error " + cal_IdMin + " A..." + cal_IdMax + " A");
 	}
 }
 //--------------------
@@ -187,6 +189,7 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
 			RCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
+			CAL_TekSetHorizontalScale(CurrentValues[j]);
 			sleep(1000);
 			
 			for (var k = 0; k < AvgNum; k++)
@@ -244,6 +247,7 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 			//
 			
 			RCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
+			CAL_TekSetHorizontalScale(CurrentValues[j]);
 			sleep(1000);
 			
 			for (var k = 0; k < AvgNum; k++)
@@ -252,11 +256,25 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 					return 0;
 			}
 
+			// Unit data			
+			var IdSet = dev.r(128);
+			cal_Idset.push(IdSet);
+			print("Idset, A: " + IdSet);
+
 			// Scope data
 			var IdSc = (CAL_MeasureId(cal_chMeasureId) / cal_Rshunt * 1000000).toFixed(2);
 			cal_IdSc.push(IdSc);
 			print("Idtek, A: " + IdSc);
+
+			// Relative error			
+			var IdsetErr = ((IdSc - IdSet) / IdSc * 100).toFixed(2);
+			cal_IdsetErr.push(IdsetErr);
+			print("Idseterr, %: " + IdsetErr);
+			print("--------------------");
 			
+			print("Irateset, A/us: " + CurrentRateTest);
+
+			// Unit data
 			var IrateSc = CAL_MeasureIrate();
 			cal_IrateSc.push(IrateSc);
 			print("Irate tek, A/us: " + IrateSc);
@@ -297,6 +315,7 @@ function CAL_CompensationIrate(CurrentValues)
 		VoltageMax = cal_IntPsVmax;
 	
 		RCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
+		CAL_TekSetHorizontalScale(CurrentValues[j]);
 		sleep(1000);
 		
 		for (var i = 0; i < cal_Points; i++)
@@ -350,8 +369,22 @@ function RCU_TekScaleId(Channel, Value)
 	Value = Value / 7;
 	TEK_Send("ch" + Channel + ":scale " + Value);
 	
-	TEK_TriggerInit(cal_chMeasureId, Value * 3.1);
+	RCU_TriggerInit(cal_chMeasureId, Value * 3.3);
+
+
+
 	TEK_Send("trigger:main:edge:slope rise");
+}
+//--------------------
+
+function RCU_TriggerInit(Channel, Level)
+{
+	TEK_Send("trigger:main:level " + Level);
+	TEK_Send("trigger:main:mode normal");
+	TEK_Send("trigger:main:type edge");
+	TEK_Send("trigger:main:edge:coupling hfrej");
+	TEK_Send("trigger:main:edge:slope rise");
+	TEK_Send("trigger:main:edge:source ch" + Channel);
 }
 //--------------------
 
@@ -374,7 +407,7 @@ function CAL_TekInitId()
 		TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
 	}
 	
-	CAL_TekSetHorizontalScale();
+	//CAL_TekSetHorizontalScale();
 }
 //--------------------
 
@@ -390,59 +423,15 @@ function CAL_TekInitIrate()
 	TEK_Send("measurement:meas2:source ch" + cal_chMeasureId);
 	TEK_Send("measurement:meas2:type rise");
 	
-	CAL_TekSetHorizontalScale();
+	//CAL_TekSetHorizontalScale();
 }
 //--------------------
 
-function CAL_TekSetHorizontalScale()
+function CAL_TekSetHorizontalScale(Current)
 {
-	switch(CurrentRateTest * 100)
-	{
-		case 50:
-			TEK_Horizontal("100e-6", "0");
-			TEK_Send("cursor:vbars:position2 400e-6");
-			break;
-		case 75:
-			TEK_Horizontal("100e-6", "0");
-			TEK_Send("cursor:vbars:position2 400e-6");
-			break;
-		case 100:
-			TEK_Horizontal("50e-6", "0");
-			TEK_Send("cursor:vbars:position2 200e-6");
-			break;
-		case 250:
-			TEK_Horizontal("25e-6", "0");
-			TEK_Send("cursor:vbars:position2 100e-6");
-			break;
-		case 500:
-			TEK_Horizontal("10e-6", "0");
-			TEK_Send("cursor:vbars:position2 40e-6");
-			break;
-		case 750:
-			TEK_Horizontal("10e-6", "0");
-			TEK_Send("cursor:vbars:position2 40e-6");
-			break;
-		case 1000:
-			TEK_Horizontal("10e-6", "0");
-			TEK_Send("cursor:vbars:position2 40e-6");
-			break;
-		case 1500:
-			TEK_Horizontal("5e-6", "0");
-			TEK_Send("cursor:vbars:position2 20e-6");
-			break;
-		case 2500:
-			TEK_Horizontal("5e-6", "0");
-			TEK_Send("cursor:vbars:position2 20e-6");
-			break;
-		case 3000:
-			TEK_Horizontal("2.5e-6", "0");
-			TEK_Send("cursor:vbars:position2 10e-6");
-			break;
-		case 5000:
-			TEK_Horizontal("2.5e-6", "0");
-			TEK_Send("cursor:vbars:position2 10e-6");
-			break;
-	}
+	OSC_K = 1.8;
+	OSC_TimeScale = ((Current / CurrentRateTest) / 10) * 1e-6;
+	TEK_Horizontal(OSC_TimeScale * OSC_K, "0");
 }
 //--------------------
 
