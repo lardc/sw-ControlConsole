@@ -266,7 +266,7 @@ function BVT_Plot(Divisor)
 	
 	// invert values
 	for (var i = 0; i < ResArray.Voltage.length; i++)
-		ResArray.Voltage[i] = -ResArray.Voltage[i];
+		ResArray.Voltage[i] = -ResArray.Voltage[i] * ((CurrentDiv < 0) ? -1 : 1);
 	for (var i = 0; i < ResArray.Current.length; i++)
 		ResArray.Current[i] = -ResArray.Current[i] / CurrentDiv;
 	
@@ -329,7 +329,7 @@ function BVT_PlotXY(Divisor)
 	
 	// invert values
 	for (var i = 0; i < ResArray.Voltage.length; i++)
-		ResArray.Voltage[i] = -ResArray.Voltage[i];
+		ResArray.Voltage[i] = -ResArray.Voltage[i] * ((CurrentDiv < 0) ? -1 : 1);
 	for (var i = 0; i < ResArray.Current.length; i++)
 		ResArray.Current[i] = -ResArray.Current[i] / CurrentDiv;
 	
