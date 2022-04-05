@@ -305,6 +305,29 @@ namespace PE.ControlConsole
             Write32S(Address, Data);
         }
 
+        public void WriteFloat(int Address, float Data)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                m_Adapter.WriteFloat((ushort)NodeID, (ushort)Address, Data);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        // ReSharper disable InconsistentNaming
+        public void wf(int Address, float Data)
+        // ReSharper restore InconsistentNaming
+        {
+            WriteFloat(Address, Data);
+        }
+
         public int Read16Silent(int Address)
         {
             try
@@ -456,6 +479,29 @@ namespace PE.ControlConsole
         // ReSharper restore InconsistentNaming
         {
             return Read32S(Address);
+        }
+
+        public float ReadFloat(int Address)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                return m_Adapter.ReadFloat((ushort)NodeID, (ushort)Address);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        // ReSharper disable InconsistentNaming
+        public float rf(int Address)
+        // ReSharper restore InconsistentNaming
+        {
+            return ReadFloat(Address);
         }
 
         public int[] ReadArray16(int Address, int MaxCount = int.MaxValue)

@@ -45,14 +45,14 @@ namespace PE.SCCI.Master
         #region Tables
 
         private readonly int[,] m_Lengths = new [,] {
-                                                        {-1, -1, -1, -1, -1},
-                                                        {-1,  4,  4,  5, -1},
-                                                        {-1,  5,  6,  7, -1},
-                                                        {-1,  4, -1, -1, -1},
-                                                        {-1,  8,  8,  8,  8},
-                                                        { 4, -1, -1, -1, -1},
-                                                        { 5, -1, -1, -1, -1},
-                                                        {-1,  6, -1,  6, -1}
+                                                        {-1, -1, -1, -1, -1, -1},
+                                                        {-1,  4,  4,  5, -1,  4},
+                                                        {-1,  5,  6,  7, -1,  6},
+                                                        {-1,  4, -1, -1, -1, -1},
+                                                        {-1,  8,  8,  8,  8, -1},
+                                                        { 4, -1, -1, -1, -1, -1},
+                                                        { 5, -1, -1, -1, -1, -1},
+                                                        {-1,  6, -1,  6, -1, -1}
                                                     };
 
 
@@ -243,6 +243,25 @@ namespace PE.SCCI.Master
         }
 
         /// <summary>
+        /// Write float value at specified address
+        /// </summary>
+        /// <param name="NodeID">ID of node in network</param>
+        /// <param name="Address">Address in object dictionary</param>
+        /// <param name="Value">Data to write</param>
+        public void WriteFloat(ushort NodeID, ushort Address, float Value)
+        {
+            lock (m_OperationSync)
+            {
+                byte[] byteArray = BitConverter.GetBytes(Value);
+                m_WriteBuffer[2] = Address;
+                m_WriteBuffer[3] = (ushort)((ushort)byteArray[3] << 8 | byteArray[2]);
+                m_WriteBuffer[4] = (ushort)((ushort)byteArray[1] << 8 | byteArray[0]);
+
+                ImplementWRX(NodeID, SCCIFunctions.Write, SCCISubFunctions.SFuncFloat, 3);
+            }
+        }
+
+        /// <summary>
         /// Read 16-bit value from specified address
         /// </summary>
         /// <param name="NodeID">ID of node in network</param>
@@ -336,6 +355,30 @@ namespace PE.SCCI.Master
                 ImplementWRX(NodeID, SCCIFunctions.Read, SCCISubFunctions.Sfunc32, 1);
 
                 return ((m_ReadBuffer[3]) << 16) | m_ReadBuffer[4];
+            }
+        }
+
+        /// <summary>
+        /// Read float value from specified address
+        /// </summary>
+        /// <param name="NodeID">ID of node in network</param>
+        /// <param name="Address">Address in object dictionary</param>
+        /// <returns>Read data</returns>
+        public float ReadFloat(ushort NodeID, ushort Address)
+        {
+            lock (m_OperationSync)
+            {
+                m_WriteBuffer[2] = Address;
+
+                ImplementWRX(NodeID, SCCIFunctions.Read, SCCISubFunctions.SFuncFloat, 1);
+                
+                byte[] byteArray = new byte[4];
+                byteArray[0] = (byte)(m_ReadBuffer[4] & 0x00FF);
+                byteArray[1] = (byte)(m_ReadBuffer[4] >> 8);
+                byteArray[2] = (byte)(m_ReadBuffer[3] & 0x00FF);
+                byteArray[3] = (byte)(m_ReadBuffer[3] >> 8);
+
+                return BitConverter.ToSingle(byteArray, 0);
             }
         }
 
