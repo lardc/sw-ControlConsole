@@ -160,7 +160,7 @@ function CAL_VerifyIrate()
 
 		// Plot relative error distribution
 		scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "Current rate relative error " + CurrentRateTest + "A/us");
-		scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "Current set relative error " + cal_IdMin + " A..." + cal_IdMax + " A");
+		scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "Current set relative error " + cal_IdMin + " A..." + cal_IdMax + " A (" + CurrentRateTest + "A/us)");
 	}
 }
 //--------------------
@@ -367,12 +367,8 @@ function CAL_CompensationIrate(CurrentValues)
 function RCU_TekScaleId(Channel, Value)
 {
 	Value = Value / 7;
-	TEK_Send("ch" + Channel + ":scale " + Value);
-	
-	RCU_TriggerInit(cal_chMeasureId, Value * 3.3);
-
-
-
+	TEK_Send("ch" + Channel + ":scale " + Value);	
+	RCU_TriggerInit(cal_chMeasureId, Value * 2.85);
 	TEK_Send("trigger:main:edge:slope rise");
 }
 //--------------------
@@ -382,7 +378,7 @@ function RCU_TriggerInit(Channel, Level)
 	TEK_Send("trigger:main:level " + Level);
 	TEK_Send("trigger:main:mode normal");
 	TEK_Send("trigger:main:type edge");
-	TEK_Send("trigger:main:edge:coupling hfrej");
+	TEK_Send("trigger:main:edge:coupling dc");
 	TEK_Send("trigger:main:edge:slope rise");
 	TEK_Send("trigger:main:edge:source ch" + Channel);
 }
@@ -429,16 +425,9 @@ function CAL_TekInitIrate()
 
 function CAL_TekSetHorizontalScale(Current)
 {
-	OSC_K = 1.8;
+	OSC_K = 2.3;
 	OSC_TimeScale = ((Current / CurrentRateTest) / 10) * 1e-6;
 	TEK_Horizontal(OSC_TimeScale * OSC_K, "0");
-}
-//--------------------
-
-function CAL_TekScale(Channel, Value)
-{
-	Value = Value / 6;
-	TEK_Send("ch" + Channel + ":scale " + Value);
 }
 //--------------------
 
