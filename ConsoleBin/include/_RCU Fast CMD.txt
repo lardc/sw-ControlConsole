@@ -28,30 +28,30 @@ DRCU_Pulse(100, 50)
 
 // Диапазон di/dt
 i("CalRCU.js");
-cal_IdMin = 50;	
+cal_IdMin = 100;	
 cal_IdMax = 500;
 cal_Rshunt = 1001;
 cal_IntPsVmin = 90;
 cal_IntPsVmax = 125;
 cal_Iterations = 1;
-cal_UseAvg = 0;
+cal_UseAvg = 1;
 cal_UseCursors = 0;
 CAL_Init(1,2,1);
-CurrentRateTest = 0.5;
+CurrentRateTest = 2.5;
 
 CAL_VerifyIrate();
+
+CAL_CalibrateIrate();
 
 // Диапазон Id
 i("CalRCU.js");
 cal_IdMin = 50;	
 cal_IdMax = 500;
 cal_Rshunt = 1001;
-cal_IntPsVmin = 90;
-cal_IntPsVmax = 125;
 cal_Iterations = 1;
-cal_UseAvg = 0;
+cal_UseAvg = 1;
 cal_UseCursors = 0;
 CAL_Init(1,2,1);
-CurrentRateTest = 10;
+CurrentRateTest = 0.75;
 
 CAL_VerifyId()
