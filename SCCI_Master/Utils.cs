@@ -23,5 +23,15 @@ namespace PE.SCCI
                 Destination[DestinationOffset + i] |= (ushort)(Source[SourceOffset + i * 2 + 1] & 0x00FF);
             }
         }
+
+        internal static void DeserializeBytesToFloatArray(IList<byte> Source, int SourceLength, int SourceOffset,
+                                                          IList<float> Destination)
+        {
+            byte[] SourceArray = new byte[Source.Count];
+            Source.CopyTo(SourceArray, 0);
+
+            for (var i = 0; i < SourceLength / 4; ++i)
+                Destination.Add(System.BitConverter.ToSingle(SourceArray, SourceOffset + i * 4));
+        }
     }
 }

@@ -68,6 +68,8 @@ Types:
 		- Write32S(@address, @data)
 		- Write16(@address1, @data1, @address2, @data2)
 		- Write16S(@address1, @data1, @address2, @data2)
+		- WriteFloat(@address, @data)
+		  <wf>
 		- Read16Silent(@address) : @value - read register without printing exception
 		- Read16(@address) : @value
 		  <r>
@@ -77,6 +79,8 @@ Types:
 		- Read32S(@address) : @value
 		- Read16(@address1, @address2) : [@value]
 		- Read16S(@address1, @address2) : [@value]
+		- ReadFloat(@address) : @value
+		  <rf>
 		- ReadArray16(@endpoint, @maxcount) : [@array]
 		  <ra>
 		- ReadArray16S(@endpoint, @maxcount) : [@array]
@@ -97,5 +101,7 @@ Types:
 		  <raf>
 		- ReadArrayFast16S(@endpoint) : [@array]
 		  <rafs>
+		- ReadArrayFastFloat(@endpoint) : [@array]
+		  <raff>
 		- Dump(@filename, @start, @end)
 		- Restore(@filename)

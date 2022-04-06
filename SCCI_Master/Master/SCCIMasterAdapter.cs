@@ -52,7 +52,7 @@ namespace PE.SCCI.Master
                                                         {-1,  8,  8,  8,  8, -1},
                                                         { 4, -1, -1, -1, -1, -1},
                                                         { 5, -1, -1, -1, -1, -1},
-                                                        {-1,  6, -1,  6, -1, -1}
+                                                        {-1,  6, -1,  6, -1,  6}
                                                     };
 
 
@@ -567,7 +567,7 @@ namespace PE.SCCI.Master
                         var useCRC = ((m_ReadBuffer[2] & 0x00FF) != 0);
                         var crc = m_ReadBuffer[4];
 
-                        ReceiveDataStream(dataCount, useCRC, crc, headerPacketLength*2 + sourceOffset);
+                        ReceiveDataStream(dataCount, useCRC, crc, headerPacketLength*2 + sourceOffset, out _);
                         m_RawReadBufferLength -= headerPacketLength*2 + sourceOffset;
 
                         break;
@@ -606,6 +606,78 @@ namespace PE.SCCI.Master
 
                 for (var j = 0; j < dataCount; j++)
                     result.Add(m_ReadBuffer[j]);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Read array of float values in streaming mode
+        /// </summary>
+        /// <param name="NodeID">ID of node in network</param>
+        /// <param name="Endpoint">Data source</param>
+        /// <returns>Array of data</returns>
+        public IList<float> ReadArrayFastFloat(ushort NodeID, ushort Endpoint)
+        {
+            if (!m_UseStreaming)
+                throw new InvalidOperationException(Resources.SCCIMasterAdapter_Streaming_mode_hasnt_been_enabled);
+
+            var result = new List<float>();
+
+            lock (m_OperationSync)
+            {
+                ushort dataCount = 0;
+                Exception savedEx = null;
+
+                m_WriteBuffer[2] = (ushort)(Endpoint << 8);
+
+                try
+                {
+                    ResetReceiveBuffer();
+                    SendPacket(NodeID, SCCIFunctions.ReadFast, SCCISubFunctions.SFuncFloat, 1);
+                    var headerPacketLength = ReceivePacket(NodeID, SCCIFunctions.ReadFast, SCCISubFunctions.SFuncFloat,
+                        out int sourceOffset, true);
+
+                    dataCount = m_ReadBuffer[3];
+                    var useCRC = ((m_ReadBuffer[2] & 0x00FF) != 0);
+                    var crc = m_ReadBuffer[4];
+                    int rawSourceOffset = headerPacketLength * 2 + sourceOffset;
+
+                    ReceiveDataStream(dataCount, useCRC, crc, rawSourceOffset, out int rawDataLength);
+                    m_RawReadBufferLength -= rawSourceOffset;
+
+                    Utils.DeserializeBytesToFloatArray(m_RawReadBuffer, rawDataLength, rawSourceOffset, result);
+                }
+                catch (ProtocolInvaidPacketFormatException e)
+                {
+                    savedEx = e;
+                }
+                catch (ProtocolInvaidFunctionException e)
+                {
+                    savedEx = e;
+                }
+                catch (ProtocolErrorFrameInvalidHeaderException e)
+                {
+                    savedEx = e;
+                }
+                catch (ProtocolErrorFrameInvalidCRCException e)
+                {
+                    savedEx = e;
+                }
+                catch (ProtocolBadCRCException e)
+                {
+                    savedEx = e;
+                }
+                catch (ProtocolTimeoutException e)
+                {
+                    if (m_CatchTimeouts)
+                        savedEx = e;
+                    else
+                        throw;
+                }
+
+                if (savedEx != null)
+                    throw savedEx;
             }
 
             return result;
@@ -949,11 +1021,12 @@ namespace PE.SCCI.Master
             return packetLength;
         }
 
-        private void ReceiveDataStream(int DataCount, bool UseCRC, ushort CRC, int SourceBufferOffset)
+        private void ReceiveDataStream(int DataCount, bool UseCRC, ushort CRC, int SourceBufferOffset, out int ByteDataLength)
         {
             var received = false;
             var timeout = Environment.TickCount + m_TimeoutSyncStream;
             var streamLength = (DataCount / DATA_STREAM_QUANTA + ((DataCount % DATA_STREAM_QUANTA != 0) ? 1 : 0)) * DATA_STREAM_QUANTA;
+            ByteDataLength = streamLength * 2;
 
             while ((Environment.TickCount < timeout) || IGNORE_TIMEOUTS)
             {
@@ -1040,7 +1113,7 @@ namespace PE.SCCI.Master
                             String.Format(Resources.SCCIMasterAdapter_Response_is_not_matched_to_request, Function, SubFunction, fnc, sfnc), code);
 
                     packetLength = m_Lengths[fnc, sfnc];
-                    Trace.Assert(packetLength != -1, String.Format(@"FNC: {0}, SFNC{1}", fnc, sfnc));
+                    Trace.Assert(packetLength != -1, String.Format(@"FNC: {0}, SFNC: {1}", fnc, sfnc));
 
                     break;
                 }

@@ -711,6 +711,29 @@ namespace PE.ControlConsole
             return ReadArrayFast16S(Address);
         }
 
+        public float[] ReadArrayFastFloat(int Address)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                return m_Adapter.ReadArrayFastFloat((ushort)NodeID, (ushort)Address).Select(Arg => (float)Arg).ToArray();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        // ReSharper disable InconsistentNaming
+        public float[] raff(int Address)
+        // ReSharper restore InconsistentNaming
+        {
+            return ReadArrayFastFloat(Address);
+        }
+
         public void SendString(string OutString)
         {
             try
