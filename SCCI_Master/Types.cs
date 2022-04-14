@@ -13,7 +13,8 @@ namespace PE.SCCI
         ReadBlock   = 4,
         Call        = 5,
         Error       = 6,
-        ReadFast    = 7
+        ReadFast    = 7,
+        GetLimit    = 8
     }
 
     internal enum SCCISubFunctions

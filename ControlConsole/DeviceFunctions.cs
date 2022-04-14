@@ -504,6 +504,46 @@ namespace PE.ControlConsole
             return ReadFloat(Address);
         }
 
+        public float ReadLimitFloatX(int Address, bool HighLimit)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                return m_Adapter.ReadLimitFloat((ushort)NodeID, (ushort)Address, HighLimit);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        public float ReadLimitFloatLow(int Address)
+        {
+            return ReadLimitFloatX(Address, false);
+        }
+
+        // ReSharper disable InconsistentNaming
+        public float rlfl(int Address)
+        // ReSharper restore InconsistentNaming
+        {
+            return ReadLimitFloatLow(Address);
+        }
+
+        public float ReadLimitFloatHigh(int Address)
+        {
+            return ReadLimitFloatX(Address, true);
+        }
+
+        // ReSharper disable InconsistentNaming
+        public float rlfh(int Address)
+        // ReSharper restore InconsistentNaming
+        {
+            return ReadLimitFloatHigh(Address);
+        }
+
         public int[] ReadArray16(int Address, int MaxCount = int.MaxValue)
         {
             try

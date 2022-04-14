@@ -52,7 +52,8 @@ namespace PE.SCCI.Master
                                                         {-1,  8,  8,  8,  8, -1},
                                                         { 4, -1, -1, -1, -1, -1},
                                                         { 5, -1, -1, -1, -1, -1},
-                                                        {-1,  6, -1,  6, -1,  6}
+                                                        {-1,  6, -1,  6, -1,  6},
+                                                        {-1, -1, -1, -1, -1,  6}
                                                     };
 
 
@@ -372,6 +373,31 @@ namespace PE.SCCI.Master
 
                 ImplementWRX(NodeID, SCCIFunctions.Read, SCCISubFunctions.SFuncFloat, 1);
                 
+                byte[] byteArray = new byte[4];
+                byteArray[0] = (byte)(m_ReadBuffer[4] & 0x00FF);
+                byteArray[1] = (byte)(m_ReadBuffer[4] >> 8);
+                byteArray[2] = (byte)(m_ReadBuffer[3] & 0x00FF);
+                byteArray[3] = (byte)(m_ReadBuffer[3] >> 8);
+
+                return BitConverter.ToSingle(byteArray, 0);
+            }
+        }
+
+        /// <summary>
+        /// Read register limit value from specified address
+        /// </summary>
+        /// <param name="NodeID">ID of node in network</param>
+        /// <param name="Address">Address in object dictionary</param>
+        /// <returns>Read data</returns>
+        public float ReadLimitFloat(ushort NodeID, ushort Address, bool HighLimit)
+        {
+            lock (m_OperationSync)
+            {
+                m_WriteBuffer[2] = Address;
+                m_WriteBuffer[3] = (ushort)(HighLimit ? 1 : 0);
+
+                ImplementWRX(NodeID, SCCIFunctions.GetLimit, SCCISubFunctions.SFuncFloat, 2);
+
                 byte[] byteArray = new byte[4];
                 byteArray[0] = (byte)(m_ReadBuffer[4] & 0x00FF);
                 byteArray[1] = (byte)(m_ReadBuffer[4] >> 8);

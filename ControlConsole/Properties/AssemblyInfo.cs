@@ -11,7 +11,7 @@ using System.Resources;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Proton-Electrotex JSC")]
 [assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("Copyright © Proton-Electrotex 2011-2017")]
+[assembly: AssemblyCopyright("Copyright © Proton-Electrotex 2011-2022")]
 [assembly: AssemblyTrademark("Proton-Electrotex")]
 [assembly: AssemblyCulture("")]
 
