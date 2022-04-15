@@ -42,13 +42,27 @@ function LSLH_StartMeasure(Current)
 
 function LSLH_ResourceTest(Current, N)
 {
+	csv_array = [];
+
+	var today = new Date();
+	var now = new Date();
+	var i = 0;
+
+	csv_array.push("N ; UTM, V; ITM, A; Hours ; Minutes; Seconds");
+
 	for(i = 0; i < N; i++)
 	{
+		now = new Date();
 		print("#" + i);
 		LSLH_StartMeasure(Current);
+
+		//sleep(3500);
 		
 		if(anykey())
 			break;
+
+		csv_array.push( i + ";" + (dev.r(198) / 1000) + ";" + (dev.r(206) + dev.r(205) / 10) + ";" + now.getHours() +  ";" + now.getMinutes() + ";" + now.getSeconds());
+		save("data/LSL_TestUTM" + today.getTime() + ".csv", csv_array);
 	}
 }
 //--------------------------
