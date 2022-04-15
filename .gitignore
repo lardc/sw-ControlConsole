@@ -4,3 +4,4 @@ obj
 *.pdb
 /ConsoleBin/data/*.csv
 /ConsoleBin/data/*.txt
+/ConsoleBin/include/MyTest.js

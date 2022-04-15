@@ -1,7 +1,7 @@
 include("PrintStatus.js")
 
 CurrentRateArray = [50, 75, 100, 250, 500, 750, 1000, 1500, 2500, 3000, 5000]; // A/us * 100
-CurrentTest = 400;	// A
+CurrentTest = 500;	// A
 bi = 0; //счётчик
 function DRCU_Debug(Current, Range)
 {
