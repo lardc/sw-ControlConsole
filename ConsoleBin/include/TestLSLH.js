@@ -1,6 +1,6 @@
 ﻿include("PrintStatus.js")
 
-GatePulseTime 	= 100;		// us
+GatePulseTime 	= 1000;		// us
 GateVoltage 	= 10000;	// mV
 GateCurrent 	= 1000;		// mA
 GatePulseDelay	= 0;		// uS
