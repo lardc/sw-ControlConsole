@@ -7,11 +7,11 @@ cal_Rshunt = 1000;	// uOhm
 cal_Points = 10;
 //
 cal_IdMin = 100;	
-cal_IdMax = 400;
+cal_IdMax = 500;
 cal_IdStp = (cal_IdMax - cal_IdMin) / cal_Points;
 
 cal_IntPsVmin = 80;	// V
-cal_IntPsVmax = 125;
+cal_IntPsVmax = 120;
 
 CurrentRateTest = 0.5; // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
 
@@ -261,6 +261,7 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 			//
 			
 			DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
+			TEK_Send("horizontal:scale "  + ((CurrentValues[j]/CurrentRateTest)/1000000)*0.2);
 			sleep(1000);
 			
 			for (var k = 0; k < AvgNum; k++)
@@ -307,7 +308,7 @@ function CAL_CompensationIrate(CurrentValues)
 		VoltageMax = cal_IntPsVmax;
 	
 		DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
-		
+		TEK_Send("horizontal:scale "  + ((CurrentValues[j]/CurrentRateTest)/1000000)*0.2);
 		for (var i = 0; i < cal_Points; i++)
 		{
 			TEK_AcquireSample();
@@ -652,3 +653,86 @@ function CAL_PrintCoefIdset()
 	print("Idset P0 		: " + dev.rs(122));
 }
 //--------------------
+
+function CAL_ResetQuad (first, last){
+while (!anykey()){
+for (;first<last;){
+//p((last - first)%3);
+if (!(last - first)%3) break;	
+dev.w(first,0);
+p(first);
+first++;
+dev.w(first,1000);
+p(first);
+first++;
+dev.w(first,0);
+p(first);
+first++;
+//first=first+3;
+}
+p(1);
+break;
+}
+}
+//--------------------
+
+function CAL_ShowQuad (first, last){
+while (!anykey()){
+for (;first<last;){
+//p((last - first)%3);
+if (!(last - first)%3) break;
+	
+p("Регистр P2 x1e6 " + first + " равен " + dev.r(first));
+first++
+p("Регистр P1 x1000 " + first + " равен " + dev.r(first));
+first++
+p("Регистр P0 x1" + first + " равен " + dev.r(first));
+first++
+}
+//p(1);
+break;
+}
+}
+//--------------------
+
+function CAL_ResetDouble (first, last){
+while (!anykey()){
+for (;first<last;){
+//p((last - first)%3);
+if (!(last - first)%2) break;	
+dev.w(first,0);
+p(first);
+first++;
+dev.w(first,1000);
+p(first);
+first++;
+//first=first+3;
+}
+p(1);
+break;
+}
+}
+
+//--------------------
+
+function CAL_ShowDouble (first, last){
+while (!anykey()){
+for (;first<last;){
+//p((last - first)%3);
+if (!(last - first)%2) break;
+	
+p("Регистр Offset " + first + " равен " + dev.r(first));
+first++
+p("Регистр K " + first + " равен " + dev.r(first));
+first++
+
+}
+//p(1);
+break;
+}
+}
+
+function CAL_DCUTestV(voltage, current, rate){
+	dev.w(130,voltage*10);
+	DRCU_Pulse(current,rate);
+}

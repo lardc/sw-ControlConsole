@@ -1,8 +1,8 @@
 include("PrintStatus.js")
 
 CurrentRateArray = [50, 75, 100, 250, 500, 750, 1000, 1500, 2500, 3000, 5000]; // A/us * 100
-CurrentTest = 400;	// A
-
+CurrentTest = 500;	// A
+bi = 0; //счётчик
 function DRCU_Debug(Current, Range)
 {
 	dev.w(150, Range);
@@ -113,3 +113,30 @@ function DRCU_InPsVoltageSet(CurrentRate, Voltage)
 	}
 }
 //---------------------------------------------
+
+function DRCU_IntPS() //периодическое включение-выключение формирования flyback
+{
+while(!anykey())
+{
+if (bi==1) {bi = 0;}  
+else bi = 1; 
+dev.w(150,bi);
+ //p(bi);
+ dev.c(54);
+ sleep (5);}
+}
+
+function DRCU_SinglePS(delay) //одиночное включение-выключение формирования flyback
+{ 
+dev.w(150,0);
+dev.c(55);
+dev.w(150,1);
+ p(dev.r(150));
+ dev.c(54);
+ 
+ sleep (delay);
+dev.w(150,0);
+ p(dev.r(150));
+ dev.c(54);
+ sleep (100);
+}
