@@ -1,0 +1,77 @@
+// Пояснения
+CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU)
+QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
+
+Mode:
+#define MODE_QRR_ONLY	0
+#define MODE_QRR_TQ		1
+#define MODE_DVDT_ONLY	2
+
+IDC: Current set, in A
+IDCFallRate: Current rate, in A/us
+
+OSV: Voltage set, in V (for CROVU)
+OSVRate: Voltage rate, in V/us (for CROVU)
+
+
+// Nid
+QSU (CAN EXT) - 10
+RCU1 - 170
+DCU1 - 160
+
+// Посмотреть версию прошивки
+i("PrintStatus.js");
+PrintFWInfo();
+
+// Обновление прошивки
+i("FWUpdate.js");
+FWU_QSU()
+
+// Скачать дамп регистров
+i("FWUpdate.js");
+FWU_DumpQSU();
+
+// Загрузить дамп регистров
+i("FWUpdate.js");
+FWU_RestoreQSU();
+
+// Подготовка блока
+dev.co(1);
+dev.nid(10);
+i("TestQRRHP.js");
+dev.c(1);
+
+// Формирование сигнала и измерение
+QRR_Start(0, 100, 0.5, 100, 10)
+
+// Диапазон di/dt
+i("CalQRRHP.js");
+cal_Rshunt = 999;
+DirectCurrentTest = 400;
+
+cal_IdMin = 500;	
+cal_IdMax = 500;
+cal_Rshunt = 999;
+cal_IntPsVmin = 80;
+cal_IntPsVmax = 120;
+cal_Iterations = 1;
+cal_UseAvg = 0;
+CAL_Init(1,2,1);
+CurrentRateTest = 0.5; // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
+
+CAL_VerifyIrate();
+
+CAL_CalibrateIrate();
+
+// Диапазон Id
+i("CalDCU.js");
+cal_IdMin = 100;	
+cal_IdMax = 500;
+cal_Rshunt = 1000;
+cal_Iterations = 1;
+cal_UseAvg = 1;
+CAL_Init(1,2,1);
+CurrentRateTest = 0.75;
+
+CAL_VerifyId();
+CAL_CalibrateId();
