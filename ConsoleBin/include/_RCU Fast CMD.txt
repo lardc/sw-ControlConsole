@@ -1,6 +1,7 @@
 // Пояснения
 CAL_Init(portDevice, portTek, channelMeasureId);
 DRCU_Pulse(Current, CurrentRate);
+CurrentRateTest // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
 
 // Посмотреть версию прошивки
 i("PrintStatus.js");
@@ -37,7 +38,7 @@ cal_Iterations = 1;
 cal_UseAvg = 1;
 cal_UseCursors = 0;
 CAL_Init(1,2,1);
-CurrentRateTest = 2.5;
+CurrentRateTest = 0.5;
 
 CAL_VerifyIrate();
 
