@@ -126,7 +126,7 @@ function CAL_CalibrateUtm()
 		CAL_SaveUtm("LSL_Utm");
 
 		// Plot relative error distribution
-		scattern(cal_UtmSc, cal_UtmErr, "Voltage (in mV)", "Error (in %)", "Voltage relative error");
+		scattern(cal_UtmSc, cal_UtmErr, "Voltage (in mV)", "Error (in %)", "Utm relative error " + cal_UtmMin + "..." + cal_UtmMax + " mV");
 
 		// Calculate correction
 		cal_UtmCorr = CGEN_GetCorrection2("LSL_Utm");
@@ -157,7 +157,7 @@ function CAL_CalibrateItm()
 		CAL_SaveItm("LSL_Itm");
 
 		// Plot relative error distribution
-		scattern(cal_ItmSc, cal_ItmErr, "Current (in A)", "Error (in %)", "Current relative error");
+		scattern(cal_ItmSc, cal_ItmErr, "Current (in A)", "Error (in %)", "Itm relative error " + cal_ItmMin[cal_CurrentRange] + "..." + cal_ItmMax[cal_CurrentRange] + " A");
 
 		// Calculate correction
 		cal_ItmCorr = CGEN_GetCorrection2("LSL_Itm");
@@ -187,7 +187,7 @@ function CAL_CalibrateIset()
 		CAL_SaveIset("LSL_Iset");
 
 		// Plot relative error distribution
-		scattern(cal_IsetSc, cal_IsetErr, "Current (in A)", "Error (in %)", "Current set relative error");
+		scattern(cal_IsetSc, cal_IsetErr, "Current (in A)", "Error (in %)", "Itm set relative error " + cal_IsetMin + "..." + cal_IsetMax + " A");
 
 		// Calculate correction
 		cal_IsetCorr = CGEN_GetCorrection2("LSL_Iset");
@@ -217,7 +217,7 @@ function CAL_CalibrateIg()
 		CAL_SaveIg("LSL_Ig");
 
 		// Plot relative error distribution
-		scattern(cal_IgSc, cal_IgErr, "Current (in mA)", "Error (in %)", "Current relative error");
+		scattern(cal_IgSc, cal_IgErr, "Current (in mA)", "Error (in %)", "Ig relative error " + cal_IgMin + "..." + cal_IgMax + " mA");
 
 		// Calculate correction
 		cal_IgCorr = CGEN_GetCorrection2("LSL_Ig");
@@ -245,7 +245,7 @@ function CAL_CalibrateUg()
 		CAL_SaveUg("LSL_Ug");
 
 		// Plot relative error distribution
-		scattern(cal_UgSc, cal_UgErr, "Voltage (in mV)", "Error (in %)", "Voltage relative error");
+		scattern(cal_UgSc, cal_UgErr, "Voltage (in mV)", "Error (in %)", "Ug relative error " + cal_UgMin + "..." + cal_UgMax + " mV");
 
 		// Calculate correction
 		cal_UgCorr = CGEN_GetCorrection2("LSL_Ug");
@@ -272,7 +272,7 @@ function CAL_VerifyUtm()
 		CAL_SaveUtm("LSL_Utm_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_UtmSc, cal_UtmErr, "Voltage (in mV)", "Error (in %)", "Voltage relative error");
+		scattern(cal_UtmSc, cal_UtmErr, "Voltage (in mV)", "Error (in %)", "Utm relative error " + cal_UtmMin + "..." + cal_UtmMax + " mV");
 	}
 	
 	OverShootCurrentRestore();
@@ -297,7 +297,7 @@ function CAL_VerifyItm()
 		CAL_SaveItm("LSL_Itm_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_ItmSc, cal_ItmErr, "Current (in A)", "Error (in %)", "Current relative error");
+		scattern(cal_ItmSc, cal_ItmErr, "Current (in A)", "Error (in %)", "Itm relative error " + cal_ItmMin[cal_CurrentRange] + "..." + cal_ItmMax[cal_CurrentRange] + " A");
 	}
 	
 	OverShootCurrentRestore();
@@ -321,7 +321,7 @@ function CAL_VerifyIset()
 		CAL_SaveIset("LSL_Iset_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_IsetSc, cal_IsetErr, "Current (in A)", "Error (in %)", "Current set relative error");
+		scattern(cal_IsetSc, cal_IsetErr, "Current (in A)", "Error (in %)", "Itm set relative error " + cal_IsetMin + "..." + cal_IsetMax + " A");
 	}
 	
 	OverShootCurrentRestore();
@@ -343,7 +343,7 @@ function CAL_VerifyIg()
 		CAL_SaveIg("LSL_Ig_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_IgSc, cal_IgErr, "Current (in mA)", "Error (in %)", "Current relative error");
+		scattern(cal_IgSc, cal_IgErr, "Current (in mA)", "Error (in %)", "Ig relative error " + cal_IgMin + "..." + cal_IgMax + " mA");
 	}
 }
 //--------------------
@@ -363,7 +363,7 @@ function CAL_VerifyUg()
 		CAL_SaveUg("LSL_Ug_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_UgSc, cal_UgErr, "Voltage (in mV)", "Error (in %)", "Voltage relative error");
+		scattern(cal_UgSc, cal_UgErr, "Voltage (in mV)", "Error (in %)", "Ug relative error " + cal_UgMin + "..." + cal_UgMax + " mV");
 	}
 }
 //--------------------
