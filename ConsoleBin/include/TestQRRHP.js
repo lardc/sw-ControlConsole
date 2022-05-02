@@ -185,7 +185,7 @@ function QRR_Result()
 	print("Result " + ((op_result == 0) ? "NONE" : (op_result == 1) ? "OK" : "FAILED"));
 	print("Qrr (GOST), uC: " + (dev.r(210) / 10));
 	print("Qrr,        uC: " + (dev.r(216) / 10));
-	print("Irr,         A: " + dev.r(211));
+	print("Irr,         A: -" + (dev.r(211) / 10));
 	print("trr,        us: " + (dev.r(212) / 10));
 	print("tq,         us: " + (dev.r(213) / 10));
 	print("Idc,         A: " + dev.r(214));
