@@ -1,5 +1,7 @@
 include("CalGeneral.js")
 include("PrintStatus.js")
+include("CalCSM.js")
+include("TestLSLH.js")
 
 cs_t_remote1 = [];
 cs_t_remote_ext = [];
@@ -181,10 +183,130 @@ function CCS_TempPlot()
 function CSS_TempStart(Temp)
 {
 
-	dev.w(84,1);
+	dev.w(84,0);
 	dev.w(72,Temp);
 	dev.c(108);
 	dev.c(117);
 
 }
 
+function CSM_Res (Num, SleepUp, SleepDown, DeviceCase , Temp)
+{
+	dev.nid(6);
+	CSS_TempStart(Temp);
+	dev.c(100);
+	do
+		{
+			if(anykey())
+				return
+			sleep(100)
+		}
+		while(dev.r(96) == 5);
+	
+	for (var i = 0; i < Num; i++)
+	{
+		print("#" + (i + 1));
+
+		CSM_PosAdap (DeviceCase);
+		do
+		{
+			if(anykey())
+				return
+			sleep(100)
+		}
+		while(dev.r(96) == 7);
+
+		sleep(SleepUp);
+
+		dev.c(104);
+		do
+		{
+			if(anykey())
+				return
+			sleep(100)
+		}
+		while(dev.r(96) == 10);
+
+		sleep(SleepDown);
+
+	}
+
+}
+
+// SL
+function CSM_SL (Num, SleepUp, SleepDown, DeviceCase , Temp, Current)
+{
+dev.nid(9);
+	if( dev.r(207) != 2)
+	{
+	print("LSLPC!=2");
+	}
+	else	
+	dev.c(1);
+	dev.nid(6);
+	CSS_TempStart(Temp);
+	dev.c(100);
+	do
+		{
+			if(anykey())
+				return
+			sleep(100)
+		}
+		while(dev.r(96) == 5);
+
+	for (var i = 0; i < Num; i++)
+	{
+		print("#" + (i + 1));
+		CSM_PosAdap (DeviceCase);
+		do
+		{
+			if(anykey())
+				return
+			sleep(100)
+		}
+		while(dev.r(96) == 7);
+
+		SL(Current)
+		sleep(SleepUp);
+
+		dev.c(104);
+		do
+		{
+			if(anykey())
+				return
+			sleep(100)
+		}
+		while(dev.r(96) == 10);
+	
+		sleep(SleepDown);
+	
+	}
+
+
+}
+function S1 ()
+{
+	dev.nid(1);
+	dev.c(101);
+	dev.w(82,0);
+	dev.w(83,0);
+	dev.c(1);
+	dev.c(100);
+	dev.nid(6);
+}
+
+function SL(Current)
+{
+	dev.nid(9);
+	LSLH_StartMeasure(Current);
+	dev.nid(6);
+}
+function SLp(Current)
+{
+	dev.nid(9);
+	LSLH_StartMeasure(Current);
+	pl(dev.rafs(1));
+	pl(dev.rafs(2));
+	dev.nid(6);
+}
+	
