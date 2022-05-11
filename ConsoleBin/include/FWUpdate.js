@@ -329,15 +329,15 @@ function FWU_QSU()
 	FWUpdate("../../hw-QrrtqSyncBoard/Firmware/Release/QrrtqSyncBoard.hex");
 }
 
-function FWU_DumpQSU(Version)
+function FWU_DumpQSU()
 {
 
-	dev.Dump("../../hw-QrrtqSyncBoard/qsu.regdump", 0, 126);
+	dev.Dump("../../hw-QrrtqSyncBoard/Firmware/QrrtqSyncBoard.regdump", 0, 126);
 }
 
-function FWU_RestoreQSU(Version)
+function FWU_RestoreQSU()
 {
-	dev.Restore("../../hw-QrrtqSyncBoard/qsu.regdump");
+	dev.Restore("../../hw-QrrtqSyncBoard/Firmware/QrrtqSyncBoard.regdump");
 }
 //------------------------
 

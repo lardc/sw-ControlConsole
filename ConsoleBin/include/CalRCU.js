@@ -72,7 +72,8 @@ function CAL_Init(portDevice, portTek, channelMeasureId)
 		else
 			TEK_ChannelOff(i);
 	}
-	cal_IdStp = (cal_IdMax - cal_IdMin) / cal_Points;
+	cal_IdStp = (cal_IdMax - cal_IdMin ? cal_IdMax - cal_IdMin : 1) / cal_Points;
+	
 }
 //--------------------
 
