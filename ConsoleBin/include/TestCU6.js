@@ -1,39 +1,82 @@
 include("PrintStatus.js")
 
-function CU_SetPin(PinID, Action, ResetMode)
+function CU6_NONE ()
 {
-	// clear all pins
-	if (ResetMode != 0)
+	if (REG_DEV_STATE == 0)
 	{
-		dev.w(67, 0);
-		for (i = 0; i < 3; i++)
-		{
-			dev.w(66, i);
-			dev.c(101);
-		}
-		dev.c(102);
-		sleep(500);
+		dev.c(1);	
 	}
-	
-	// set pin
-	dev.w(64, PinID);
-	dev.w(65, Action);
-	dev.c(100);
-	dev.c(102);
+
+	dev.c(120);
+}
+function CU6_GETE (TYPES,POS,CASES)
+{
+	if (REG_DEV_STATE == 0)
+	{
+		dev.c(1);	
+	}
+
+	dev.w(70,TYPES);
+	dev.w(71,POS);
+	dev.w(72,CASES);
+	dev.c(121);
 }
 
-function CU6_GTU ( TYPES, POS, CASES )
+function CU6_SL (TYPES,POS,CASES)
 {
-dev.w(70,TYPES);
-dev.w(71,POS);
-dev.w(72,CASES);
-dev.c(121);
+	if (REG_DEV_STATE == 0)
+	{
+		dev.c(1);	
+	}
+
+	dev.w(70,TYPES);
+	dev.w(71,POS);
+	dev.w(72,CASES);
+	dev.c(122);
 }
 
-function CU6_GTUSL ( TYPES, POS, CASES )
+function CU6_BV_D (TYPES,POS,CASES)
 {
-dev.w(70,TYPES);
-dev.w(71,POS);
-dev.w(72,CASES);
-dev.c(126);
+	if (REG_DEV_STATE == 0)
+	{
+		dev.c(1);	
+	}
+
+	dev.w(70,TYPES);
+	dev.w(71,POS);
+	dev.w(72,CASES);
+	dev.c(123);
+}
+
+function CU6_BV_R (TYPES,POS,CASES)
+{
+	if (REG_DEV_STATE == 0)
+	{
+		dev.c(1);	
+	}
+
+	dev.w(70,TYPES);
+	dev.w(71,POS);
+	dev.w(72,CASES);
+	dev.c(124);
+}
+function CU6_NO_PE ()
+{
+	if (REG_DEV_STATE == 0)
+	{
+		dev.c(1);	
+	}
+
+	dev.c(125);
+}
+function CU6_GETE_SL (TYPES,POS,CASES)
+{
+	if (REG_DEV_STATE == 0)
+	{
+		dev.c(1);	
+	}
+	dev.w(70,TYPES);
+	dev.w(71,POS);
+	dev.w(72,CASES);
+	dev.c(126);
 }
