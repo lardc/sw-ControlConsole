@@ -1,6 +1,7 @@
 include("TestDRCU.js")
 include("Tektronix.js")
 include("CalGeneral.js")
+include("TestQRR.js");
 
 // Calibration setup parameters
 cal_Rshunt = 1000;	// uOhm
@@ -17,6 +18,13 @@ CurrentRateTest = 0.5; // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
 
 cal_Iterations = 1;
 cal_UseAvg = 1;
+//cal_UseCanQRR = 1;
+
+cal_UseQRR = 1;
+cal_QRRCanPort = 9;
+cal_QRRCanNID = 10;
+DRCU_Active = 10; // RCU/DCU active (calibrated)
+DRCU_Present = 01; // RCU/DCU present (need to be charged), only non-active
 //		
 
 // Counters
@@ -51,6 +59,11 @@ cal_IrateCorr = [];
 
 function CAL_Init(portDevice, portTek, channelMeasureId)
 {
+	if (cal_UseQRR == 1)
+	{
+		QRR_CANCal(cal_QRRCanPort,cal_QRRCanNID,DRCU_Active, DRCU_Present);
+		dev.Disconnect();
+	}
 	if (channelMeasureId < 1 || channelMeasureId > 4)
 	{
 		print("Wrong channel numbers");
@@ -170,7 +183,7 @@ function CAL_VerifyIrate()
 		CAL_SaveVintPS("DCU_Irate_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "Current rate relative error");
+		scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "Current rate relative error " + CurrentRateTest + "A/us");
 	}
 }
 //--------------------
@@ -261,7 +274,10 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 			//
 			
 			DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
-			TEK_Send("horizontal:scale "  + ((CurrentValues[j]/CurrentRateTest)/1000000)*0.2);
+			TEK_Send("horizontal:scale "  + ((CurrentValues[j]/CurrentRateTest)/1000000)*0.25);
+			//p((((CurrentValues[j]/CurrentRateTest)/1000000)));
+
+			TEK_Send("horizontal:main:position "+ (((CurrentValues[j]/CurrentRateTest)/1000000)*0.1));
 			sleep(1000);
 			
 			for (var k = 0; k < AvgNum; k++)
@@ -309,6 +325,7 @@ function CAL_CompensationIrate(CurrentValues)
 	
 		DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
 		TEK_Send("horizontal:scale "  + ((CurrentValues[j]/CurrentRateTest)/1000000)*0.2);
+		TEK_Send("horizontal:delay:pos"+ ((CurrentValues[j]/CurrentRateTest)/1000000)*0.2);
 		for (var i = 0; i < cal_Points; i++)
 		{
 			TEK_AcquireSample();
@@ -383,6 +400,7 @@ function CAL_TekInitIrate()
 {
 	TEK_ChannelInit(cal_chMeasureId, "1", "0.02");
 	TEK_TriggerInit(cal_chMeasureId, "0.06");
+	TEK_Send("ch" + cal_chMeasureId + ":position -3.52");
 	TEK_Send("trigger:main:edge:slope fall");
 	TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
 	TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
@@ -390,7 +408,7 @@ function CAL_TekInitIrate()
 	TEK_Send("measurement:meas1:type maximum");
 	TEK_Send("measurement:meas2:source ch" + cal_chMeasureId);
 	TEK_Send("measurement:meas2:type fall");
-	
+	TEK_Send("CURSor:HBArs:POSITION 0.1");
 	CAL_TekSetHorizontalScale();
 }
 //--------------------
@@ -686,7 +704,7 @@ p("Регистр P2 x1e6 " + first + " равен " + dev.r(first));
 first++
 p("Регистр P1 x1000 " + first + " равен " + dev.r(first));
 first++
-p("Регистр P0 x1" + first + " равен " + dev.r(first));
+p("Регистр P0 x1 " + first + " равен " + dev.r(first));
 first++
 }
 //p(1);
@@ -732,7 +750,3 @@ break;
 }
 }
 
-function CAL_DCUTestV(voltage, current, rate){
-	dev.w(130,voltage*10);
-	DRCU_Pulse(current,rate);
-}

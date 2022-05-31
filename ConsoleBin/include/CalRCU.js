@@ -18,6 +18,11 @@ CurrentRateTest = 0.5; // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
 cal_Iterations = 3;
 cal_UseAvg = 1;
 cal_UseCursors = 1;
+cal_UseQRR = 1;
+cal_QRRCanPort = 9;
+cal_QRRCanNID = 10;
+DRCU_Active = 10; // RCU/DCU active (calibrated)
+DRCU_Present = 01; // RCU/DCU present (need to be charged), only non-active
 //		
 
 // Counters
@@ -48,6 +53,11 @@ cal_IrateCorr = [];
 
 function CAL_Init(portDevice, portTek, channelMeasureId)
 {
+	if (cal_UseQRR == 1)
+	{
+		include("TestQRR.js");
+		QRR_CANCal(cal_QRRCanPort,cal_QRRCanNID,DRCU_Active, DRCU_Present);
+	}
 	if (channelMeasureId < 1 || channelMeasureId > 4)
 	{
 		print("Wrong channel numbers");
