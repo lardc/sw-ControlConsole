@@ -325,9 +325,9 @@ function CAL_QRRdidt(Current,CurrentRate)
 	var ctou_tgd_ki = 9e-4;
 	var ctou_tgd_kd = 1e-4;
 	
-	var cursor_place = -1.5 * (Current / 2) / CurrentRate * 1e-6;
-	TEK_Send("cursor:vbars:position1 "+ cursor_place);
-	TEK_Send("cursor:vbars:position2 "+ cursor_place);
+	var cursor_place = -1.4 * (Current / 2) / CurrentRate * 1e-6;
+	TEK_Send("cursor:vbars:position1 " + cursor_place);
+	TEK_Send("cursor:vbars:position2 " + cursor_place);
 	
 	ctou_tgd_u = DirectCurrentTest / cal_Rshunt;
 	ctou_tgd_u90 = (DirectCurrentTest / cal_Rshunt) * 0.9;
@@ -348,7 +348,7 @@ function CAL_QRRdidt(Current,CurrentRate)
 
 		ctou_tgd_u_preverr = ctou_tgd_u_err;
 
-		cursor_place_fixed = ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd;
+		cursor_place_fixed = (ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd) / CurrentRate;
 		//-----------------
 
 		//Если cursor_place_fixed будет выдавать значения менее 10нс, то принудительно сделать шаг 10нс. Иначе при очень маленькой ошибке курсор замирает на долгое время
@@ -365,6 +365,8 @@ function CAL_QRRdidt(Current,CurrentRate)
 		if (anykey()) return 0;
 	}
 	
+	cursor_place = Current / CurrentRate * 1e-6;
+	TEK_Send("cursor:vbars:position2 " + cursor_place);
 	while(ctou_tgd_u > ctou_tgd_u10)
 	{
 		// ПИД регулятор
@@ -376,7 +378,7 @@ function CAL_QRRdidt(Current,CurrentRate)
 
 		ctou_tgd_u_preverr = ctou_tgd_u_err;
 
-		cursor_place_fixed = ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd;
+		cursor_place_fixed = (ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd) / CurrentRate;
 		//-----------------
 
 		//Если cursor_place_fixed будет выдавать значения менее 10нс, то принудительно сделать шаг 10нс. Иначе при очень маленькой ошибке курсор замирает на долгое время
@@ -385,7 +387,7 @@ function CAL_QRRdidt(Current,CurrentRate)
 
 		// Корректировка, отправка нового положения курсора и измерение напряжения в этой точке
 		cursor_place = cursor_place_fixed + cursor_place;
-		// p("cursor_place " + cursor_place * 1e6);
+		//p("cursor_place " + cursor_place * 1e6);
 		TEK_Send("cursor:vbars:position2 " + cursor_place);
 		ctou_tgd_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
 		ctou_tgd_u.toFixed(1);
@@ -397,10 +399,11 @@ function CAL_QRRdidt(Current,CurrentRate)
 	var U2 = TEK_Exec("cursor:vbars:hpos2?");
 	var dT = TEK_Exec("cursor:vbars:delta?");
 	
-	var didt = ((U2 - U1) / dT) * 1e-3;
-	
+	var didt = ((U1 - U2) / dT) * 1e-3;	
 	
 	print("didt osc = " + didt.toFixed(2));
+	
+	print("didt relative error, % = " + ((didt - CurrentRate) / CurrentRate * 100).toFixed(2));
 	
 }
 
