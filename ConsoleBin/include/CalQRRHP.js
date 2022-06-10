@@ -8,10 +8,13 @@ DirectCurrentTest = 500; // in A
 DirectVoltageTest = 1500; // in V
 DirectVoltageRateTest = 1000; // in V/us
 //
+SetCurrentTest = [100, 200, 300, 400, 500]; // in A
 CurrentRateTest = [1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100]; // in A/us
 IrrMeasured = [35, 47, 60, 110, 180, 225, 265, 330, 425, 460, 530]; // in A
 CurrentRateStartTestIndex = 0;
 CurrentRateFinishTestIndex = 10;
+CurrentSetStartTestIndex = 0;
+CurrentSetFinishTestIndex = 4;
 //
 QrrGOST = 0;
 //
@@ -265,37 +268,46 @@ function CAL_CollectQrr(IterationsCount)
 
 function QRR_TestPSVoltage()
 {
+	for (var i = 1; i <= 4; i++)
+	{
+		TEK_ChannelOff(i);
+	}
+	TEK_ChannelOn(1);
 	
 	TEK_Horizontal("1e-6", "0");
-	
-	TEK_ChannelInit(cal_chMeasureI, "1", "0.1");
-	TEK_Send("ch" + cal_chMeasureI + ":position 0");
-	
-	TEK_TriggerInit(cal_chMeasureI, DirectCurrentTest / 2 * 1e-3);
-	TEK_Send("trigger:main:edge:slope fall");
-	
-	
-	cal_CntTotal = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex + 1);
+		
+	cal_CntTotalRate = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex + 1);
+	cal_CntTotalSet = (CurrentSetFinishTestIndex - CurrentSetStartTestIndex + 1);
+	cal_CntTotal = cal_CntTotalRate * cal_CntTotalSet;
 	cal_CntDone = 1;
-		
-	for (var j = CurrentRateStartTestIndex; j <= CurrentRateFinishTestIndex; j++)
-	{
-		print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-		CAL_QRRHorizontalScale(DirectCurrentTest, CurrentRateTest[j]);
-		sleep(100);
-		
-		QRR_Start(0, DirectCurrentTest, CurrentRateTest[j], 100, 10);
 	
-		print("Set current, A : " + DirectCurrentTest);
-		print("Set current rate, A/us : " + CurrentRateTest[j]);
-		print("INT_PS_VOLTAGE DCU, V : " + QSU_ReadReg(160,201) / 10);
-		print("INT_PS_VOLTAGE RCU, V : " + QSU_ReadReg(170,201) / 10);
+	for (var i = CurrentSetStartTestIndex; i <= CurrentSetFinishTestIndex; i++)
+	{	
+		TEK_ChannelInit(cal_chMeasureI, "1", ((SetCurrentTest[i] * cal_Rshunt * 1e-6) * 2) / 6);
+		TEK_Send("ch" + cal_chMeasureI + ":position 0");
 		
-		CAL_QRRdidt(DirectCurrentTest, CurrentRateTest[j]);
+		TEK_TriggerInit(cal_chMeasureI, (SetCurrentTest[i] * cal_Rshunt * 1e-6) / 2);
+		TEK_Send("trigger:main:edge:slope fall");
 		
-		if (anykey()) return 0;
-		sleep(500);
-	}
+		for (var j = CurrentRateStartTestIndex; j <= CurrentRateFinishTestIndex; j++)
+		{
+			CAL_QRRHorizontalScale(SetCurrentTest[i], CurrentRateTest[j]);
+			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+			sleep(3000);
+			
+			QRR_Start(0, SetCurrentTest[i], CurrentRateTest[j], 100, 10);
+		
+			print("Set current, A : " + SetCurrentTest[i]);
+			print("Set current rate, A/us : " + CurrentRateTest[j]);
+			print("INT_PS_VOLTAGE DCU, V : " + QSU_ReadReg(160,201) / 10);
+			print("INT_PS_VOLTAGE RCU, V : " + QSU_ReadReg(170,201) / 10);
+			
+			CAL_QRRdidt(SetCurrentTest[i], CurrentRateTest[j]);
+			
+			if (anykey()) return 0;
+			sleep(500);
+		}
+	}	
 }
 
 function CAL_QRRHorizontalScale(Current,CurrentRate)
@@ -329,9 +341,9 @@ function CAL_QRRdidt(Current,CurrentRate)
 	TEK_Send("cursor:vbars:position1 " + cursor_place);
 	TEK_Send("cursor:vbars:position2 " + cursor_place);
 	
-	ctou_tgd_u = DirectCurrentTest / cal_Rshunt;
-	ctou_tgd_u90 = (DirectCurrentTest / cal_Rshunt) * 0.9;
-	ctou_tgd_u10 = -(DirectCurrentTest / cal_Rshunt) * 0.9;
+	ctou_tgd_u = Current * cal_Rshunt * 1e-6;
+	ctou_tgd_u90 = (Current * cal_Rshunt * 1e-6) * 0.9;
+	ctou_tgd_u10 = -(Current * cal_Rshunt * 1e-6) * 0.9;
 	
 	ctou_tgd_u.toFixed(1);
 	ctou_tgd_u90.toFixed(1);
