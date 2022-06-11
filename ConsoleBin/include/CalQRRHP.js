@@ -47,6 +47,8 @@ cal_IrrErr = [];
 cal_QrrErr = [];
 cal_TqErr = [];
 
+// Data arrays
+cdidt_scatter = [];
 
 function CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU)
 {
@@ -268,12 +270,20 @@ function CAL_CollectQrr(IterationsCount)
 
 function QRR_TestPSVoltage()
 {
+	cdvdt_scatter = [];
 	for (var i = 1; i <= 4; i++)
 	{
 		TEK_ChannelOff(i);
 	}
-	TEK_ChannelOn(1);
-	
+	TEK_ChannelOn(cal_chMeasureI);
+	//---------------
+	TEK_Send("measurement:meas" + cal_chMeasureI + ":source ch" + cal_chMeasureI);
+	TEK_Send("measurement:meas" + cal_chMeasureI + ":type pk2pk");
+	TEK_Send("measurement:meas1:source ch" + cal_chMeasureI);
+	TEK_Send("measurement:meas1:type pk2pk");	
+	TEK_Send("measurement:meas2:source ch" + cal_chMeasureI);
+	TEK_Send("measurement:meas2:type fall");
+	//--------------
 	TEK_Horizontal("1e-6", "0");
 		
 	cal_CntTotalRate = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex + 1);
@@ -302,12 +312,15 @@ function QRR_TestPSVoltage()
 			print("INT_PS_VOLTAGE DCU, V : " + QSU_ReadReg(160,201) / 10);
 			print("INT_PS_VOLTAGE RCU, V : " + QSU_ReadReg(170,201) / 10);
 			
-			CAL_QRRdidt(SetCurrentTest[i], CurrentRateTest[j]);
+			//CAL_QRRdidt(SetCurrentTest[i], CurrentRateTest[j]);
+			
+			CAL_MeasureIrate(CurrentRateTest[j], SetCurrentTest[i]);
 			
 			if (anykey()) return 0;
 			sleep(500);
 		}
-	}	
+	}
+	save("data/didt_404.csv", cdidt_scatter);	
 }
 
 function CAL_QRRHorizontalScale(Current,CurrentRate)
@@ -320,6 +333,23 @@ function CAL_QRRTimeScale(Current,CurrentRate)
 	OSC_K = 2;
 	OSC_TimeScale = ((Current * 2 / CurrentRate) / 10) * 1e-6;
 	return OSC_TimeScale * OSC_K
+}
+
+function CAL_MeasureIrate(RateSet, CurrentSet)
+{
+	var RateScope = (TEK_Measure(cal_chMeasureI) * 0.8 / cal_Rshunt * 1e6 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(3);	
+	var RateErr = ((RateScope - RateSet) / RateSet * 100).toFixed(3);
+	
+	var CurrentScope = ((TEK_Measure(cal_chMeasureI) / 2) / (cal_Rshunt * 1e-6)).toFixed(3);
+	var CurrentErr = ((CurrentScope - CurrentSet) / CurrentSet * 100).toFixed(3);
+	
+	cdidt_scatter.push(RateSet + ";" + RateScope + ";" + RateErr + ";" + CurrentSet + ";" + CurrentScope + ";" + CurrentErr);
+	
+	print("current osc, A = " + CurrentScope);	
+	print("current error, % = " + CurrentErr);
+	
+	print("didt osc, A/us = " + RateScope);	
+	print("didt error, % = " + RateErr);	
 }
 
 function CAL_QRRdidt(Current,CurrentRate)
