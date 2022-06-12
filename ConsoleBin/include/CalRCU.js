@@ -249,6 +249,7 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 		for (var k = 0; k < CurrentRateTest.length; k++)
 		{	
 			cal_IdSc = [];
+			cal_IdsetErr = [];
 			cal_IrateErr = [];	
 			
 			for (var j = 0; j < CurrentValues.length; j++)
@@ -259,7 +260,7 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 				RCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
 				TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRateTest[k]) * 1e-6) * 0.25);
 				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRateTest[k]) * 1e-6) * 0.1);
-				//CAL_TekSetHorizontalScale(CurrentValues[j]);
+
 				sleep(1000);
 				
 				for (var m = 0; m < AvgNum; m++)
@@ -293,13 +294,13 @@ function CAL_MeasureIrate(RateSet, CurrentSet)
 	cal_IdsetErr.push(CurrentErr);
 	cal_IrateErr.push(RateErr);
 
-	print("current set, A = " + CurrentSet);	
-	print("current osc, A = " + CurrentScope);	
-	print("current error, % = " + CurrentErr);
+	print("Current Set, A = " + CurrentSet);	
+	print("Current Osc, A = " + CurrentScope);	
+	print("Current Err, % = " + CurrentErr);
 	
-	print("didt set, A/us = " + RateSet);	
-	print("didt osc, A/us = " + RateScope);	
-	print("didt error, % = " + RateErr);	
+	print("di/dt Set, A/us = " + RateSet);	
+	print("di/dt Osc, A/us = " + RateScope);	
+	print("di/dt Err, % = " + RateErr);	
 }
 //--------------------
 
@@ -412,8 +413,6 @@ function CAL_TekInitId()
 		TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
 		TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
 	}
-	
-	//CAL_TekSetHorizontalScale();
 }
 //--------------------
 
@@ -429,16 +428,6 @@ function CAL_TekInitIrate()
 	TEK_Send("measurement:meas1:type maximum");
 	TEK_Send("measurement:meas2:source ch" + cal_chMeasureId);
 	TEK_Send("measurement:meas2:type rise");
-	
-	//CAL_TekSetHorizontalScale();
-}
-//--------------------
-
-function CAL_TekSetHorizontalScale(Current)
-{
-	OSC_K = 2.3;
-	OSC_TimeScale = ((Current / CurrentRateTest) / 10) * 1e-6;
-	TEK_Horizontal(OSC_TimeScale * OSC_K, "0");
 }
 //--------------------
 
