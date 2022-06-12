@@ -79,6 +79,23 @@ function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
 	}
 }
 
+function QRR_Resaurce()
+{
+	CurrentRateTest = [1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100];
+	while(1)
+	{
+		for (var i = 0; i < CurrentRateTest.length; i++)
+		{
+			sleep(2000);
+			QRR_Start(0, 500, CurrentRateTest[i], 100, 10);
+			sleep(2000);
+			if (anykey()) return 0;		
+		}
+	}
+	
+	
+}	
+
 function QRR_Status()
 {
 	print("[QSU]")
