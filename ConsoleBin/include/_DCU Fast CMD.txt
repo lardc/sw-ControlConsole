@@ -40,11 +40,9 @@ cal_Iterations = 1;
 cal_UseAvg = 0;
 CAL_Init(13,14,1);
 
-CurrentRateTest = 0.5; // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
 dev.c(1);
 sleep(1000);
 CAL_VerifyIrate();
-
 
 CAL_CalibrateIrate();
 
