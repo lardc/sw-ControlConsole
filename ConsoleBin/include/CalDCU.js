@@ -266,7 +266,8 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 		for (var k = 0; k < CurrentRateTest.length; k++)
 		{	
 			cal_IdSc = [];
-			cal_IrateErr = [];	
+			cal_IdsetErr = [];
+			cal_IrateErr = [];
 			
 			for (var j = 0; j < CurrentValues.length; j++)
 			{
@@ -284,7 +285,7 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 					if(!DRCU_Pulse(CurrentValues[j], CurrentRateTest[k] * 100))
 						return 0;
 				}
-				CAL_MeasureIrate(CurrentRateTest[k],CurrentValues[j]);
+				CAL_MeasureIrate(CurrentRateTest[k], CurrentValues[j]);
 				if (anykey()) return 0;
 			}
 			scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "DCU Current rate relative error " + CurrentRateTest[k] + " A/us");
@@ -310,13 +311,13 @@ function CAL_MeasureIrate(RateSet, CurrentSet)
 	cal_IdsetErr.push(CurrentErr);
 	cal_IrateErr.push(RateErr);
 
-	print("current set, A = " + CurrentSet);	
-	print("current osc, A = " + CurrentScope);	
-	print("current error, % = " + CurrentErr);
+	print("Current Set, A = " + CurrentSet);	
+	print("Current Osc, A = " + CurrentScope);	
+	print("Current Err, % = " + CurrentErr);
 	
-	print("didt set, A/us = " + RateSet);	
-	print("didt osc, A/us = " + RateScope);	
-	print("didt error, % = " + RateErr);
+	print("di/dt Set, A/us = " + RateSet);	
+	print("di/dt Osc, A/us = " + RateScope);	
+	print("di/dt Err, % = " + RateErr);	
 }
 //--------------------
 
@@ -679,81 +680,92 @@ function CAL_PrintCoefIdset()
 }
 //--------------------
 
-function CAL_ResetQuad (first, last){
-while (!anykey()){
-for (;first<last;){
-//p((last - first)%3);
-if (!(last - first)%3) break;	
-dev.w(first,0);
-p(first);
-first++;
-dev.w(first,1000);
-p(first);
-first++;
-dev.w(first,0);
-p(first);
-first++;
-//first=first+3;
-}
-p(1);
-break;
-}
-}
-//--------------------
-
-function CAL_ShowQuad (first, last){
-while (!anykey()){
-for (;first<last;){
-//p((last - first)%3);
-if (!(last - first)%3) break;
-	
-p("Регистр P2 x1e6 " + first + " равен " + dev.r(first));
-first++
-p("Регистр P1 x1000 " + first + " равен " + dev.r(first));
-first++
-p("Регистр P0 x1 " + first + " равен " + dev.r(first));
-first++
-}
-//p(1);
-break;
-}
+function CAL_ResetQuad (first, last)
+{
+	while (!anykey())
+	{
+		for (;first<last;)
+		{
+			//p((last - first)%3);
+			if (!(last - first)%3) break;	
+			dev.w(first,0);
+			p(first);
+			first++;
+			dev.w(first,1000);
+			p(first);
+			first++;
+			dev.w(first,0);
+			p(first);
+			first++;
+			//first=first+3;
+		}
+		p(1);
+		break;
+	}
 }
 //--------------------
 
-function CAL_ResetDouble (first, last){
-while (!anykey()){
-for (;first<last;){
-//p((last - first)%3);
-if (!(last - first)%2) break;	
-dev.w(first,0);
-p(first);
-first++;
-dev.w(first,1000);
-p(first);
-first++;
-//first=first+3;
+function CAL_ShowQuad (first, last)
+{
+	while (!anykey())
+	{
+		for (;first<last;)
+		{
+			//p((last - first)%3);
+			if (!(last - first)%3) break;
+				
+			p("Регистр P2 x1e6 " + first + " равен " + dev.r(first));
+			first++
+			p("Регистр P1 x1000 " + first + " равен " + dev.r(first));
+			first++
+			p("Регистр P0 x1 " + first + " равен " + dev.r(first));
+			first++
+		}
+		//p(1);
+		break;
+	}
 }
-p(1);
-break;
-}
-}
-
 //--------------------
 
-function CAL_ShowDouble (first, last){
-while (!anykey()){
-for (;first<last;){
-//p((last - first)%3);
-if (!(last - first)%2) break;
-	
-p("Регистр Offset " + first + " равен " + dev.r(first));
-first++
-p("Регистр K " + first + " равен " + dev.r(first));
-first++
+function CAL_ResetDouble (first, last)
+{
+	while (!anykey())
+	{
+		for (;first<last;)
+		{
+			//p((last - first)%3);
+			if (!(last - first)%2) break;	
+			
+			dev.w(first,0);
+			p(first);
+			first++;
+			dev.w(first,1000);
+			p(first);
+			first++;
+			//first=first+3;
+		}
+		p(1);
+		break;
+	}
+}
+//--------------------
 
-}
-//p(1);
-break;
-}
-}
+function CAL_ShowDouble (first, last)
+{
+	while (!anykey())
+	{
+		for (;first<last;)
+		{
+			//p((last - first)%3);
+			if (!(last - first)%2) break;
+				
+			p("Регистр Offset " + first + " равен " + dev.r(first));
+			first++
+			p("Регистр K " + first + " равен " + dev.r(first));
+			first++
 
+			}
+			//p(1);
+		break;
+	}
+}
