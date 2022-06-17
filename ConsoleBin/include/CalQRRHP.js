@@ -3,19 +3,22 @@ include("TestQRRHP.js")
 include("Sic_GetData.js")
 
 // Calibration setup parameters
-cal_Rshunt = 1000;	// uOhm
-DirectCurrentTest = 400; // in A
+cal_Rshunt = 999;	// uOhm
+DirectCurrentTest = 500; // in A
 DirectVoltageTest = 1500; // in V
 DirectVoltageRateTest = 1000; // in V/us
 //
+SetCurrentTest = [100, 200, 300, 400, 500]; // in A
 CurrentRateTest = [1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100]; // in A/us
-IrrMeasured = [25, 35, 43, 83, 130, 170, 200, 248, 320, 345, 345]; // in A
+IrrMeasured = [35, 47, 60, 110, 180, 225, 265, 330, 425, 460, 530]; // in A
 CurrentRateStartTestIndex = 0;
 CurrentRateFinishTestIndex = 10;
+CurrentSetStartTestIndex = 0;
+CurrentSetFinishTestIndex = 4;
 //
 QrrGOST = 0;
 //
-cal_Iterations = 3;
+cal_Iterations = 1;
 //		
 
 // Counters
@@ -24,7 +27,7 @@ cal_CntDone = 0;
 
 // Channels
 cal_chMeasureI = 1;
-cal_chMeasureU = 2;
+cal_chMeasureU = 3;
 
 // Results storage
 cal_Trr = [];
@@ -44,6 +47,8 @@ cal_IrrErr = [];
 cal_QrrErr = [];
 cal_TqErr = [];
 
+// Data arrays
+cdidt_scatter = [];
 
 function CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU)
 {
@@ -209,7 +214,7 @@ function CAL_CollectQrr(IterationsCount)
 				Qrr = dev.r(210) / 10;				
 			cal_Qrr.push(Qrr);
 			
-			var Irr = dev.r(211);
+			var Irr = dev.r(211) / 10;
 			cal_Irr.push(Irr);
 			
 			var Trr = dev.r(212) / 10;
@@ -262,6 +267,187 @@ function CAL_CollectQrr(IterationsCount)
 	return 1;
 }
 //--------------------
+
+function QRR_TestPSVoltage()
+{
+	cdvdt_scatter = [];
+	for (var i = 1; i <= 4; i++)
+	{
+		TEK_ChannelOff(i);
+	}
+	TEK_ChannelOn(cal_chMeasureI);
+	//---------------
+	TEK_Send("measurement:meas" + cal_chMeasureI + ":source ch" + cal_chMeasureI);
+	TEK_Send("measurement:meas" + cal_chMeasureI + ":type pk2pk");
+	TEK_Send("measurement:meas1:source ch" + cal_chMeasureI);
+	TEK_Send("measurement:meas1:type pk2pk");	
+	TEK_Send("measurement:meas2:source ch" + cal_chMeasureI);
+	TEK_Send("measurement:meas2:type fall");
+	//--------------
+	TEK_Horizontal("1e-6", "0");
+		
+	cal_CntTotalRate = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex + 1);
+	cal_CntTotalSet = (CurrentSetFinishTestIndex - CurrentSetStartTestIndex + 1);
+	cal_CntTotal = cal_CntTotalRate * cal_CntTotalSet;
+	cal_CntDone = 1;
+	
+	for (var i = CurrentSetStartTestIndex; i <= CurrentSetFinishTestIndex; i++)
+	{	
+		TEK_ChannelInit(cal_chMeasureI, "1", ((SetCurrentTest[i] * cal_Rshunt * 1e-6) * 2) / 6);
+		TEK_Send("ch" + cal_chMeasureI + ":position 0");
+		
+		TEK_TriggerInit(cal_chMeasureI, (SetCurrentTest[i] * cal_Rshunt * 1e-6) / 2);
+		TEK_Send("trigger:main:edge:slope fall");
+		
+		for (var j = CurrentRateStartTestIndex; j <= CurrentRateFinishTestIndex; j++)
+		{
+			CAL_QRRHorizontalScale(SetCurrentTest[i], CurrentRateTest[j]);
+			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+			sleep(3000);
+			
+			QRR_Start(0, SetCurrentTest[i], CurrentRateTest[j], 100, 10);
+		
+			print("Set current, A : " + SetCurrentTest[i]);
+			print("Set current rate, A/us : " + CurrentRateTest[j]);
+			print("INT_PS_VOLTAGE DCU, V : " + QSU_ReadReg(160,201) / 10);
+			print("INT_PS_VOLTAGE RCU, V : " + QSU_ReadReg(170,201) / 10);
+			
+			//CAL_QRRdidt(SetCurrentTest[i], CurrentRateTest[j]);
+			
+			CAL_MeasureIrate(CurrentRateTest[j], SetCurrentTest[i]);
+			
+			if (anykey()) return 0;
+			sleep(500);
+		}
+	}
+	save("data/didt_404.csv", cdidt_scatter);	
+}
+
+function CAL_QRRHorizontalScale(Current,CurrentRate)
+{
+	TEK_Horizontal(CAL_QRRTimeScale(Current,CurrentRate), (Current / 2) / CurrentRate * 1e-6);
+}
+
+function CAL_QRRTimeScale(Current,CurrentRate)
+{
+	OSC_K = 2;
+	OSC_TimeScale = ((Current * 2 / CurrentRate) / 10) * 1e-6;
+	return OSC_TimeScale * OSC_K
+}
+
+function CAL_MeasureIrate(RateSet, CurrentSet)
+{
+	var RateScope = (TEK_Measure(cal_chMeasureI) * 0.8 / cal_Rshunt * 1e6 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(3);	
+	var RateErr = ((RateScope - RateSet) / RateSet * 100).toFixed(3);
+	
+	var CurrentScope = ((TEK_Measure(cal_chMeasureI) / 2) / (cal_Rshunt * 1e-6)).toFixed(3);
+	var CurrentErr = ((CurrentScope - CurrentSet) / CurrentSet * 100).toFixed(3);
+	
+	cdidt_scatter.push(RateSet + ";" + RateScope + ";" + RateErr + ";" + CurrentSet + ";" + CurrentScope + ";" + CurrentErr);
+	
+	print("current osc, A = " + CurrentScope);	
+	print("current error, % = " + CurrentErr);
+	
+	print("didt osc, A/us = " + RateScope);	
+	print("didt error, % = " + RateErr);	
+}
+
+function CAL_QRRdidt(Current,CurrentRate)
+{
+	var ctou_tgd_u = 0;
+	var ctou_tgd_u90 = 0;
+	var ctou_tgd_u10 = 0;
+	var ctou_tgd_u_err = 0;
+	var ctou_tgd_u_preverr = 0;	
+
+	var ctou_tgd_integral = 0;
+	var ctou_tgd_derivative = 0;
+
+	var ctou_tgd_kp = 1e-4;
+	var ctou_tgd_ki = 9e-4;
+	var ctou_tgd_kd = 1e-4;
+	
+	var cursor_place = -1.4 * (Current / 2) / CurrentRate * 1e-6;
+	TEK_Send("cursor:vbars:position1 " + cursor_place);
+	TEK_Send("cursor:vbars:position2 " + cursor_place);
+	
+	ctou_tgd_u = Current * cal_Rshunt * 1e-6;
+	ctou_tgd_u90 = (Current * cal_Rshunt * 1e-6) * 0.9;
+	ctou_tgd_u10 = -(Current * cal_Rshunt * 1e-6) * 0.9;
+	
+	ctou_tgd_u.toFixed(1);
+	ctou_tgd_u90.toFixed(1);
+	ctou_tgd_u10.toFixed(1);
+	
+	while(ctou_tgd_u > ctou_tgd_u90)
+	{
+		// ПИД регулятор
+		ctou_tgd_u_err = ctou_tgd_u - ctou_tgd_u90;
+
+		ctou_tgd_integral = ctou_tgd_integral + ctou_tgd_u_err * ctou_tgd_ki;
+
+		ctou_tgd_derivative = ctou_tgd_u_err - ctou_tgd_u_preverr;
+
+		ctou_tgd_u_preverr = ctou_tgd_u_err;
+
+		cursor_place_fixed = (ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd) / CurrentRate;
+		//-----------------
+
+		//Если cursor_place_fixed будет выдавать значения менее 10нс, то принудительно сделать шаг 10нс. Иначе при очень маленькой ошибке курсор замирает на долгое время
+		if(cursor_place_fixed < 1e-8)
+			cursor_place_fixed = 1e-8;
+
+		// Корректировка, отправка нового положения курсора и измерение напряжения в этой точке
+		cursor_place = cursor_place_fixed + cursor_place;
+		// p("cursor_place " + cursor_place * 1e6);
+		TEK_Send("cursor:vbars:position1 " + cursor_place);
+		ctou_tgd_u = parseFloat(TEK_Exec("cursor:vbars:hpos1?"));
+		ctou_tgd_u.toFixed(1);
+
+		if (anykey()) return 0;
+	}
+	
+	cursor_place = Current / CurrentRate * 1e-6;
+	TEK_Send("cursor:vbars:position2 " + cursor_place);
+	while(ctou_tgd_u > ctou_tgd_u10)
+	{
+		// ПИД регулятор
+		ctou_tgd_u_err = ctou_tgd_u - ctou_tgd_u10;
+
+		ctou_tgd_integral = ctou_tgd_integral + ctou_tgd_u_err * ctou_tgd_ki;
+
+		ctou_tgd_derivative = ctou_tgd_u_err - ctou_tgd_u_preverr;
+
+		ctou_tgd_u_preverr = ctou_tgd_u_err;
+
+		cursor_place_fixed = (ctou_tgd_u_err * ctou_tgd_kp + ctou_tgd_integral * ctou_tgd_ki + ctou_tgd_derivative * ctou_tgd_kd) / CurrentRate;
+		//-----------------
+
+		//Если cursor_place_fixed будет выдавать значения менее 10нс, то принудительно сделать шаг 10нс. Иначе при очень маленькой ошибке курсор замирает на долгое время
+		if(cursor_place_fixed < 1e-8)
+			cursor_place_fixed = 1e-8;
+
+		// Корректировка, отправка нового положения курсора и измерение напряжения в этой точке
+		cursor_place = cursor_place_fixed + cursor_place;
+		//p("cursor_place " + cursor_place * 1e6);
+		TEK_Send("cursor:vbars:position2 " + cursor_place);
+		ctou_tgd_u = parseFloat(TEK_Exec("cursor:vbars:hpos2?"));
+		ctou_tgd_u.toFixed(1);
+
+		if (anykey()) return 0;
+	}
+
+	var U1 = TEK_Exec("cursor:vbars:hpos1?");
+	var U2 = TEK_Exec("cursor:vbars:hpos2?");
+	var dT = TEK_Exec("cursor:vbars:delta?");
+	
+	var didt = ((U1 - U2) / dT) * 1e-3;	
+	
+	print("didt osc = " + didt.toFixed(2));
+	
+	print("didt relative error, % = " + ((didt - CurrentRate) / CurrentRate * 100).toFixed(2));
+	
+}
 
 function CAL_MeasureQrr(Channel)
 {
@@ -397,7 +583,7 @@ function CAL_TekInitQrr()
 {
 	TEK_Horizontal("1e-6", "0");
 	
-	TEK_ChannelInvInit(cal_chMeasureI, "1", "0.1");
+	TEK_ChannelInit(cal_chMeasureI, "1", "0.1");
 	TEK_Send("ch" + cal_chMeasureI + ":position 3");
 	
 	TEK_ChannelInit(cal_chMeasureU, "100", "20");

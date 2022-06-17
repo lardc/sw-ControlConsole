@@ -1,6 +1,7 @@
 // Пояснения
 CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU)
 QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
+// 1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100 A/us
 
 Mode:
 #define MODE_QRR_ONLY	0
@@ -62,9 +63,14 @@ QRR_PlotDiag()
 // Диапазон QRR
 include("CalQRRHP.js");
 cal_Rshunt = 999;
-DirectCurrentTest = 100;
+DirectCurrentTest = 500;
 cal_Iterations = 1;
 QrrGOST = 0;
-CAL_Init(7,2,1,2);
+CAL_Init(13,14,1,3);
 
 CAL_VerifyQrr();
+
+// Диапазон di/dt QRR
+include("CalQRRHP.js");
+CAL_Init(13,14,1,3);
+QRR_TestPSVoltage()
