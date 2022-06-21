@@ -1,5 +1,6 @@
 include("CalGeneral.js")
 include("TestCS.js")
+include("PrintStatus.js")
 
 // Results storage
 ccs_inp = [];
@@ -101,6 +102,7 @@ function CCS_ClampVerify()
 		}
 		
 		// Plot relative error distribution
+
 		scattern(ccs_scope, ccs_measure_err, "Force scope (in N)", "Error (in %)", "Force measure relative error");
 		scattern(ccs_inp, ccs_setpoint_err, "Force input (in N)", "Error (in %)", "Force setpoint relative error");
 	}
@@ -138,6 +140,7 @@ function CCS_ClampCollect()
 		}
 		
 		sleep(2000);
+		pl(dev.rafs(1));
 		force_unit = dev.r(110) * 100;
 		
 		print("Enter force value from scope (in kg):");
