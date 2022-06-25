@@ -100,7 +100,7 @@ function CBVT_CalibrateV()
 		CBVT_SaveV("bvt_v");
 		
 		// Plot relative error distribution
-		scattern(cbvt_v_sc, cbvt_v_err, "Voltage (in V)", "Error (in %)", "Voltage relative error");
+		scattern(cbvt_v_sc, cbvt_v_err, "Voltage (in V)", "Error (in %)", "Udrm/Urrm relative error " + cbvt_Vmin + "..." + cbvt_Vmax + " V");
 		
 		if (CGEN_UseQuadraticCorrection())
 		{
@@ -153,7 +153,7 @@ function CBVT_CalibrateIx(FileName)
 		CBVT_SaveI(FileName);
 		
 		// Plot relative error distribution
-		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Current relative error");
+		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + cbvt_i_sc[0] + "..." + cbvt_i_sc[cbvt_VoltageValues-1] + " mA");
 		
 		if (CGEN_UseQuadraticCorrection())
 		{
@@ -187,11 +187,11 @@ function CBVT_VerifyV()
 		CBVT_SaveV("bvt_v_fixed");
 		
 		// Plot relative error distribution
-		scattern(cbvt_v_sc, cbvt_v_err, "Voltage (in V)", "Error (in %)", "Voltage relative error");
+		scattern(cbvt_v_sc, cbvt_v_err, "Voltage (in V)", "Error (in %)", "Udrm/Urrm relative error " + cbvt_Vmin + "..." + cbvt_Vmax + " V");
 		
 		// Plot summary error distribution
 		if(cbvt_EnableSumError)
-			scattern(cbvt_v_sc, cbvt_v_err_sum, "Voltage (in V)", "Error (in %)", "Voltage summary error");
+			scattern(cbvt_v_sc, cbvt_v_err_sum, "Voltage (in V)", "Error (in %)", "Udrm/Urrm summary error " + cbvt_Vmin + "..." + cbvt_Vmax + " V");
 	}
 }
 
@@ -228,11 +228,11 @@ function CBVT_VerifyIx(FileName)
 		CBVT_SaveI(FileName);
 		
 		// Plot relative error distribution
-		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Current relative error");
+		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + cbvt_i_sc[0] + "..." + cbvt_i_sc[cbvt_VoltageValues-1] + " mA");
 
 		// Plot relative error distribution
 		if(cbvt_EnableSumError)
-			scattern(cbvt_i_sc, cbvt_i_err_sum, "Current (in mA)", "Error (in %)", "Current summary error");
+			scattern(cbvt_i_sc, cbvt_i_err_sum, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + cbvt_i_sc[0] + "..." + cbvt_i_sc[cbvt_VoltageValues-1] + " mA");
 	}
 }
 

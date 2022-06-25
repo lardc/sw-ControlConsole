@@ -1,6 +1,7 @@
 include("TestDRCU.js")
 include("Tektronix.js")
 include("CalGeneral.js")
+include("TestQRR.js")
 
 // Calibration setup parameters
 cal_Rshunt = 1000;	// uOhm
@@ -13,11 +14,16 @@ cal_IdStp = 0;
 cal_IntPsVmin = 90;	// V
 cal_IntPsVmax = 125;
 
-CurrentRateTest = 0.5; // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
+CurrentRateTest = [0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50]; // A/us
 
-cal_Iterations = 3;
+cal_Iterations = 1;
 cal_UseAvg = 1;
 cal_UseCursors = 1;
+cal_UseQRR = 1;
+cal_QRRCanPort = 9;
+cal_QRRCanNID = 10;
+DRCU_Active = 01; // RCU/DCU active (calibrated)
+DRCU_Present = 10; // RCU/DCU present (need to be charged), only non-active
 //		
 
 // Counters
@@ -45,9 +51,16 @@ cal_IrateErr = [];
 cal_IdsetCorr = [];
 cal_IrateCorr = [];
 
+// Data arrays
+crcu_scatter = [];
 
 function CAL_Init(portDevice, portTek, channelMeasureId)
 {
+	if (cal_UseQRR == 1)
+	{
+		QRR_CANCal(cal_QRRCanPort,cal_QRRCanNID,DRCU_Active, DRCU_Present);
+		dev.Disconnect();
+	}
 	if (channelMeasureId < 1 || channelMeasureId > 4)
 	{
 		print("Wrong channel numbers");
@@ -72,7 +85,7 @@ function CAL_Init(portDevice, portTek, channelMeasureId)
 		else
 			TEK_ChannelOff(i);
 	}
-	cal_IdStp = (cal_IdMax - cal_IdMin) / cal_Points;
+	cal_IdStp = (cal_IdMax - cal_IdMin ? cal_IdMax - cal_IdMin : 1) / cal_Points;	
 }
 //--------------------
 
@@ -153,15 +166,7 @@ function CAL_VerifyIrate()
 
 	// Reload values
 	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
-
-	if (CAL_CollectIrate(CurrentArray, cal_Iterations))
-	{
-		CAL_SaveVintPS("RCU_Irate_fixed");
-
-		// Plot relative error distribution
-		scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "Current rate relative error " + CurrentRateTest + "A/us");
-		scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "Current set relative error " + cal_IdMin + " A..." + cal_IdMax + " A (" + CurrentRateTest + "A/us)");
-	}
+	CAL_CollectIrate(CurrentArray, cal_Iterations);
 }
 //--------------------
 
@@ -224,7 +229,7 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 
 function CAL_CollectIrate(CurrentValues, IterationsCount)
 {
-	cal_CntTotal = IterationsCount * CurrentValues.length;
+	cal_CntTotal = IterationsCount * CurrentValues.length * CurrentRateTest.length;
 	cal_CntDone = 1;
 
 	var AvgNum;
@@ -241,55 +246,61 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 	
 	for (var i = 0; i < IterationsCount; i++)
 	{
-		for (var j = 0; j < CurrentValues.length; j++)
-		{
-			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-			//
+		for (var k = 0; k < CurrentRateTest.length; k++)
+		{	
+			cal_IdSc = [];
+			cal_IdsetErr = [];
+			cal_IrateErr = [];	
 			
-			RCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
-			CAL_TekSetHorizontalScale(CurrentValues[j]);
-			sleep(1000);
-			
-			for (var k = 0; k < AvgNum; k++)
+			for (var j = 0; j < CurrentValues.length; j++)
 			{
-				if(!DRCU_Pulse(CurrentValues[j], CurrentRateTest * 100))
-					return 0;
+				print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+				//
+				
+				RCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
+				TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRateTest[k]) * 1e-6) * 0.25);
+				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRateTest[k]) * 1e-6) * 0.1);
+
+				sleep(1000);
+				
+				for (var m = 0; m < AvgNum; m++)
+				{
+					if(!DRCU_Pulse(CurrentValues[j], CurrentRateTest[k] * 100))
+						return 0;
+				}
+				CAL_MeasureIrate(CurrentRateTest[k],CurrentValues[j]);
+				if (anykey()) return 0;
 			}
-
-			// Unit data			
-			var IdSet = dev.r(128);
-			cal_Idset.push(IdSet);
-			print("Idset, A: " + IdSet);
-
-			// Scope data
-			var IdSc = (CAL_MeasureId(cal_chMeasureId) / cal_Rshunt * 1000000).toFixed(2);
-			cal_IdSc.push(IdSc);
-			print("Idtek, A: " + IdSc);
-
-			// Relative error			
-			var IdsetErr = ((IdSc - IdSet) / IdSc * 100).toFixed(2);
-			cal_IdsetErr.push(IdsetErr);
-			print("Idseterr, %: " + IdsetErr);
-			print("--------------------");
-			
-			print("Irateset, A/us: " + CurrentRateTest);
-
-			// Unit data
-			var IrateSc = CAL_MeasureIrate();
-			cal_IrateSc.push(IrateSc);
-			print("Irate tek, A/us: " + IrateSc);
-
-			// Relative error
-			var IrateErr = ((IrateSc - CurrentRateTest) / CurrentRateTest * 100).toFixed(2);
-			cal_IrateErr.push(IrateErr);
-			print("Irate err, %: " + IrateErr);
-			print("--------------------");
-			
-			if (anykey()) return 0;
+			scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "RCU Current rate relative error " + CurrentRateTest[k] + " A/us");
+			scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "RCU Set current relative error " + CurrentRateTest[k] + " A/us");
 		}
 	}
-
+	save("data/rcu_404.csv", crcu_scatter);
 	return 1;
+}
+//--------------------
+
+function CAL_MeasureIrate(RateSet, CurrentSet)
+{
+	var RateScope = (TEK_Measure(cal_chMeasureId) * 0.8 / cal_Rshunt * 1e6 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(3);	
+	var RateErr = ((RateScope - RateSet) / RateSet * 100).toFixed(3);
+	
+	var CurrentScope = (TEK_Measure(cal_chMeasureId) / (cal_Rshunt * 1e-6)).toFixed(3);
+	var CurrentErr = ((CurrentScope - CurrentSet) / CurrentSet * 100).toFixed(3);
+	
+	crcu_scatter.push(RateSet + ";" + RateScope + ";" + RateErr + ";" + CurrentSet + ";" + CurrentScope + ";" + CurrentErr);
+	
+	cal_IdSc.push(CurrentScope);
+	cal_IdsetErr.push(CurrentErr);
+	cal_IrateErr.push(RateErr);
+
+	print("Current Set, A = " + CurrentSet);	
+	print("Current Osc, A = " + CurrentScope);	
+	print("Current Err, % = " + CurrentErr);
+	
+	print("di/dt Set, A/us = " + RateSet);	
+	print("di/dt Osc, A/us = " + RateScope);	
+	print("di/dt Err, % = " + RateErr);	
 }
 //--------------------
 
@@ -368,7 +379,7 @@ function RCU_TekScaleId(Channel, Value)
 {
 	Value = Value / 7;
 	TEK_Send("ch" + Channel + ":scale " + Value);	
-	RCU_TriggerInit(cal_chMeasureId, Value * 2.85);
+	TEK_TriggerInit(cal_chMeasureId, Value * 3.5);
 	TEK_Send("trigger:main:edge:slope rise");
 }
 //--------------------
@@ -402,8 +413,6 @@ function CAL_TekInitId()
 		TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
 		TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
 	}
-	
-	//CAL_TekSetHorizontalScale();
 }
 //--------------------
 
@@ -411,6 +420,7 @@ function CAL_TekInitIrate()
 {
 	TEK_ChannelInit(cal_chMeasureId, "1", "0.02");
 	TEK_TriggerInit(cal_chMeasureId, "0.06");
+	TEK_Send("ch" + cal_chMeasureId + ":position -4");
 	TEK_Send("trigger:main:edge:slope rise");
 	TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
 	TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
@@ -418,16 +428,6 @@ function CAL_TekInitIrate()
 	TEK_Send("measurement:meas1:type maximum");
 	TEK_Send("measurement:meas2:source ch" + cal_chMeasureId);
 	TEK_Send("measurement:meas2:type rise");
-	
-	//CAL_TekSetHorizontalScale();
-}
-//--------------------
-
-function CAL_TekSetHorizontalScale(Current)
-{
-	OSC_K = 2.3;
-	OSC_TimeScale = ((Current / CurrentRateTest) / 10) * 1e-6;
-	TEK_Horizontal(OSC_TimeScale * OSC_K, "0");
 }
 //--------------------
 
@@ -437,12 +437,6 @@ function CAL_MeasureId(Channel)
 		return TEK_Exec("cursor:vbars:hpos2?");
 	else
 		return TEK_Measure(Channel);
-}
-//--------------------
-
-function CAL_MeasureIrate()
-{
-	return ((TEK_Measure(1) * 0.8 / cal_Rshunt * 1e6 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(3));
 }
 //--------------------
 
@@ -464,6 +458,9 @@ function CAL_ResetA()
 	// Correction
 	cal_IdsetCorr = [];
 	cal_IrateCorr = [];
+	
+	// Data arrays
+	crcu_scatter = [];
 }
 //--------------------
 

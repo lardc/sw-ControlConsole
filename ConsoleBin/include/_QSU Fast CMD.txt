@@ -1,0 +1,76 @@
+// Пояснения
+CAL_Init(portDevice, portTek, channelMeasureI, channelMeasureU)
+QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
+// 1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100 A/us
+
+Mode:
+#define MODE_QRR_ONLY	0
+#define MODE_QRR_TQ		1
+#define MODE_DVDT_ONLY	2
+
+IDC: Current set, in A (for DCU & RCU)
+IDCFallRate: Current rate, in A/us (for DCU & RCU)
+
+OSV: Voltage set, in V (for CROVU)
+OSVRate: Voltage rate, in V/us (for CROVU)
+
+// Nid
+QSU (CAN EXT) - 10
+RCU1 - 170
+DCU1 - 160
+
+// Посмотреть версию прошивки
+i("PrintStatus.js");
+PrintFWInfo();
+
+// Обновление прошивки
+include("FWUpdate.js");
+FWU_QSU()
+
+// Скачать дамп регистров
+i("FWUpdate.js");
+FWU_DumpQSU();
+
+// Загрузить дамп регистров
+i("FWUpdate.js");
+FWU_RestoreQSU();
+
+// Подготовка блока
+dev.co(7);
+dev.nid(10);
+i("TestQRRHP.js");
+dev.c(1);
+
+// Формирование сигнала и измерение
+dev.nid(10)
+dev.c(1)
+
+i("TestQRRHP.js");
+qrr_idc_width = 2000;		// in us
+qrr_single = 1;
+qrr_print = 1;
+
+QRR_Start(0, 100, 1, 100, 10)
+
+// Считывание данных
+i("TestQRRHP.js");
+QSU_Status()
+QSU_SamplerResult()
+QRR_Status()
+QRR_Result()
+QRR_PlotDiag()
+
+// Диапазон QRR
+include("CalQRRHP.js");
+cal_Rshunt = 999;
+DirectCurrentTest = 500;
+cal_Iterations = 1;
+QrrGOST = 0;
+CAL_Init(13,14,1,3);
+
+CAL_VerifyQrr();
+
+// Диапазон di/dt QRR
+include("CalQRRHP.js");
+CAL_Init(13,14,1,3);
+QRR_TestPSVoltage()

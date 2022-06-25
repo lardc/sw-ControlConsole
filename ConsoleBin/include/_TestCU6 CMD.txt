@@ -1,0 +1,10 @@
+
+i("TestCU6.js")
+
+CU6_NONE() 				// Выключить коммутацию
+CU6_GETE (TYPES,POS,CASES)		// Коммутация для GTU
+CU6_SL (TYPES,POS,CASES)		// Коммутация для SL
+CU6_BV_D (TYPES,POS,CASES)		// Коммутация для BVT прямой
+CU6_BV_R (TYPES,POS,CASES)		// Коммутация для BVT обратный
+CU6_NO_PE ()				// Выключить заземление
+CU6_GETE_SL (TYPES,POS,CASES)		// Коммутация для IH по ГОСТу

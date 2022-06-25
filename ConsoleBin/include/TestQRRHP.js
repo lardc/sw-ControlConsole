@@ -79,6 +79,23 @@ function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
 	}
 }
 
+function QRR_Resaurce()
+{
+	CurrentRateTest = [1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100];
+	while(1)
+	{
+		for (var i = 0; i < CurrentRateTest.length; i++)
+		{
+			sleep(2000);
+			QRR_Start(0, 500, CurrentRateTest[i], 100, 10);
+			sleep(2000);
+			if (anykey()) return 0;		
+		}
+	}
+	
+	
+}	
+
 function QRR_Status()
 {
 	print("[QSU]")
@@ -185,7 +202,7 @@ function QRR_Result()
 	print("Result " + ((op_result == 0) ? "NONE" : (op_result == 1) ? "OK" : "FAILED"));
 	print("Qrr (GOST), uC: " + (dev.r(210) / 10));
 	print("Qrr,        uC: " + (dev.r(216) / 10));
-	print("Irr,         A: " + dev.r(211));
+	print("Irr,         A: -" + (dev.r(211) / 10));
 	print("trr,        us: " + (dev.r(212) / 10));
 	print("tq,         us: " + (dev.r(213) / 10));
 	print("Idc,         A: " + dev.r(214));

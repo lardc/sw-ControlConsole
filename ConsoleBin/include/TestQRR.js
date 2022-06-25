@@ -388,3 +388,72 @@ function QPU_Plot()
 	sleep(1000);
 	plot(dev.rafs(4), 30, 0);
 }
+
+
+function QRR_CANCal(Port,NID,DRCU_Active, DRCU_Present)
+{
+dev.Connect(Port);
+dev.nid(NID);
+if(dev.r(192) == 1) {
+	QRR_Status();
+	p("Warning! Fault detected! Reset? Y/N");
+	QRR_key = readkey();
+	switch (QRR_key){
+	case ('Y'):
+	dev.c(3);
+	case ('N'):
+	break;
+	default:
+	p('Invalid input. Fault NOT reset.');
+	break;
+	}
+}
+	
+	
+QRRCount=8;
+for (QRRCount=8; QRRCount>=0 ; QRRCount--){//Emulate Everything except CSU
+	dev.w(QRRCount, 1);
+}
+DRCU_Present
+switch (DRCU_Present) {// RCU/DCU number connected and needed to be powered
+case 10:
+dev.w(2,1);  
+dev.w(5,0); //Activate RCU1
+p('DCU1 emulated (not charging)');
+break;
+case 01:
+dev.w(2,0); //Activate DCU1
+dev.w(5,1);  
+p('RCU1 emulated (not charging)');
+break;
+default:
+p('Invalid DRCU config, ignoring power-up override');
+}
+dev.c(1);
+sleep(5000);
+while((dev.r(241) < 988)) {
+sleep(1000);
+p(dev.r(241) + "V, charging" );
+}
+p("CSU Voltage OK");
+switch (DRCU_Active) {// RCU/DCU number to be active
+case 10:
+dev.w(2,1); //Emulate DCU1 
+dev.w(5,0); 
+p('DCU1 emulated');
+break;
+case 01:
+dev.w(2,0);
+dev.w(5,1); //Emulate RCU1 
+p('RCU1 emulated');
+break;
+default:
+p('Invalid DRCU config, ignoring emulation override');
+}
+dev.c(2);
+sleep(200);
+dev.w(170,1);
+dev.c(31); // Generate control pulse for QCUHC
+sleep(200);
+}
+

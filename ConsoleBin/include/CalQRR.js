@@ -12,7 +12,33 @@ var Verify = 0;
 var Osc = TEK;
 //
 
+CurrentRateTest = 0.5; // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
+cal_Iterations = 1;
+cal_UseAvg = 1;
 
+// Counters
+//cal_CntTotal = 0;
+//cal_CntDone = 0;
+
+// Channels
+cal_chMeasureId = 1;
+cal_chSync = 3;
+
+// Results storage
+cal_Id = [];
+cal_Idset = [];
+cal_Irate = [];
+cal_VintPS = [];
+
+// Tektronix data
+cal_IdSc = [];
+cal_IdSc = [];
+cal_Irate = [];
+
+// Relative error
+cal_IdErr = [];
+cal_IdsetErr = [];
+cal_Irate = [];
 
 //----------------------------------------------------------------------------------
 function QPU_Cal_Idc_Verify(LSL_Port, TekPort)
@@ -150,6 +176,142 @@ function QPU_Cal_Idc(QPU_Port,TekPort)
 //----------------------------------------------------------------------------------
 
 
+function CAL_QRR_VerifyIrate()
+{		
+	CAL_ResetA();
+	
+	// Tektronix init
+	QRR_CAL_TekInitIrate();
+
+	// Reload values
+	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
+
+	if (CAL_CollectIrate(CurrentArray, cal_Iterations))
+	{
+		CAL_SaveVintPS("QRR_Irate_fixed");
+
+		// Plot relative error distribution
+		scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "Current rate relative error " + CurrentRateTest + "A/us");
+	}
+}
+
+//----------------------------------------------------------------------------------
+
+function CAL_ResetA()
+{	
+	// Results storage
+	cal_Id = [];
+	cal_Idset = [];
+	cal_Irateset = [];
+	cal_VintPS = [];
+
+	// Tektronix data
+	cal_IdSc = [];
+	cal_IdSc = [];
+	cal_IrateSc = [];
+
+	// Relative error
+	cal_IdErr = [];
+	cal_IdsetErr = [];
+	cal_IrateErr = [];
+
+	// Correction
+	cal_IdCorr = [];
+	cal_IdsetCorr = [];
+	cal_IrateCorr = [];
+}
+
+//----------------------------------------------------------------------------------
+
+function QRR_CAL_CollectIrate(CurrentValues, IterationsCount)
+{
+	cal_CntTotal = IterationsCount * CurrentValues.length;
+	cal_CntDone = 1;
+
+	var AvgNum;
+	if (cal_UseAvg)
+	{
+		AvgNum = 4;
+		TEK_AcquireAvg(AvgNum);
+	}
+	else
+	{
+		AvgNum = 1;
+		TEK_AcquireSample();
+	}
+	
+	for (var i = 0; i < IterationsCount; i++)
+	{
+		for (var j = 0; j < CurrentValues.length; j++)
+		{
+			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+			//
+			
+			DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
+			TEK_Send("horizontal:scale "  + ((CurrentValues[j]/CurrentRateTest)/1000000)*0.25);
+			//p((((CurrentValues[j]/CurrentRateTest)/1000000)));
+
+			TEK_Send("horizontal:main:position "+ (((CurrentValues[j]/CurrentRateTest)/1000000)*0.1));
+			sleep(1000);
+			
+			for (var k = 0; k < AvgNum; k++)
+			{
+				if(!DRCU_Pulse(CurrentValues[j], CurrentRateTest * 100))
+					return 0;
+			}
+
+			// Scope data
+			var IdSc = (CAL_MeasureId(cal_chMeasureId) / cal_Rshunt * 1000).toFixed(2);
+			cal_IdSc.push(IdSc);
+			print("Idtek, A: " + IdSc);
+			
+			var IrateSc = CAL_MeasureIrate();
+			cal_IrateSc.push(IrateSc);
+			print("Irate tek, A/us: " + IrateSc);
+
+			// Relative error
+			var IrateErr = ((IrateSc - CurrentRateTest) / CurrentRateTest * 100).toFixed(2);
+			cal_IrateErr.push(IrateErr);
+			print("Irate err, %: " + IrateErr);
+			print("--------------------");
+			
+			if (anykey()) return 0;
+		}
+	}
+
+	return 1;
+}
+
+//----------------------------------------------------------------------------------
+
+function QRR_CAL_MeasureId(Channel)
+{
+	return (TEK_Exec("measurement:meas1:value?") * 1000).toFixed(1);
+}
+//--------------------
+
+function QRR_CAL_MeasureIrate()
+{
+	return ((TEK_Measure(1) * 0.8 / cal_Rshunt * 1e6 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(3));
+}
+
+//----------------------------------------------------------------------------------
+
+function QRR_CAL_TekInitIrate()
+{
+	TEK_ChannelInit(cal_chMeasureId, "1", "0.02");
+	TEK_TriggerInit(cal_chMeasureId, "0.06");
+	TEK_Send("ch" + cal_chMeasureId + ":position -3.52");
+	TEK_Send("trigger:main:edge:slope fall");
+	TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
+	TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
+	TEK_Send("measurement:meas1:source ch" + cal_chMeasureId);
+	TEK_Send("measurement:meas1:type maximum");
+	TEK_Send("measurement:meas2:source ch" + cal_chMeasureId);
+	TEK_Send("measurement:meas2:type fall");
+	TEK_Send("CURSor:HBArs:POSITION 0.1");
+	CAL_TekSetHorizontalScale();
+}
 
 
 //----------------------------------------------------------------------------------

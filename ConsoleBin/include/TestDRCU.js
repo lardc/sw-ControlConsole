@@ -140,3 +140,8 @@ dev.w(150,0);
  dev.c(54);
  sleep (100);
 }
+
+function CAL_DCUTestV(voltage, current, rate){
+	dev.w(130,voltage*10);
+	DRCU_Pulse(current,rate);
+}

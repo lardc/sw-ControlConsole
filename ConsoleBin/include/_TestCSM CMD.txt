@@ -18,12 +18,12 @@ CS_Temp(Sleep, Temp)	  // Проверка нагрева поверхности
 
 //-----------------------------------
 DeviceCase(Код корпуса прибора (71регистр))
-CASE_A2		0	
-CASE_B0		1	
-CASE_C1		2	
-CASE_D		3	
-CASE_E		4	
-CASE_F		5	
+CASE_A2		0	1001
+CASE_B0		1	1006
+CASE_C1		2	1002
+CASE_D		3	1005
+CASE_E		4	1003
+CASE_F		5	1004	
 //-----------------------------------
 DeviceState
 
