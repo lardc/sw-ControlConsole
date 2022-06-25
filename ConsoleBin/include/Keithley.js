@@ -130,8 +130,9 @@ function KEI_InitTrigWaiting()
 function KEI_BufferConfig(N)
 {
 	KEI_Reset();
+	KEI_ZeroCorrect(true);
 	KEI_SetExtTrigger(N);
-	KEI_SetTLinkOutputLine(2);
+	KEI_SetTLinkInputLine(2);
 	KEI_SetOutputTrigType(0);
 	TEK_Send("NPLC 0.01");
 	KEI_SetRange(2e-3);
