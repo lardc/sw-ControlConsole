@@ -8,8 +8,8 @@ HeatingCurrentAbove10mS	= 100;
 GateCurrent 			= 1000;		// Gate current, in mA
 MeasuringCurrent 		= 1000;		// Measuring current, in mA
 MeasurementDelay		= 750;		// Delay before measurement, in us
-DUT_Type				= 0;		// 0 - thyristor, 1 - IGBT;
-Tmax					= 600;
+DUT_Type				= 1;		// 0 - thyristor, 1 - IGBT;
+Tmax					= 850;
 //
 PrintProcess			= 1;
 
@@ -75,12 +75,12 @@ function Zth_InProcess()
 		sleep(1000);
 		p("Im,    mA: " + dev.r(206) / 10);
 		p("Ih,     A: " + dev.r(201) / 10);
-		p("P,      W: " + (dev.r(202) + dev.r(203) / 10));
-		p("Ps,     W: " + (dev.r(204) + dev.r(205) / 10));
+		p("P,      W: " + (dev.r(202) / 10));
+		p("Ps,     W: " + (dev.r(204) / 10));
 		p("Tcase1, C: " + dev.r(207) / 10);
 		p("Tcool1, C: " + dev.r(209) / 10);
-		p("Udut,   V: " + dev.r(200) / 1000);
-		p("TSP,    V: " + dev.r(211) / 1000);
+		p("Udut,   V: " + dev.r(200) / 10000);
+		p("TSP,    V: " + dev.r(211) / 10000);
 		p("-------------------");
 		
 		if(anykey())
