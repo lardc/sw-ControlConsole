@@ -74,26 +74,44 @@ function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
 		if (dev.r(205) != 0)
 			print("DC retries number: " + dev.r(205));
 		
-		if (dev.r(198) != 1)
+		if (dev.r(198) != 1){
 			print("Operation result: " + dev.r(198));
+			QRR_Status();
+		}
 	}
 }
 
-function QRR_Resaurce()
+function QRR_Resource()
 {
-	CurrentRateTest = [1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100];
-	while(1)
+	CurrentRateTest = [1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60];
+	
+	var qrr_resource_test = 8;
+	var i, k = 0;
+	var today = new Date();								// Узнаем и сохраняем текущее время
+	var hours = today.getHours() + qrr_resource_test;	// Узнаем кол-во часов в текущем времени и прибавляем к нему продолжительность ресурсного теста
+	today.setHours(hours);								// Задаем новое количество часов в дату
+
+	while((new Date()).getTime() < today.getTime() || (!anykey()))		// Сравниваем текущее время на компьютере в мс, с конечным временем в мс
 	{
 		for (var i = 0; i < CurrentRateTest.length; i++)
 		{
 			sleep(2000);
+			if (dev.r(201) == 1) break;
 			QRR_Start(0, 500, CurrentRateTest[i], 100, 10);
-			sleep(2000);
-			if (anykey()) return 0;		
+			sleep(3000);
+			var left_time = new Date((today.getTime()) - ((new Date()).getTime()));
+			print("#" + k + "скорость" + CurrentRateTest[i] + " Осталось " + (left_time.getHours()-3) + " ч " + left_time.getMinutes() + " мин");
+			k++;
+			if (dev.r(201) == 1) break;
+			//if (anykey()) break;
 		}
-	}
-	
-	
+
+		
+		if(dev.r(201) == 1) {
+			p("QRR FAULT");
+			break;
+		}
+	}	
 }	
 
 function QRR_Status()

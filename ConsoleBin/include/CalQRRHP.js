@@ -9,7 +9,7 @@ DirectVoltageTest = 1500; // in V
 DirectVoltageRateTest = 1000; // in V/us
 //
 SetCurrentTest = [100, 200, 300, 400, 500]; // in A
-CurrentRateTest = [1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100]; // in A/us
+CurrentRateTest = [1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60]; // in A/us
 IrrMeasured = [35, 47, 60, 110, 180, 225, 265, 330, 425, 460, 530]; // in A
 CurrentRateStartTestIndex = 0;
 CurrentRateFinishTestIndex = 10;
@@ -130,12 +130,12 @@ function CAL_VerifyQrr()
 
 function CAL_CollectTq(IterationsCount)
 {
-	cal_CntTotal = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex + 1) * IterationsCount;
+	cal_CntTotal = CurrentRateTest.length * IterationsCount;
 	cal_CntDone = 1;
 	
 	for (var i = 0; i < IterationsCount; i++)
 	{
-		for (var j = CurrentRateStartTestIndex; j <= CurrentRateFinishTestIndex; j++)
+		for (var j = 0; j < CurrentRateTest.length; j++)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
@@ -187,12 +187,12 @@ function CAL_CollectTq(IterationsCount)
 
 function CAL_CollectQrr(IterationsCount)
 {
-	cal_CntTotal = (CurrentRateFinishTestIndex - CurrentRateStartTestIndex + 1) * IterationsCount;
+	cal_CntTotal = CurrentRateTest.length * IterationsCount;
 	cal_CntDone = 1;
 	
 	for (var i = 0; i < IterationsCount; i++)
 	{
-		for (var j = CurrentRateStartTestIndex; j <= CurrentRateFinishTestIndex; j++)
+		for (var j = 0; j < CurrentRateTest.length; j++)
 		{
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//

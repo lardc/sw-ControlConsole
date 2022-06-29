@@ -145,3 +145,13 @@ function CAL_DCUTestV(voltage, current, rate){
 	dev.w(130,voltage*10);
 	DRCU_Pulse(current,rate);
 }
+
+function DRCU_CurrentTest(){
+plot(dev.rafs(1), 1, 0);
+ while (dev.r(202) > 7000) {
+ DRCU_Pulse(500, 2000); 
+ sleep (3000); 
+ if (anykey()) break
+ }
+ plot(dev.rafs(1), 1, 0);
+}

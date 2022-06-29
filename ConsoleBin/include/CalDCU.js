@@ -9,11 +9,12 @@ cal_Points = 10;
 //
 cal_IdMin = 100;	
 cal_IdMax = 500;
+cal_IdStp = 0;
 
 cal_IntPsVmin = 80;	// V
 cal_IntPsVmax = 120;
 
-CurrentRateTest = [0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50]; // in A/us
+CurrentRateTest = [0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50]; // in A/us 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50
 
 cal_Iterations = 1;
 cal_UseAvg = 1;
@@ -89,7 +90,7 @@ function CAL_Init(portDevice, portTek, channelMeasureId)
 		else
 			TEK_ChannelOff(i);
 	}
-	var cal_IdStp = (cal_IdMax - cal_IdMin ? cal_IdMax - cal_IdMin : 1) / cal_Points;
+	cal_IdStp = (cal_IdMax - cal_IdMin ? cal_IdMax - cal_IdMin : 1) / cal_Points;
 }
 //--------------------
 
@@ -272,24 +273,24 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 			for (var j = 0; j < CurrentValues.length; j++)
 			{
 				print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-				//
-				
+						
 				DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
 				TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRateTest[k]) * 1e-6) * 0.25);
 				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRateTest[k]) * 1e-6) * 0.1);
-				sleep(1000);
-				
+				sleep(800);
 				
 				for (var m = 0; m < AvgNum; m++)
 				{
 					if(!DRCU_Pulse(CurrentValues[j], CurrentRateTest[k] * 100))
 						return 0;
 				}
+				sleep(1000);
+				
 				CAL_MeasureIrate(CurrentRateTest[k], CurrentValues[j]);
 				if (anykey()) return 0;
 			}
 			scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "DCU Current rate relative error " + CurrentRateTest[k] + " A/us");
-			scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "DCU Set current relative error " + CurrentRateTest[k] + " A/us");
+			//scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "DCU Set current relative error " + CurrentRateTest[k] + " A/us");
 		}		
 	}
 	save("data/dcu_404.csv", cdcu_scatter);
@@ -299,11 +300,11 @@ function CAL_CollectIrate(CurrentValues, IterationsCount)
 
 function CAL_MeasureIrate(RateSet, CurrentSet)
 {
-	var RateScope = (TEK_Measure(cal_chMeasureId) * 0.8 / cal_Rshunt * 1e6 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(3);	
-	var RateErr = ((RateScope - RateSet) / RateSet * 100).toFixed(3);
+	var RateScope = (TEK_Measure(cal_chMeasureId) * 0.8 / cal_Rshunt * 1e6 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(2);
+	var RateErr = ((RateScope - RateSet) / RateSet * 100).toFixed(2);
 	
-	var CurrentScope = (TEK_Measure(cal_chMeasureId) / (cal_Rshunt * 1e-6)).toFixed(3);
-	var CurrentErr = ((CurrentScope - CurrentSet) / CurrentSet * 100).toFixed(3);
+	var CurrentScope = (TEK_Measure(cal_chMeasureId) / (cal_Rshunt * 1e-6)).toFixed(2);
+	var CurrentErr = ((CurrentScope - CurrentSet) / CurrentSet * 100).toFixed(2);
 	
 	cdcu_scatter.push(RateSet + ";" + RateScope + ";" + RateErr + ";" + CurrentSet + ";" + CurrentScope + ";" + CurrentErr);
 	

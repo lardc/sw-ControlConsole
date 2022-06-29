@@ -62,7 +62,7 @@ QRR_PlotDiag()
 
 // Диапазон QRR
 include("CalQRRHP.js");
-cal_Rshunt = 999;
+cal_Rshunt = 1001;
 DirectCurrentTest = 500;
 cal_Iterations = 1;
 QrrGOST = 0;
@@ -74,3 +74,5 @@ CAL_VerifyQrr();
 include("CalQRRHP.js");
 CAL_Init(13,14,1,3);
 QRR_TestPSVoltage()
+
+p(QSU_ReadRegS(0, 2)); p(QSU_ReadRegS(0, 3));  p(QSU_ReadRegS(0, 4)); 

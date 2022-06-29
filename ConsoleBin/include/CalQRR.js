@@ -14,7 +14,7 @@ var Osc = TEK;
 
 CurrentRateTest = 0.5; // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
 cal_Iterations = 1;
-cal_UseAvg = 1;
+cal_UseAvg = 0;
 
 // Counters
 //cal_CntTotal = 0;
@@ -173,8 +173,43 @@ function QPU_Cal_Idc(QPU_Port,TekPort)
 		dev.c(200);
 	}
 }
+
 //----------------------------------------------------------------------------------
 
+function QRR_CAL_Init(portDevice, portTek, channelMeasureId)
+{
+	/*if (cal_UseQRR == 1)
+	{
+		QRR_CANCal(cal_QRRCanPort,cal_QRRCanNID,DRCU_Active, DRCU_Present);
+		dev.Disconnect();
+	}*/
+	if (channelMeasureId < 1 || channelMeasureId > 4)
+	{
+		print("Wrong channel numbers");
+		return;
+	}
+
+	// Copy channel information
+	cal_chMeasureId = channelMeasureId;
+
+	// Init device port
+	dev.Disconnect();
+	dev.Connect(portDevice);
+
+	// Init Tektronix port
+	TEK_PortInit(portTek);
+	
+	// Tektronix init
+	for (var i = 1; i <= 4; i++)
+	{
+		if (i == channelMeasureId)
+			TEK_ChannelOn(i);
+		else
+			TEK_ChannelOff(i);
+	}
+}
+
+//----------------------------------------------------------------------------------
 
 function CAL_QRR_VerifyIrate()
 {		
@@ -186,7 +221,7 @@ function CAL_QRR_VerifyIrate()
 	// Reload values
 	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
 
-	if (CAL_CollectIrate(CurrentArray, cal_Iterations))
+	if (QRR_CAL_CollectIrate(CurrentArray, cal_Iterations))
 	{
 		CAL_SaveVintPS("QRR_Irate_fixed");
 
@@ -223,7 +258,7 @@ function CAL_ResetA()
 
 //----------------------------------------------------------------------------------
 
-function QRR_CAL_CollectIrate(CurrentValues, IterationsCount)
+function QRR_QRR_CollectIrate(CurrentValues, IterationsCount)
 {
 	cal_CntTotal = IterationsCount * CurrentValues.length;
 	cal_CntDone = 1;
@@ -247,17 +282,21 @@ function QRR_CAL_CollectIrate(CurrentValues, IterationsCount)
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
 			
-			DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
-			TEK_Send("horizontal:scale "  + ((CurrentValues[j]/CurrentRateTest)/1000000)*0.25);
+			DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000 * 2);
+			TEK_Send("horizontal:scale "  + ((CurrentValues[j]/CurrentRateTest)/1000000)*0.5);
 			//p((((CurrentValues[j]/CurrentRateTest)/1000000)));
 
 			TEK_Send("horizontal:main:position "+ (((CurrentValues[j]/CurrentRateTest)/1000000)*0.1));
 			sleep(1000);
 			
 			for (var k = 0; k < AvgNum; k++)
-			{
-				if(!DRCU_Pulse(CurrentValues[j], CurrentRateTest * 100))
+			{	//QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
+				p(CurrentValues[j], CurrentRateTest * 100);
+				if(!(QRR_Start(0, CurrentValues[j], CurrentRateTest * 100, 100, 10)))
 					return 0;
+				/*if(!DRCU_Pulse(CurrentValues[j], CurrentRateTest * 100))
+					return 0;*/
+				sleep (1000);
 			}
 
 			// Scope data
@@ -300,8 +339,8 @@ function QRR_CAL_MeasureIrate()
 function QRR_CAL_TekInitIrate()
 {
 	TEK_ChannelInit(cal_chMeasureId, "1", "0.02");
-	TEK_TriggerInit(cal_chMeasureId, "0.06");
-	TEK_Send("ch" + cal_chMeasureId + ":position -3.52");
+	TEK_TriggerInit(cal_chMeasureId, "0.5");
+	TEK_Send("ch" + cal_chMeasureId + ":position 0");
 	TEK_Send("trigger:main:edge:slope fall");
 	TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
 	TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");

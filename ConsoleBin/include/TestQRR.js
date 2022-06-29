@@ -8,7 +8,7 @@ qrr_single = 0;
 // QRR
 function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
 {
-	if (dev.r(192) == 1)
+	/*if (dev.r(192) == 1)
 	{
 		dev.c(3);
 		print("Clear fault");
@@ -25,11 +25,12 @@ function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
 			if (anykey()) return;
 			sleep(50);
 		}
-	}
+	}*/
 	
 	if (dev.r(192) != 4)
 	{
 		print("Abnormal state");
+		QRR_Status();
 		return;
 	}
 	
@@ -49,7 +50,7 @@ function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
 		print("Process");
 		dev.c(100);
 	}
-	
+	if (dev.r(192) == 1) QRR_Status();
 	var pulse_counter = dev.r(199);
 	while (dev.r(192) == 5)
 	{
@@ -65,11 +66,15 @@ function QRR_Start(Mode, IDC, IDCFallRate, OSV, OSVRate)
 	if (dev.r(192) != 4)
 		print("Failed");
 	
-	if (dev.r(205) != 0)
-		print("DC retries number: " + dev.r(205));
+	/*if (dev.r(205) != 0)
+		print("DC retries number: " + dev.r(205));*/
 	
-	if (dev.r(198) != 1)
+	if (dev.r(198) != 1){
 		print("Operation result: " + dev.r(198));
+		QRR_Status();
+		p("Slomalos!");
+		readline();
+	}
 }
 
 function QRR_Status()
@@ -414,6 +419,7 @@ QRRCount=8;
 for (QRRCount=8; QRRCount>=0 ; QRRCount--){//Emulate Everything except CSU
 	dev.w(QRRCount, 1);
 }
+//dev.w(9,1);		//Emulate CSU
 DRCU_Present
 switch (DRCU_Present) {// RCU/DCU number connected and needed to be powered
 case 10:
@@ -429,13 +435,17 @@ break;
 default:
 p('Invalid DRCU config, ignoring power-up override');
 }
+dev.c(2);
+sleep(500);
 dev.c(1);
 sleep(5000);
+if(dev.r(9) == 0){
 while((dev.r(241) < 988)) {
 sleep(1000);
 p(dev.r(241) + "V, charging" );
 }
 p("CSU Voltage OK");
+}
 switch (DRCU_Active) {// RCU/DCU number to be active
 case 10:
 dev.w(2,1); //Emulate DCU1 
