@@ -44,7 +44,7 @@ GTU_PulseIg(10);
 / (Offset: 109) (K: 108)
 / [P0: 107] [P1: 106] [P2: 105]
 i("CalGTU_4.0.js");
-cgtu_ResGate = 19.75;
+cgtu_ResGate = 19.76;
 cgtu_Imax = 49;
 cgtu_Imin = 10;
 cgtu_Istp = 5;
@@ -61,7 +61,7 @@ CGTU_VerifyIGate();
 / (Offset: 51) (K: 50)
 / [P0: 49] [P1: 48] [P2: 47]
 i("CalGTU_4.0.js");
-cgtu_ResGate = 9.88;
+cgtu_ResGate = 9.87;
 cgtu_Imax = 1000;
 cgtu_Imin = 50;
 cgtu_Istp = 100;
@@ -94,7 +94,7 @@ CGTU_VerifyVGate();
 / (Offset: 44) (K: 43)
 / [P0: 42] [P1: 41] [P2: 40]
 i("CalGTU_4.0.js");
-cgtu_ResPower = 9.88;
+cgtu_ResPower = 9.87;
 cgtu_Imax = 1000;
 cgtu_Imin = 50;
 cgtu_Istp = 100;
