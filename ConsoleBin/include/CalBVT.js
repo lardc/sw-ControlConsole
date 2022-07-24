@@ -153,7 +153,7 @@ function CBVT_CalibrateIx(FileName)
 		CBVT_SaveI(FileName);
 		
 		// Plot relative error distribution
-		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + cbvt_i_sc[0] + "..." + cbvt_i_sc[cbvt_VoltageValues-1] + " mA");
+		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + cbvt_i_sc[0] + "..." + (cbvt_VmaxAC / ( cbvt_Shunt + cbvt_R))  + " mA");
 		
 		if (CGEN_UseQuadraticCorrection())
 		{
@@ -228,11 +228,11 @@ function CBVT_VerifyIx(FileName)
 		CBVT_SaveI(FileName);
 		
 		// Plot relative error distribution
-		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + cbvt_i_sc[0] + "..." + cbvt_i_sc[cbvt_VoltageValues-1] + " mA");
+		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + 30 + "..." + 300 + " mA");
 
 		// Plot relative error distribution
 		if(cbvt_EnableSumError)
-			scattern(cbvt_i_sc, cbvt_i_err_sum, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + cbvt_i_sc[0] + "..." + cbvt_i_sc[cbvt_VoltageValues-1] + " mA");
+			scattern(cbvt_i_sc, cbvt_i_err_sum, "Current (in mA)", "Error (in %)", "Irrm/Idrm summary error " + cbvt_i_sc[0] + "..." + (cbvt_VmaxAC / ( cbvt_Shunt + cbvt_R))   + " mA");
 	}
 }
 
@@ -378,8 +378,8 @@ function CBVT_Collect(VoltageValues, IterationsCount, PrintMode)
 	dev.w(128, 3);																// Test type - reverse pulse
 	dev.w(130, CBVT_GetILim() * 10);											// Current limit
 	dev.w(132, bvt_test_time);													// Plate time
-	dev.w(133, 30);																// Rise rate
-	dev.w(136, Math.round(50 / ((cbvt_MaxP == 0) ? cbvt_Freq2 : cbvt_Freq1)));	// Frequency divisor
+	dev.w(133, 10);																// Rise rate
+	dev.w(136, Math.round(50 / ((cbvt_MaxP == 0) ? cbvt_Freq1 : cbvt_Freq2)));	// Frequency divisor
 	
 	CBVT_TekScale(cbvt_chMeasureV, cbvt_Vmax);
 	CBVT_TekScale(cbvt_chMeasureI, (cbvt_MaxP == 0) ? (cbvt_Vmax / cbvt_R * cbvt_Shunt) : (cbvt_Vmax / cbvt_RP * cbvt_ShuntP));
@@ -636,7 +636,7 @@ function CBVT_TekMeasurement(Channel)
 
 function CBVT_TekScale(Channel, Value)
 {
-	Value = Value * 0.85
+	Value = Value * 0.95
 	TEK_ChannelScale(Channel, Value);
 }
 
