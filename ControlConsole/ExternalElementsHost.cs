@@ -107,7 +107,10 @@ namespace PE.ControlConsole
 
         private void Print(object Arg)
         {
-            Console.WriteLine(Arg);
+            if (Arg is double)
+                Console.WriteLine(Convert.ToSingle(Arg));
+            else
+                Console.WriteLine(Arg);
         }
 
         private void Sleep(object TimemSec)
