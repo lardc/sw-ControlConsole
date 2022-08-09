@@ -1,3 +1,6 @@
+include('FWUpdate.js')
+include('STM_FWUpdate.js')
+
 function w32(Address, Value)
 {
 	w32d(Address, Address + 1, Value)
