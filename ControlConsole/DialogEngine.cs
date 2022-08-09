@@ -27,9 +27,11 @@ namespace PE.ControlConsole
                 {
                     m_RecreateContext = false;
                     CreateContext();
-                }
 
-                InputCommand(input);
+                    input = new StringBuilder("i(\"Common.js\")");
+                }
+                else
+                    InputCommand(input);
 
                 try
                 {

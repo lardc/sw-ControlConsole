@@ -305,6 +305,29 @@ namespace PE.ControlConsole
             Write32S(Address, Data);
         }
 
+        public void WriteFloat(int Address, float Data)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                m_Adapter.WriteFloat((ushort)NodeID, (ushort)Address, Data);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        // ReSharper disable InconsistentNaming
+        public void wf(int Address, float Data)
+        // ReSharper restore InconsistentNaming
+        {
+            WriteFloat(Address, Data);
+        }
+
         public int Read16Silent(int Address)
         {
             try
@@ -456,6 +479,84 @@ namespace PE.ControlConsole
         // ReSharper restore InconsistentNaming
         {
             return Read32S(Address);
+        }
+
+        public float ReadFloatSilent(int Address)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                return m_Adapter.ReadFloat((ushort)NodeID, (ushort)Address);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
+
+        public float ReadFloat(int Address)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                return m_Adapter.ReadFloat((ushort)NodeID, (ushort)Address);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        // ReSharper disable InconsistentNaming
+        public float rf(int Address)
+        // ReSharper restore InconsistentNaming
+        {
+            return ReadFloat(Address);
+        }
+
+        public float ReadLimitFloatX(int Address, bool HighLimit)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                return m_Adapter.ReadLimitFloat((ushort)NodeID, (ushort)Address, HighLimit);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        public float ReadLimitFloatLow(int Address)
+        {
+            return ReadLimitFloatX(Address, false);
+        }
+
+        // ReSharper disable InconsistentNaming
+        public float rlfl(int Address)
+        // ReSharper restore InconsistentNaming
+        {
+            return ReadLimitFloatLow(Address);
+        }
+
+        public float ReadLimitFloatHigh(int Address)
+        {
+            return ReadLimitFloatX(Address, true);
+        }
+
+        // ReSharper disable InconsistentNaming
+        public float rlfh(int Address)
+        // ReSharper restore InconsistentNaming
+        {
+            return ReadLimitFloatHigh(Address);
         }
 
         public int[] ReadArray16(int Address, int MaxCount = int.MaxValue)
@@ -665,6 +766,29 @@ namespace PE.ControlConsole
             return ReadArrayFast16S(Address);
         }
 
+        public float[] ReadArrayFastFloat(int Address)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                return m_Adapter.ReadArrayFastFloat((ushort)NodeID, (ushort)Address).Select(Arg => (float)Arg).ToArray();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        // ReSharper disable InconsistentNaming
+        public float[] raff(int Address)
+        // ReSharper restore InconsistentNaming
+        {
+            return ReadArrayFastFloat(Address);
+        }
+
         public void SendString(string OutString)
         {
             try
@@ -707,33 +831,68 @@ namespace PE.ControlConsole
 
         public void Dump(string FileName, int StartAddress, int EndAddress)
         {
+            bool UseFloat = true;
+
             try
             {
                 if (!m_Adapter.Connected)
                     throw new InvalidOperationException("No connection to device");
 
+                m_Adapter.ReadFloat((ushort)NodeID, 0);
+            }
+            catch (ProtocolErrorFrameException e)
+            {
+                if (e.Error == SCCIErrors.NotSupported)
+                    UseFloat = false;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+
+            try
+            {
                 using (var stream = new FileStream(FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
                     using (var writer = new StreamWriter(stream, Encoding.ASCII))
                         for (var i = StartAddress; i <= EndAddress; i++)
                         {
-                            var data = m_Adapter.Read16((ushort)NodeID, (ushort)i);
+                            var data = UseFloat ? m_Adapter.ReadFloat((ushort)NodeID, (ushort)i) :
+                                m_Adapter.Read16((ushort)NodeID, (ushort)i);
                             writer.WriteLine("{0}; {1};", i, data);
                         }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-                    throw;
+                throw;
             } 
         }
         
         public void Restore(string FileName)
         {
+            bool UseFloat = true;
+
             try
             {
                 if (!m_Adapter.Connected)
                     throw new InvalidOperationException("No connection to device");
 
+                m_Adapter.ReadFloat((ushort)NodeID, 0);
+            }
+            catch (ProtocolErrorFrameException e)
+            {
+                if (e.Error == SCCIErrors.NotSupported)
+                    UseFloat = false;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+
+            try
+            {
                 using (var stream = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     using (var reader = new StreamReader(stream, Encoding.ASCII))
                     {
@@ -742,7 +901,18 @@ namespace PE.ControlConsole
                         while ((data = reader.ReadLine()) != null)
                         {
                             var values = data.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries);
-                            m_Adapter.Write16((ushort)NodeID, ushort.Parse(values[0]), ushort.Parse(values[1]));                            
+                            ushort reg = ushort.Parse(values[0]);
+                            float value = float.Parse(values[1]);
+
+                            if (UseFloat)
+                            {
+                                m_Adapter.WriteFloat((ushort)NodeID, reg, value);
+                            }
+                            else
+                            {
+                                m_Adapter.Write16((ushort)NodeID, reg, (ushort)value);
+                            }
+                            
                         }
                     }
             }

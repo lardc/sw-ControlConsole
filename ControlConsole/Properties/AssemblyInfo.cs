@@ -11,7 +11,7 @@ using System.Resources;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Proton-Electrotex JSC")]
 [assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("Copyright © Proton-Electrotex 2011-2017")]
+[assembly: AssemblyCopyright("Copyright © Proton-Electrotex 2011-2022")]
 [assembly: AssemblyTrademark("Proton-Electrotex")]
 [assembly: AssemblyCulture("")]
 
@@ -33,6 +33,6 @@ using System.Resources;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.5.*")]
-[assembly: AssemblyFileVersion("1.5.0.0")]
+[assembly: AssemblyVersion("1.10.*")]
+[assembly: AssemblyFileVersion("1.10.0.0")]
 [assembly: NeutralResourcesLanguageAttribute("")]
