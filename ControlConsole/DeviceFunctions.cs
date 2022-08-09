@@ -481,6 +481,21 @@ namespace PE.ControlConsole
             return Read32S(Address);
         }
 
+        public float ReadFloatSilent(int Address)
+        {
+            try
+            {
+                if (!m_Adapter.Connected)
+                    throw new InvalidOperationException("No connection to device");
+
+                return m_Adapter.ReadFloat((ushort)NodeID, (ushort)Address);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
+
         public float ReadFloat(int Address)
         {
             try

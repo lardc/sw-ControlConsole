@@ -79,8 +79,13 @@ Types:
 		- Read32S(@address) : @value
 		- Read16(@address1, @address2) : [@value]
 		- Read16S(@address1, @address2) : [@value]
+		- ReadFloatSilent(@address) : @value - read register without printing exception
 		- ReadFloat(@address) : @value
 		  <rf>
+		- ReadLimitFloatLow(@address) : @value
+		  <rlfl>
+		- ReadLimitFloatHigh(@address) : @value
+		  <rlfh>
 		- ReadArray16(@endpoint, @maxcount) : [@array]
 		  <ra>
 		- ReadArray16S(@endpoint, @maxcount) : [@array]
