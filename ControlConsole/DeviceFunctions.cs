@@ -816,33 +816,68 @@ namespace PE.ControlConsole
 
         public void Dump(string FileName, int StartAddress, int EndAddress)
         {
+            bool UseFloat = true;
+
             try
             {
                 if (!m_Adapter.Connected)
                     throw new InvalidOperationException("No connection to device");
 
+                m_Adapter.ReadFloat((ushort)NodeID, 0);
+            }
+            catch (ProtocolErrorFrameException e)
+            {
+                if (e.Error == SCCIErrors.NotSupported)
+                    UseFloat = false;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+
+            try
+            {
                 using (var stream = new FileStream(FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
                     using (var writer = new StreamWriter(stream, Encoding.ASCII))
                         for (var i = StartAddress; i <= EndAddress; i++)
                         {
-                            var data = m_Adapter.Read16((ushort)NodeID, (ushort)i);
+                            var data = UseFloat ? m_Adapter.ReadFloat((ushort)NodeID, (ushort)i) :
+                                m_Adapter.Read16((ushort)NodeID, (ushort)i);
                             writer.WriteLine("{0}; {1};", i, data);
                         }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-                    throw;
+                throw;
             } 
         }
         
         public void Restore(string FileName)
         {
+            bool UseFloat = true;
+
             try
             {
                 if (!m_Adapter.Connected)
                     throw new InvalidOperationException("No connection to device");
 
+                m_Adapter.ReadFloat((ushort)NodeID, 0);
+            }
+            catch (ProtocolErrorFrameException e)
+            {
+                if (e.Error == SCCIErrors.NotSupported)
+                    UseFloat = false;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+
+            try
+            {
                 using (var stream = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     using (var reader = new StreamReader(stream, Encoding.ASCII))
                     {
@@ -851,7 +886,18 @@ namespace PE.ControlConsole
                         while ((data = reader.ReadLine()) != null)
                         {
                             var values = data.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries);
-                            m_Adapter.Write16((ushort)NodeID, ushort.Parse(values[0]), ushort.Parse(values[1]));                            
+                            ushort reg = ushort.Parse(values[0]);
+                            float value = float.Parse(values[1]);
+
+                            if (UseFloat)
+                            {
+                                m_Adapter.WriteFloat((ushort)NodeID, reg, value);
+                            }
+                            else
+                            {
+                                m_Adapter.Write16((ushort)NodeID, reg, (ushort)value);
+                            }
+                            
                         }
                     }
             }
