@@ -82,6 +82,21 @@ function step_p()
 	p("\nВсе шаги выполнены")
 }
 
+function co2(action)
+{
+	dev.c(action ? 154 : 155)
+}
+
+function beer(action)
+{
+	dev.c(action ? 152 : 153)
+}
+
+function heads(action)
+{
+	dev.c(action ? 150 : 151)
+}
+
 function save()
 {
 	dev.c(200)
