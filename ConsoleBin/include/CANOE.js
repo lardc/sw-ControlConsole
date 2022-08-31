@@ -82,6 +82,21 @@ function step_p()
 	p("\nВсе шаги выполнены")
 }
 
+function co2(action)
+{
+	dev.c(action ? 154 : 155)
+}
+
+function beer(action)
+{
+	dev.c(action ? 152 : 153)
+}
+
+function heads(action)
+{
+	dev.c(action ? 150 : 151)
+}
+
 function save()
 {
 	dev.c(200)
@@ -111,6 +126,11 @@ function info()
 	p("---")
 	p("11. Позиция закатки этап1:\t\t" + get_long_number(47))
 	p("12. Позиция закатки этап2:\t\t" + get_long_number(49))
+	p("---")
+	p("13. Момент на двигателе, %:\t\t" + dev.r(20))
+	p("14. Скорость при закатке, %:\t\t" + dev.r(19))
+	p("15. Скорость при перемещении, %:\t" + dev.r(61))
+	p("16. Оффсет перед закаткой:\t\t" + dev.r(62))
 }
 
 function write(param, value)
@@ -167,6 +187,22 @@ function write(param, value)
 			value = value >>> 0
 			dev.w(49, value & 0xFFFF)
 			dev.w(50, (value >> 16) & 0xFFFF)
+			break
+			
+		case 13:
+			dev.w(20, value)
+			break
+			
+		case 14:
+			dev.w(19, value)
+			break
+			
+		case 15:
+			dev.w(61, value)
+			break
+			
+		case 16:
+			dev.w(62, value)
 			break
 			
 		default:
