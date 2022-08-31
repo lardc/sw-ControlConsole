@@ -42,6 +42,11 @@ function KEI_SetRange(Range)
 	TEK_Send("CURR:RANG " + Range);
 }
 
+function KEI_SetRate(Rate)
+{
+	TEK_Send("CURR:NPLC " + Rate);
+}
+
 function KEI_MedianFilterControl(Rank, State)
 {
 	// Rank = 1..5
