@@ -842,7 +842,7 @@ namespace PE.ControlConsole
             }
             catch (ProtocolErrorFrameException e)
             {
-                if (e.Error == SCCIErrors.NotSupported)
+                if (e.Error == SCCIErrors.InvalidSfunction)
                     UseFloat = false;
             }
             catch (Exception e)
