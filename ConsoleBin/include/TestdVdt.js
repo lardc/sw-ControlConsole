@@ -159,18 +159,25 @@ function dVdt_CellCall(CellID, Action)
 	dev.c(122);
 }
 
-function dVdt_CellPulse(CellID, Voltage, Gate, NoShutdown)
+function dVdt_CellPulse(CellID, Voltage, Gate, Range, NoShutdown)
 {
 	dVdt_CellCall(CellID, 1);
-	
+
+	dVdt_SelectRange(CellID, Range);	
 	dVdt_CellSetV(CellID, Voltage);
-	dVdt_CellSetGate(CellID, Gate);
 	
-	while (dVdt_CellReadReg(CellID, 14) != 1)
+	while (dVdt_CellReadReg(CellID, 14) == 0)
+	{
+		if (anykey()) return 0;
 		sleep(100);
+	}		
 	
+	dVdt_CellSetGate(CellID, Gate);
 	sleep(500);
 	dev.c(114);
+
+	while(_dVdt_Active())
+		sleep(50);
 	
 	if ((typeof NoShutdown == 'undefined') || NoShutdown == 0)
 		dVdt_CellCall(CellID, 2);
