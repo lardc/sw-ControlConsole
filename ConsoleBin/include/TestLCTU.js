@@ -8,14 +8,12 @@ function LCTU_Start(Voltage, PulseWidth)
 		dev.w(129, PulseWidth);
 		dev.c(100);
 		
-		sleep(50);
-		
 		while(dev.r(192) == 4)
 		{
 			if(anykey())
 				break;
 			
-			sleep(100);
+			sleep(10);
 		}
 		
 		if(!dev.r(192) == 3)
