@@ -13,8 +13,10 @@ function ITU_Start(Voltage, Current)
 	if(dev.r(192) == 3)
 	{
 		p('Voltage,      V: ' + dev.r(200))
-		p('Current,     mA: ' + (dev.r(201) + dev.r(202) / 1000))
-		p('Current act, mA: ' + (dev.r(203) + dev.r(204) / 1000))
+		p('Current,     mA: ' + (dev.r(201) + dev.r(202) / 1000).toFixed(3))
+		p('Current act, mA: ' + (dev.r(203) + dev.r(204) / 1000).toFixed(3))
+		if(dev.r(195) == 1)
+			p('Short circuit detected')
 	}
 	else
 		PrintStatus()
@@ -23,11 +25,12 @@ function ITU_Start(Voltage, Current)
 function ITU_PlotFull()
 {
 	var a = ITU_Read()
-	var res = {v : a[1], i_ : [], vrms : a[4], irms : [], pwm : a[7], cosphi : a[8]}
+	var res = {v : a[1], i_ : [], vrms : a[4], irms : [], pwm : a[7], cosphi : []}
 	for(var i = 0; i < a[1].length; i++)
 	{
 		res.i_.push(a[2][i] + a[3][i] / 1000)
 		res.irms.push(a[5][i] + a[6][i] / 1000)
+		res.cosphi[i] = a[8][i] / 1000
 	}
 	
 	plot(res.pwm, 50, 0)
@@ -44,15 +47,18 @@ function ITU_PlotFast()
 	var i_uA = dev.rafs(3)
 	var irms_mA = dev.rafs(5)
 	var irms_uA = dev.rafs(6)
+	var cosphi = dev.rafs(8)
 	
 	var i_ = [], irms = []
 	for(var i = 0; i < i_mA.length; i++)
 	{
 		i_.push(i_mA[i] + i_uA[i] / 1000)
 		irms.push(irms_mA[i] + irms_uA[i] / 1000)
+		cosphi[i] /= 1000
 	}
+	
 	plot(dev.rafs(7), 50, 0)
-	plot(dev.rafs(8), 50, 0)
+	plot(cosphi, 50, 0)
 	plot2(dev.rafs(4), irms, 50, 0)
 	plot2(dev.rafs(1), i_, 50, 0)
 }
