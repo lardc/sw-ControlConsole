@@ -16,7 +16,7 @@ function ITU_Start(Voltage, Current)
 		p('Current,     mA: ' + (dev.r(201) + dev.r(202) / 1000).toFixed(3))
 		p('Current act, mA: ' + (dev.r(203) + dev.r(204) / 1000).toFixed(3))
 		if(dev.r(195) == 1)
-			p('Short circuit detected')
+			p('Output current saturation')
 	}
 	else
 		PrintStatus()
