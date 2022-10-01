@@ -271,41 +271,6 @@ function FWU_RestoreCROVU()
 }
 //------------------------
 
-// FCROVU
-function FWU_FCROVU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		FWUpdate("../../../../../../../QRR Tester/FCROVU/Controller soft/Version " + Version + "/dVdtControlBoard/Release/ForcedVdtControlBoard.hex");
-}
-
-function FWU_DumpFCROVU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Dump("../../../../../../../QRR Tester/FCROVU/Controller soft/Version " + Version + "/dVdtControlBoard/fdvdt.regdump", 0, 126);
-}
-
-function FWU_RestoreFCROVU(Version)
-{
-	if (typeof Version == 'undefined')
-	{
-		print("Error. Define software version.");
-		return;
-	}
-	else
-		dev.Restore("../../../../../../../QRR Tester/FCROVU/Controller soft/Version " + Version + "/dVdtControlBoard/fdvdt.regdump");
-}
-//------------------------
-
 // CS
 function FWU_CS()
 {
