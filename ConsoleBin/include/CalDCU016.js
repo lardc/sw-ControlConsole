@@ -176,7 +176,7 @@ function CAL_CalibrateId()
 }
 //--------------------
 
-function CAL_CalibrateIrate(CurrentRareNTest)
+function CAL_CalibrateIrate(CurrentRateNTest)
 {
 	CAL_ResetA();
 	
@@ -186,7 +186,7 @@ function CAL_CalibrateIrate(CurrentRareNTest)
 	// Reload values
 	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
 
-	if (CAL_CompensationIrate(CurrentArray, CurrentRateNTest ))
+	if (CAL_CompensationIrate(CurrentArray, CurrentRateNTest))
 	{
 		CAL_SaveVintPS("DCU_VintPS");
 
@@ -197,6 +197,7 @@ function CAL_CalibrateIrate(CurrentRareNTest)
 	}	
 }
 
+//function CAL_Calibrate
 //--------------------
 
 //Аdditional Functions 
@@ -235,7 +236,7 @@ function CAL_TekInitId()
 	TEK_ChannelInit(cal_chMeasureId, "1", "0.02");
 	TEK_TriggerInit(cal_chMeasureId, "0.06");
 	TEK_Send("trigger:main:edge:slope fall");
-	TEK_Horizontal("0.1e-3", "-0.4e-3");
+	TEK_Horizontal("0.5e-3", "-0.4e-3");
 	TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
 	TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
 }
@@ -269,7 +270,7 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 			sleep(1000);
 			
 			for (var k = 0; k < AvgNum; k++)
-				DRCU_Pulse(CurrentValues[j], 5);
+				DRCU_Pulse(CurrentValues[j], 0);
 			
 			// Unit data
 			var Id = dev.r(202) / 10;
@@ -315,7 +316,7 @@ function DCU_TekScaleId(Channel, Value)
 {
 	Value = Value / 7;
 	TEK_Send("ch" + Channel + ":scale " + Value);
-	TEK_TriggerInit(cal_chMeasureId, Value * 3.5);
+	TEK_TriggerInit(cal_chMeasureId, Value * 6);
 	TEK_Send("trigger:main:edge:slope fall");
 }
 
@@ -421,7 +422,7 @@ function CAL_CollectIrateALL(CurrentValues, IterationsCount)
 						
 				DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
 				TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.25);
-				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.1);
+				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.4);
 				sleep(800);
 				
 				for (var m = 0; m < AvgNum; m++)
@@ -476,7 +477,7 @@ function CAL_CollectIrate(CurrentValues, IterationsCount, CurrentRateNTest)
 
 				DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
 				TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.25);
-				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.1);
+				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.4);
 				sleep(800);
 				
 				for (var m = 0; m < AvgNum; m++)
@@ -519,7 +520,9 @@ function CAL_MeasureIrate(RateSet, CurrentSet)
 	
 	print("di/dt Set, A/us = " + RateSet);	
 	print("di/dt Osc, A/us = " + RateScope);	
-	print("di/dt Err, % = " + RateErr);	
+	print("di/dt Err, % = " + RateErr);
+
+	return RateScope;	
 }
 
 //--------------------
@@ -579,10 +582,11 @@ function CAL_SetCoefIdset(P2, P1, P0)
 	dev.ws(122, Math.round(P0));	
 }
 
-function CAL_CompensationIrate(CurrentValues, CurrentRateNTest )
+function CAL_CompensationIrate(CurrentValues, CurrentRateNTest)
 {	
 	cal_CntTotal = CurrentValues.length;
 	cal_CntDone = 1;
+		
 
 	var AvgNum, VoltageMin, VoltageMax, Voltage;
 	
@@ -601,9 +605,10 @@ function CAL_CompensationIrate(CurrentValues, CurrentRateNTest )
 
 		k = CurrentRateNTest;
 
-		DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
-		TEK_Send("horizontal:scale "  + ((CurrentValues[j]/CurrentRate[k])/1000000)*0.2);
-		TEK_Send("horizontal:delay:pos"+ ((CurrentValues[j]/CurrentRate[k])/1000000)*0.2);
+		DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
+		TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.25);
+		TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.4);
+
 		for (var i = 0; i < cal_Points; i++)
 		{
 			TEK_AcquireSample();
@@ -612,7 +617,8 @@ function CAL_CompensationIrate(CurrentValues, CurrentRateNTest )
 			Voltage = Math.round((VoltageMin + (VoltageMax - VoltageMin) / 2) * 10) / 10;
 			
 			dev.w(130, Voltage * 10);
-			
+			p("Voltage DCU : " + Voltage);
+
 			p("Current, A : " + CurrentValues[j]);
 			p("VintPS max : " + VoltageMax);
 			p("VintPS,  V : " + Voltage);
@@ -620,42 +626,35 @@ function CAL_CompensationIrate(CurrentValues, CurrentRateNTest )
 			p("-------------");
 			
 			for (var n = 0; n < AvgNum; n++)
-			{
 				if(!DRCU_Pulse(CurrentValues[j], CurrentRateN[k]))
-					return 0;
-			}
+					return 0;				
+
 			
-			var IrateSc = CAL_MeasureIrate(CurrentRate[k], CurrentValues[j]);
+			var IrateSc = CAL_MeasureIrate(CurrentRate[k],CurrentValues[j]);
 			
-			if(IrateSc < CurrentRate)
-			{	VoltageMin = Voltage;
-			p(1);
-			}
+			if(IrateSc < CurrentRate[k])
+
+				VoltageMin = Voltage;
+
 			else
 			{
-				if(IrateSc > CurrentRate)
-			{		VoltageMax = Voltage;
-				p(2);
-			}
+				if(IrateSc > CurrentRate[k])
+
+					VoltageMax = Voltage;
 				else
-			
-			
 					break;
-			}
 			
 			if((VoltageMin + 0.2) >= VoltageMax)
-				p(4);
 				break;
 			
 			if (anykey()) return 0;
-		}
 
+			}
+		}
 		cal_Idset.push(CurrentValues[j]);
 		cal_VintPS.push(Voltage * 10);
-	}
-	
-	dev.w(130, 0);
-	
+	}	
+	dev.w(130, 0);	
 	return 1;
 }
 
@@ -678,7 +677,7 @@ function CAL_SetCoefIrateCompens(K, Offset)
 	K = parseFloat(K);
 	Offset = parseFloat(Offset);
 	
-	switch(CurrentRateN)
+	switch(CurrentRateN[k])
 	{
 		case 0:
 			dev.ws(41, Offset);
@@ -731,7 +730,7 @@ function CAL_SetCoefIrateCompens(K, Offset)
 
 function CAL_PrintCoefIrateCompens()
 {
-	switch(CurrentRateN)
+	switch(CurrentRateN[k])
 	{
 		case 0:
 			print("Irate compensation Offset	: " + dev.rs(41));
