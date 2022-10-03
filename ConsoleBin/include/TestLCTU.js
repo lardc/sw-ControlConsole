@@ -28,6 +28,9 @@ function LCTU_Start(Voltage, PulseWidth)
 		return 0;
 	}
 	
+	p("Voltage,  V: " + dev.rf(200).toFixed(2))
+	p("Current, uA: " + dev.rf(201).toFixed(2))
+	
 	return 1;
 }
 //-----------------------------
