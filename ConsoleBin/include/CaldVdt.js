@@ -10,23 +10,23 @@ cdvdt_chMeasure = 1;
 
 // Definition section (modification is dangerous)
 cdvdt_def_SetpointCount = 7;
-cdvdt_def_VGateMin = 3000;
+cdvdt_def_VGateMin = 1800;
 cdvdt_def_VGateMax = 5000;
 
 // Definition range config
 cdvdt_def_NO_RANGE = 3; 		// for compibility old pcb
-cdvdt_def_RANGE_LOW = 1;
-cdvdt_def_RANGE_MID = 2;
-cdvdt_def_RANGE_HIGH = 0;
+cdvdt_def_RANGE_LOW = 0;
+cdvdt_def_RANGE_MID = 1;
+cdvdt_def_RANGE_HIGH = 2;
 cdvdt_def_SetpointStartAddr = {}
 cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_LOW]  = 320;
 cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_MID]  = 410;
 cdvdt_def_SetpointStartAddr[cdvdt_def_RANGE_HIGH] = 40;
 cdvdt_def_SetpointStartAddr[cdvdt_def_NO_RANGE] = 30;
 //
-cdvdt_CalVoltage = 500;
-cdvdt_SelectedRange = cdvdt_def_RANGE_HIGH;
-cdvdt_HVProbeScale = 100	// Коэффициент деления щупа
+cdvdt_CalVoltage = 900;
+cdvdt_SelectedRange = cdvdt_def_RANGE_LOW;
+cdvdt_HVProbeScale = "1000"	// Коэффициент деления щупа
 cdvdt_DeviderRate = 10; 		// Делить скорости. Установить равным 1 если плата без диапазонов 
 
 // Voltage settings for unit calibration
@@ -79,7 +79,7 @@ function CdVdt_Init(portdVdt, portTek, channelMeasure)
 	
 	// Tektronix init
 	// Init channels
-	TEK_ChannelInit(channelMeasure, "100", "100");
+	TEK_ChannelInit(channelMeasure, cdvdt_HVProbeScale, "100");
 	// Init trigger
 	TEK_TriggerInit(channelMeasure, "100");
 	// Horizontal settings
@@ -173,15 +173,15 @@ function CdVdt_MeasureRate()
 
 function CdVdt_TekVScale(Channel, Voltage)
 {
-	// 0.7 - use 70% of full range
-	// 7 - number of scope grids in full scale
-	var scale = Math.round(Voltage / (0.8 * 7));
+	// 0.85 - use 90% of full range
+	// 8 - number of scope grids in full scale
+	var scale = Math.round(Voltage / (0.85 * 8));
 	TEK_Send("ch" + Channel + ":scale " + scale);
 }
 
 function CdVdt_TekHScale(Channel, Voltage, Rate)
 {
-	var RiseTime = ((Voltage / Rate) * 0.73) * 1e-6;
+	var RiseTime = (Voltage / Rate) * 1e-6;
 	TEK_Horizontal(RiseTime.toExponential(), "0");
 }
 
@@ -190,8 +190,6 @@ function CdVdt_CellCalibrateRateA(CellArray)
 	// Power disable all cells
 	dev.c(2);
 	dev.c(3);
-	sleep(1000);
-	dev.c(112);
 	sleep(1000);
 	
 	p("Disabling all flyback.");
@@ -416,7 +414,7 @@ function CdVdt_CollectFixedRate(Repeat)
 				for(var CounterAverages = 0; CounterAverages < cdvdt_def_UseAverage; CounterAverages++)
 				{
 					while(_dVdt_Active()) sleep(50);
-					dev.c(100);
+					dev.c(10);
 					sleep(1000);
 				}
 				
