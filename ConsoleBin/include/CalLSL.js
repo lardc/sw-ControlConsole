@@ -681,7 +681,8 @@ function LSL_TriggerInit(Channel)
 
 function LSL_TekScale(Channel, Value)
 {
-	TEK_ChannelScale(Channel, Value);
+	var scale = Value / 7;
+	TEK_Send("ch" + Channel + ":scale " + scale);
 }
 //--------------------
 
