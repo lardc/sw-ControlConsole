@@ -33,41 +33,41 @@ CdVdt_CellCalibrateRateA([1,2,3,4,5]);
 
 // Предкалибровка диапазаона MID всех ячеек
 i(“CaldVdt.js”);
-cdvdt_def_VGateMin = 2000;
+cdvdt_def_VGateMin = 1700;
 cdvdt_def_VGateMax = 5000;
 cdvdt_CalVoltage = 900;
 cdvdt_HVProbeScale = "1000";
 cdvdt_SelectedRange = cdvdt_def_RANGE_MID;
-CdVdt_Init(4, 5, 1);
+CdVdt_Init(11, 12, 1);
 CdVdt_CellCalibrateRateA([1,2,3,4,5]);
 
 
-// Скорости 4 и 10 В/мкс
+// Скорости 20 и 50 В/мкс
 i(“CaldVdt.js”);
 cdvdt_SelectedRange = cdvdt_def_RANGE_LOW;
 cdvdt_DeviderRate = 10;
 cdvdt_HVProbeScale = "1000"
-cdvdt_RatePoint = [4, 10];
+cdvdt_RatePoint = [20, 50];
 cdvdt_Vmin = 400;
 cdvdt_Vmax = 4500;
 cdvdt_Vstp = 500;
 cdvdt_def_UseHandMeasure = 0; // ручной - 1, авто - 0
-CdVdt_Init(1,2,1);
+CdVdt_Init(4,5,1);
 
 CdVdt_CollectFixedRate(1); 
 CdVdt_SaveA(“4_10V_us”);
 
-// Скорости 20 и 40 В/мкс
+// Скорости 100 и 200 В/мкс
 i(“CaldVdt.js”);
 cdvdt_SelectedRange = cdvdt_def_RANGE_MID;
 cdvdt_DeviderRate = 10;
 cdvdt_HVProbeScale = "1000"
-cdvdt_RatePoint = [20, 40];
+cdvdt_RatePoint = [100, 200];
 cdvdt_Vmin = 400;
 cdvdt_Vmax = 4500;
 cdvdt_Vstp = 500;
 cdvdt_def_UseHandMeasure = 0; // ручной - 1, авто - 0
-CdVdt_Init(1,2,1);
+CdVdt_Init(4,5,1);
 
 CdVdt_CollectFixedRate(1); 
 CdVdt_SaveA(“20_40V_us”);
