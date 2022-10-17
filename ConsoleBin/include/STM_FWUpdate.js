@@ -369,3 +369,21 @@ function FWU_RestoreLCTU()
 	dev.Restore("../../hw-LCTUControlBoard/Firmware/LCTUControlBoard.regdump");
 }
 //------------------------
+
+// PAU
+function FWU_PAU()
+{
+	FWUpdateSTM("../../hw-PAUControlBoard/Firmware/Release/PAUControlBoard.binary");
+}
+
+function FWU_DumpPAU()
+{
+	dev.Dump("../../hw-PAUControlBoard/Firmware/PAUControlBoard.regdump", 0, 126);
+}
+
+function FWU_RestorePAU()
+{
+	dev.Restore("../../hw-PAUControlBoard/Firmware/PAUControlBoard.regdump");
+}
+//------------------------
+
