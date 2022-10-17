@@ -7,17 +7,17 @@ cal_Points = 10;
 cal_Ice_Rshunt = 100;	// in Ohm
 cal_Ice_Rload = 110		// in kOhm
 
-cal_IceMin = 2;			// in mA	
+cal_IceMin = 5;			// in mA	
 cal_IceMax = 30;		// in mA
 cal_IceStp = (cal_IceMax - cal_IceMin) / cal_Points;
 
 cal_UceProbe = 500;
 cal_UceRange = 1;
-cal_UceMin = [200, 1301];	
+cal_UceMin = [300, 1301];	
 cal_UceMax = [1300, 3300];
 cal_UceStp = (cal_UceMax[cal_UceRange] - cal_UceMin[cal_UceRange]) / cal_Points;
 
-cal_Iterations = 1;
+cal_Iterations = 3;
 //		
 
 // Counters
@@ -158,7 +158,12 @@ function CAL_CollectUce(VoltageValues, IterationsCount)
 			p("Enter the measured voltage value in Volts and press Enter:");
 			
 			// Keithley data
-			var UceKeithley = readline() * cal_UceProbe;;
+			var UceKeithley = readline();
+			
+			if(UceKeithley == "stop")
+				return 0;
+			
+			UceKeithley = UceKeithley * cal_UceProbe;
 			cal_UceKei.push(UceKeithley);
 			p("");
 			print("UceKeithley, V: " + UceKeithley);
@@ -208,6 +213,10 @@ function CAL_CollectIce(CurrentValues, IterationsCount)
 
 			// Keithley data
 			var IceKeithley = readline();
+			
+			if(IceKeithley == "stop")
+				return 0;
+			
 			cal_IceKei.push(IceKeithley);
 			p("");
 			print("IceKeithley, mA: " + IceKeithley);
