@@ -18,10 +18,17 @@ i("STM_FWUpdate.js");
 FWU_RestoreFCROVU();
 
 // Подготовка блока
+dev.co(11);
+dev.c(1)
+i("CalFCROVU.js");
 
+// Формирование сигнала
+fdVdt_DiagPulse(Gate);
 
-// Формирование сигнала и измерение
+// Калибровка платы
+i("CalFCROVU.js");
+CfdVdt_Init(11, 12, 1);
 
+CfdVdt_CalibrateRate()
 
-
-// Диапазон di/dt
+// Диапазон dV/dt
