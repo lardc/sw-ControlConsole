@@ -6,10 +6,11 @@ using System.Text;
 using PE.ControlConsole.Properties;
 using PE.SCCI;
 using PE.SCCI.Master;
+using NationalInstruments.Visa;
 
 namespace PE.ControlConsole
 {
-    internal class DeviceFunctions: IDisposable
+    internal class DeviceFunctions : IDisposable
     {
         private readonly SCCIMasterAdapter m_Adapter = new SCCIMasterAdapter(true);
         private int m_Baudrate = Settings.Default.SerialBaudrate;
@@ -490,7 +491,7 @@ namespace PE.ControlConsole
 
                 return m_Adapter.ReadFloat((ushort)NodeID, (ushort)Address);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw;
             }
@@ -854,21 +855,21 @@ namespace PE.ControlConsole
             try
             {
                 using (var stream = new FileStream(FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
-                    using (var writer = new StreamWriter(stream, Encoding.ASCII))
-                        for (var i = StartAddress; i <= EndAddress; i++)
-                        {
-                            var data = UseFloat ? m_Adapter.ReadFloat((ushort)NodeID, (ushort)i) :
-                                m_Adapter.Read16((ushort)NodeID, (ushort)i);
-                            writer.WriteLine("{0}; {1};", i, data);
-                        }
+                using (var writer = new StreamWriter(stream, Encoding.ASCII))
+                    for (var i = StartAddress; i <= EndAddress; i++)
+                    {
+                        var data = UseFloat ? m_Adapter.ReadFloat((ushort)NodeID, (ushort)i) :
+                            m_Adapter.Read16((ushort)NodeID, (ushort)i);
+                        writer.WriteLine("{0}; {1};", i, data);
+                    }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 throw;
-            } 
+            }
         }
-        
+
         public void Restore(string FileName)
         {
             bool UseFloat = true;
@@ -894,33 +895,33 @@ namespace PE.ControlConsole
             try
             {
                 using (var stream = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    using (var reader = new StreamReader(stream, Encoding.ASCII))
+                using (var reader = new StreamReader(stream, Encoding.ASCII))
+                {
+                    string data;
+
+                    while ((data = reader.ReadLine()) != null)
                     {
-                        string data;
+                        var values = data.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        ushort reg = ushort.Parse(values[0]);
+                        float value = float.Parse(values[1]);
 
-                        while ((data = reader.ReadLine()) != null)
+                        if (UseFloat)
                         {
-                            var values = data.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries);
-                            ushort reg = ushort.Parse(values[0]);
-                            float value = float.Parse(values[1]);
-
-                            if (UseFloat)
-                            {
-                                m_Adapter.WriteFloat((ushort)NodeID, reg, value);
-                            }
-                            else
-                            {
-                                m_Adapter.Write16((ushort)NodeID, reg, (ushort)value);
-                            }
-                            
+                            m_Adapter.WriteFloat((ushort)NodeID, reg, value);
                         }
+                        else
+                        {
+                            m_Adapter.Write16((ushort)NodeID, reg, (ushort)value);
+                        }
+
                     }
+                }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 throw;
-            }             
+            }
         }
 
         #endregion
@@ -940,5 +941,126 @@ namespace PE.ControlConsole
         }
 
         #endregion
+    }
+
+    internal class TMCFunctions : IDisposable
+    {
+        private readonly ResourceManager rmSession = new ResourceManager();
+        private MessageBasedSession mbSession;
+        private bool IsConnected = false;
+
+        private string ReplaceCommonEscapeSequences(string s)
+        {
+            return s.Replace("\\n", "").Replace("\\r", "");
+        }
+
+        public void list()
+        {
+            try
+            {
+                var resources = rmSession.Find("(USB)?*");
+                foreach (string s in resources)
+                    Console.WriteLine(ReplaceCommonEscapeSequences(s));
+            }
+            catch { }
+        }
+
+        public void co()
+        {
+            try
+            {
+                if (IsConnected)
+                {
+                    IsConnected = false;
+                    mbSession.Dispose();
+                }
+            }
+            catch { }
+
+            try
+            {
+                var resources = rmSession.Find("(USB)?*");
+                mbSession = (MessageBasedSession)rmSession.Open(resources.First());
+                IsConnected = true;
+            }
+            catch(Exception)
+            {
+                Console.WriteLine("No attached USB TMC devices");
+            }
+        }
+
+        public void dco()
+        {
+            try
+            {
+                if (IsConnected)
+                {
+                    IsConnected = false;
+                    mbSession.Dispose();
+                }
+            }
+            catch { }
+        }
+
+        public string query(string Command)
+        {
+            try
+            {
+                if (!IsConnected)
+                    throw new InvalidOperationException("No connection to TMC device");
+
+                mbSession.RawIO.Write(Command);
+                return mbSession.RawIO.ReadString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        public void write(string Command)
+        {
+            try
+            {
+                if (!IsConnected)
+                    throw new InvalidOperationException("No connection to TMC device");
+
+                mbSession.RawIO.Write(Command);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        public string read()
+        {
+            try
+            {
+                if (!IsConnected)
+                    throw new InvalidOperationException("No connection to TMC device");
+
+                return mbSession.RawIO.ReadString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (IsConnected)
+                    mbSession.Dispose();
+
+                rmSession.Dispose();
+            }
+            catch { }
+        }
     }
 }

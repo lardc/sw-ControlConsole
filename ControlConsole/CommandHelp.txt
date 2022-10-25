@@ -37,7 +37,8 @@ Commands:
 
 Predefined objects:
 	- cfg : Configuration - provides access to configuration functions
-	- dev : DeviceObject- provides access to device control function
+	- dev : DeviceObject - provides access to device control function
+	- tmc : TMCObject - provides access to TMC device control function
 	- cin : TextReader - standard input stream
 	- cout : TextWriter - standard output stream
 	- cerr : TextWriter - standard error stream
@@ -110,3 +111,9 @@ Types:
 		  <raff>
 		- Dump(@filename, @start, @end)
 		- Restore(@filename)
+	- TMCObject - provides access to TMC device I/O functions
+		- co() - connect to device
+		- dco() - disconnect device
+		- query(@string) : [@value] - send request to device and read response
+		- write(@string) - send command to device
+		- read() : [@value] - read data from device

@@ -11,6 +11,7 @@ using System.Threading;
 using System.Text.RegularExpressions;
 using Noesis.Javascript;
 using PE.ControlConsole.Forms;
+using NationalInstruments.Visa;
 
 namespace PE.ControlConsole
 {
@@ -21,14 +22,17 @@ namespace PE.ControlConsole
     {
         private readonly DialogEngine m_Dialog;
         private readonly DeviceFunctions m_DeviceObject;
+        private readonly TMCFunctions m_TMCObject;
 
         internal ExternalElementsHost(DialogEngine Dialog, JavascriptContext EngineContext)
         {
             m_Dialog = Dialog;
             m_DeviceObject = new DeviceFunctions();
+            m_TMCObject = new TMCFunctions();
             var configFunctions = new ConfigFunctions(this);
-            
+
             // Set parameters - external functions
+            EngineContext.SetParameter(@"tst", new Action(Tst));
             EngineContext.SetParameter(@"cls", new Action(Clr));
             EngineContext.SetParameter(@"closew", new Action(CloseWindows));
             EngineContext.SetParameter(@"exec", new Action<string, string>(Execute));
@@ -70,6 +74,7 @@ namespace PE.ControlConsole
             EngineContext.SetParameter(@"cerr", Console.Error);
             EngineContext.SetParameter(@"cfg", configFunctions);
             EngineContext.SetParameter(@"dev", configFunctions.CreateDevice());
+            EngineContext.SetParameter(@"tmc", new TMCFunctions());
         }
 
         internal JavascriptContext ExecutionContext
@@ -93,6 +98,22 @@ namespace PE.ControlConsole
         private void Clr()
         {
             Console.Clear();
+        }
+
+        private void Tst()
+        {
+            using (var rmSession = new ResourceManager())
+            {
+                var resources = rmSession.Find("(USB)?*");
+                foreach (string s in resources)
+                {
+                    Console.WriteLine(s);
+                    var mbSession = (MessageBasedSession)rmSession.Open(s);
+                    mbSession.RawIO.Write("*IDN?");
+                    Console.WriteLine(mbSession.RawIO.ReadString());
+                    mbSession.Dispose();
+                }
+            }
         }
 
         private void CloseWindows()
@@ -500,6 +521,7 @@ namespace PE.ControlConsole
         public void Dispose()
         {
             m_DeviceObject.Dispose();
+            m_TMCObject.Dispose();
         }
 
         #endregion
