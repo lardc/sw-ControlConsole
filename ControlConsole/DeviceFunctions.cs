@@ -951,7 +951,7 @@ namespace PE.ControlConsole
 
         private string ReplaceCommonEscapeSequences(string s)
         {
-            return s.Replace("\\n", "").Replace("\\r", "");
+            return s.Replace("\n", " ").Replace("\r", " ");
         }
 
         public void list()
@@ -1010,7 +1010,7 @@ namespace PE.ControlConsole
                     throw new InvalidOperationException("No connection to TMC device");
 
                 mbSession.RawIO.Write(Command);
-                return mbSession.RawIO.ReadString();
+                return ReplaceCommonEscapeSequences(mbSession.RawIO.ReadString());
             }
             catch (Exception e)
             {
@@ -1042,7 +1042,7 @@ namespace PE.ControlConsole
                 if (!IsConnected)
                     throw new InvalidOperationException("No connection to TMC device");
 
-                return mbSession.RawIO.ReadString();
+                return ReplaceCommonEscapeSequences(mbSession.RawIO.ReadString());
             }
             catch (Exception e)
             {
