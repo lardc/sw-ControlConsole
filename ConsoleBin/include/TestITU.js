@@ -1,6 +1,6 @@
 include("PrintStatus.js")
 
-function ITU_Start(Voltage, Current)
+function ITU_Start(Voltage, Current, VReadyCallback, MutePrint)
 {
 	dev.w(128, Voltage)
 	dev.w(129, Math.floor(Current))
@@ -8,18 +8,50 @@ function ITU_Start(Voltage, Current)
 	dev.c(100)
 	
 	while(dev.r(192) == 4)
+	{
+		if(typeof(VReadyCallback) == 'function')
+			VReadyCallback(dev.r(198) == 1)
+		
+		if(anykey())
+		{
+			dev.c(101)
+			return false
+		}
+		
 		sleep(100)
+	}
 	
 	if(dev.r(192) == 3)
 	{
-		p('Voltage,      V: ' + dev.r(200))
-		p('Current,     mA: ' + (dev.r(201) + dev.r(202) / 1000).toFixed(3))
-		p('Current act, mA: ' + (dev.r(203) + dev.r(204) / 1000).toFixed(3))
-		if(dev.r(195) == 1)
-			p('Output current saturation')
+		if(!MutePrint)
+		{
+			var res = ITU_ReadResult()
+			
+			p('Voltage,      V: ' + res.v)
+			p('Current,     mA: ' + res.i.toFixed(3))
+			p('Current act, mA: ' + res.i_act.toFixed(3))
+			p('Cos Phi        : ' + res.cos_phi.toFixed(3))
+			if(dev.r(195) == 1)
+				p('Output current saturation')
+		}
+		
+		return true
 	}
 	else
+	{
 		PrintStatus()
+		return false
+	}
+}
+
+function ITU_ReadResult()
+{
+	var voltage 	= dev.r(200)
+	var current 	= dev.r(201) + dev.r(202) / 1000
+	var current_act = dev.r(203) + dev.r(204) / 1000
+	var cos_phi		= dev.rs(205) / 1000
+	
+	return {v : voltage, i : current, i_act : current_act, cos_phi : cos_phi}
 }
 
 function ITU_PlotFull()
