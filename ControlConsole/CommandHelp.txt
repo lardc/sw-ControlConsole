@@ -114,6 +114,6 @@ Types:
 	- TMCObject - provides access to TMC device I/O functions
 		- co() - connect to device
 		- dco() - disconnect device
-		- query(@string) : [@value] - send request to device and read response
-		- write(@string) - send command to device
-		- read() : [@value] - read data from device
+		- q(@string) : [@value] - query data from the device
+		- w(@string) - write command to device
+		- r() : [@value] - read data from device

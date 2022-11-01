@@ -1002,7 +1002,7 @@ namespace PE.ControlConsole
             catch { }
         }
 
-        public string query(string Command)
+        public string q(string Command)
         {
             try
             {
@@ -1019,7 +1019,7 @@ namespace PE.ControlConsole
             }
         }
 
-        public void write(string Command)
+        public void w(string Command)
         {
             try
             {
@@ -1035,7 +1035,7 @@ namespace PE.ControlConsole
             }
         }
 
-        public string read()
+        public string r()
         {
             try
             {
