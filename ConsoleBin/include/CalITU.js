@@ -95,8 +95,8 @@ function CITU_Current(Calibrate)
 	
 	if(CITU_Collect(VoltageValues, CurrentParams.Limit, citu_Iterations))
 	{
-		CGEN_SaveArrays(Calibrate ? 'itu_i' : 'itu_i_fixed', citu_v, citu_v_ref, citu_v_err)
-		scattern(citu_v_ref, citu_v_err, 'Current (in mA)', 'Error (in %)', 'Current relative error up to ' + CurrentParams.Limit + ' mA')
+		CGEN_SaveArrays(Calibrate ? 'itu_i' : 'itu_i_fixed', citu_i, citu_i_ref, citu_i_err)
+		scattern(citu_i_ref, citu_i_err, 'Current (in mA)', 'Error (in %)', 'Current relative error up to ' + CurrentParams.Limit + ' mA')
 		
 		if(Calibrate)
 		{
@@ -110,7 +110,7 @@ function CITU_Current(Calibrate)
 function CITU_Collect(VoltageValues, MaxCurrent, IterationsCount)
 {
 	// Подготовительные настройки
-	CITU_PrepareMultimeter()
+	CITU_PrepareMultimeter(MaxCurrent)
 	dev.w(132, 60)
 	if(dev.r(192) == 0)
 		dev.c(1)
@@ -143,7 +143,7 @@ function CITU_Collect(VoltageValues, MaxCurrent, IterationsCount)
 			{
 				if(citu_VoltageMode)
 				{
-					var name = ' voltage, V'
+					var name = ' voltage,  V'
 					var idx = citu_v.length - 1
 					var unit = citu_v[idx]
 					var ref  = citu_v_ref[idx]
@@ -160,7 +160,7 @@ function CITU_Collect(VoltageValues, MaxCurrent, IterationsCount)
 				
 				p('Unit' + name + ': ' + unit)
 				p('Ref ' + name + ': ' + ref)
-				p('Err,          %: ' + err)
+				p('Err,           %: ' + err)
 				p('----------------------')
 			}
 			else
@@ -180,7 +180,7 @@ function CITU_TestCallback(VoltageReady)
 	else if(VoltageReady && (Date.now() / 1000 - citu_VReadyTime) > citu_ProbeTime)
 	{
 		var unit_result = ITU_ReadResult()
-		var ref_result = parseFloat(tmc.q(':READ?')) * (citu_VoltageMode ? 1000 : 1)
+		var ref_result = parseFloat(tmc.q(':READ?')) * 1000
 		
 		if(citu_VoltageMode)
 		{
@@ -199,12 +199,20 @@ function CITU_TestCallback(VoltageReady)
 	}
 }
 
-function CITU_PrepareMultimeter()
+function CITU_PrepareMultimeter(MaxCurrent)
 {
 	tmc.co()
 	tmc.w('*RST')
-	tmc.w(':FUNC \"VOLT:AC\"')
-	tmc.w('VOLT:AC:RANG 10')
+	if(citu_VoltageMode)
+	{
+		tmc.w(':FUNC \"VOLT:AC\"')
+		tmc.w('VOLT:AC:RANG 10')
+	}
+	else
+	{
+		tmc.w(':FUNC \"CURR:AC\"')
+		tmc.w('CURR:AC:RANG ' + (MaxCurrent / 1000))
+	}
 }
 
 function CITU_GetIRangeParameters()
