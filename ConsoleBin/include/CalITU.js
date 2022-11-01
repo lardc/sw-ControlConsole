@@ -9,7 +9,7 @@ citu_Vmax = 8000
 citu_IRange = 1
 
 // Время считывания результата от готовности напряжения (в сек)
-citu_ProbeTime = 10
+citu_ProbeTime = 1
 
 // Сопротивление нагрузки для калибровки/верификации тока (в Ом)
 citu_LoadRes = 10e6
@@ -45,7 +45,7 @@ function CITU_Voltage(Calibrate)
 {
 	citu_VoltageMode = true
 	var VStep = (citu_Vmax - citu_Vmin) / (citu_RangeSteps - 1)
-	var VoltageValues = CGEN_GetRange(citu_Vmin, citu_Vmax, VStep.toFixed(0))
+	var VoltageValues = CGEN_GetRange(citu_Vmin, citu_Vmax, VStep)
 	
 	if(Calibrate)
 		CITU_CalV(0, 1, 0)
@@ -88,7 +88,7 @@ function CITU_Current(Calibrate)
 	
 	Vmax = (Vmax > citu_Vmax) ? citu_Vmax : Vmax
 	var VStep = (Vmax - citu_Vmin) / (citu_RangeSteps - 1)
-	var VoltageValues = CGEN_GetRange(citu_Vmin, Vmax.toFixed(0), VStep.toFixed(0))
+	var VoltageValues = CGEN_GetRange(citu_Vmin, Vmax, VStep)
 	
 	if(Calibrate)
 		CITU_CalI(0, 1, 0)
@@ -112,6 +112,9 @@ function CITU_Collect(VoltageValues, MaxCurrent, IterationsCount)
 	// Подготовительные настройки
 	CITU_PrepareMultimeter()
 	dev.w(132, 60)
+	if(dev.r(192) == 0)
+		dev.c(1)
+	
 	if(citu_VoltageMode)
 	{
 		citu_v = []
@@ -126,11 +129,15 @@ function CITU_Collect(VoltageValues, MaxCurrent, IterationsCount)
 	}
 	
 	// Сбор данных
+	var cnt = 1
+	var total_cnt = VoltageValues.length * IterationsCount
 	for(var i = 0; i < IterationsCount; i++)
 	{
 		for(var j = 0; j < VoltageValues.length; j++)
 		{
-			var VoltageSet = VoltageValues[j]
+			p('Test ' + (cnt++) + ' of ' + total_cnt)
+			
+			var VoltageSet = Math.floor(VoltageValues[j])
 			citu_VReadyTime = undefined
 			if(ITU_Start(VoltageSet, MaxCurrent, CITU_TestCallback, true))
 			{
@@ -138,23 +145,23 @@ function CITU_Collect(VoltageValues, MaxCurrent, IterationsCount)
 				{
 					var name = ' voltage, V'
 					var idx = citu_v.length - 1
-					var unit = citu_v[idx].toFixed(0)
-					var ref  = citu_v_ref[idx].toFixed(0)
-					var err  = citu_v_err[idx].toFixed(2)
+					var unit = citu_v[idx]
+					var ref  = citu_v_ref[idx]
+					var err  = citu_v_err[idx]
 				}
 				else
 				{
 					var name = ' current, mA'
 					var idx = citu_i.length - 1
-					var unit = citu_i[idx].toFixed(3)
-					var ref  = citu_i_ref[idx].toFixed(3)
-					var err  = citu_i_err[idx].toFixed(2)
+					var unit = citu_i[idx]
+					var ref  = citu_i_ref[idx]
+					var err  = citu_i_err[idx]
 				}
 				
 				p('Unit' + name + ': ' + unit)
 				p('Ref ' + name + ': ' + ref)
-				p('Err, %          : ' + err)
-				p('---')
+				p('Err,          %: ' + err)
+				p('----------------------')
 			}
 			else
 				return false
@@ -173,19 +180,19 @@ function CITU_TestCallback(VoltageReady)
 	else if(VoltageReady && (Date.now() / 1000 - citu_VReadyTime) > citu_ProbeTime)
 	{
 		var unit_result = ITU_ReadResult()
-		var ref_result = parseFloat(tmc.query(':READ?')) * (citu_VoltageMode ? 1000 : 1)
+		var ref_result = parseFloat(tmc.q(':READ?')) * (citu_VoltageMode ? 1000 : 1)
 		
 		if(citu_VoltageMode)
 		{
-			citu_v.push(unit_result.v)
-			citu_v_ref.push(ref_result)
-			citu_v_err.push((unit_result.v - ref_result) / ref_result * 100)
+			citu_v.push(unit_result.v.toFixed(0))
+			citu_v_ref.push(ref_result.toFixed(1))
+			citu_v_err.push(((unit_result.v - ref_result) / ref_result * 100).toFixed(2))
 		}
 		else
 		{
-			citu_i.push(unit_result.i)
-			citu_i_ref.push(ref_result)
-			citu_i_err.push((unit_result.i - ref_result) / ref_result * 100)
+			citu_i.push(unit_result.i.toFixed(3))
+			citu_i_ref.push(ref_result.toFixed(4))
+			citu_i_err.push(((unit_result.i - ref_result) / ref_result * 100).toFixed(2))
 		}
 		
 		dev.c(101)
@@ -195,11 +202,9 @@ function CITU_TestCallback(VoltageReady)
 function CITU_PrepareMultimeter()
 {
 	tmc.co()
-	tmc.write(':SENS:FUNC \'VOLT:AC\'')
-	
-	tmc.write('VOLT:AC:AVER:COUNT 10')
-	tmc.write('VOLT:AC:AVER:TCON MOV')
-	tmc.write('VOLT:AC:AVER ON')
+	tmc.w('*RST')
+	tmc.w(':FUNC \"VOLT:AC\"')
+	tmc.w('VOLT:AC:RANG 10')
 }
 
 function CITU_GetIRangeParameters()
