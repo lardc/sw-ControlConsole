@@ -158,6 +158,7 @@ function CITU_Collect(VoltageValues, MaxCurrent, IterationsCount)
 					var err  = citu_i_err[idx]
 				}
 				
+				p('Set voltage,   V: ' + VoltageSet)
 				p('Unit' + name + ': ' + unit)
 				p('Ref ' + name + ': ' + ref)
 				p('Err,           %: ' + err)
