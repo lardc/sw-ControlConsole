@@ -1,7 +1,7 @@
 include("PrintStatus.js")
 
-CurrentRateArray = [50, 75, 100, 250, 500, 750, 1000, 1500, 2500, 3000, 5000]; // A/us * 100
-CurrentTest = 500;	// A
+CurrentRateArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // A/us * 100
+CurrentTest = 1100;	// A
 bi = 0; //счётчик
 function DRCU_Debug(Current, Range)
 {
@@ -60,7 +60,7 @@ function DRCU_Test(N)
 		for (var j = 0; j < 11; j++)
 		{
 			p("#" + (i * 11 + j));
-			p("dI/dt = " + CurrentRateArray[j] / 100 + "A/us")
+			p("dI/dt = " + CurrentRateArray[j] + "N_A/us");
 			p("----------------");
 			p("");
 			

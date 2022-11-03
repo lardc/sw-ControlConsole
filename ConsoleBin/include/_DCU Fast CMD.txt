@@ -30,7 +30,7 @@ DRCU_Pulse(50, 50)
 CAL_DCUTestV(90,100,50);
 
 // Диапазон di/dt
-i("CalDCU.js");
+i("CalDCU016.js");
 cal_IdMin = 100;	
 cal_IdMax = 500;
 cal_Rshunt = 999;
@@ -40,13 +40,15 @@ cal_Iterations = 1;
 cal_UseAvg = 0;
 cal_UseQRR = 1;
 CurrentRateTest = [0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50];
-CAL_Init(13,14,1);
+CAL_Init(1,2,1);
 
 dev.c(1);
 sleep(1000);
-CAL_VerifyIrate();
+CAL_VerifyIrate(1);
 
-CAL_CalibrateIrate();
+i("CalDCU016.js");
+CAL_Init(1,2,1);
+CAL_CalibrateIrate(1);
 
 // Диапазон Id
 i("CalDCU.js");
@@ -55,10 +57,10 @@ cal_IdMax = 500;
 cal_Rshunt = 1000;
 cal_Iterations = 1;
 cal_UseAvg = 1;
-CAL_Init(13,14,1);
+CAL_Init(1,2,1);
 dev.c(1);
 sleep(1000);
 CurrentRateTest = 0.75;
 
-CAL_VerifyId();
+CAL_VerifyId(0);
 CAL_CalibrateId();

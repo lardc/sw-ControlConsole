@@ -88,7 +88,7 @@ if (channelMeasureId < 1 || channelMeasureId > 4)
 
 //Verification Function 
 
-function CAL_VerifyId()
+function CAL_VerifyId(CurrentRateNTest)
 {
 	//Reset values
 	CAL_ResetA();
@@ -143,7 +143,7 @@ function CAL_VerifyIrate(CurrentRateNTest)
 
 //Calibration Function
 
-function CAL_CalibrateId()
+function CAL_CalibrateId(CurrentRateNTest)
 {		
 	CAL_ResetA();
 	CAL_ResetIdCal();
@@ -155,7 +155,7 @@ function CAL_CalibrateId()
 	// Reload values
 	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
 
-	if (CAL_CollectId(CurrentArray, cal_Iterations))
+	if (CAL_CollectId(CurrentArray, cal_Iterations, CurrentRateNTest))
 	{
 		CAL_SaveId("DCU_Id");
 		CAL_SaveIdset("DCU_Idset");
@@ -236,14 +236,14 @@ function CAL_TekInitId()
 	TEK_ChannelInit(cal_chMeasureId, "1", "0.02");
 	TEK_TriggerInit(cal_chMeasureId, "0.06");
 	TEK_Send("trigger:main:edge:slope fall");
-	TEK_Horizontal("0.5e-3", "-0.4e-3");
+	TEK_Horizontal("0.5e-3", "0.4e-3");
 	TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
 	TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
 }
 
 //--------------------
 
-function CAL_CollectId(CurrentValues, IterationsCount)
+function CAL_CollectId(CurrentValues, IterationsCount,CurrentRateNTest)
 {
 	cal_CntTotal = IterationsCount * CurrentValues.length;
 	cal_CntDone = 1;
@@ -270,7 +270,7 @@ function CAL_CollectId(CurrentValues, IterationsCount)
 			sleep(1000);
 			
 			for (var k = 0; k < AvgNum; k++)
-				DRCU_Pulse(CurrentValues[j], 0);
+				DRCU_Pulse(CurrentValues[j], CurrentRateNTest );
 			
 			// Unit data
 			var Id = dev.r(202) / 10;
