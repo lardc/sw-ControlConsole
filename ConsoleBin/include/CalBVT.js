@@ -11,7 +11,8 @@ cbvt_VoltageProbeRatio = 1000;	// Коэффициент деление проб
 cbvt_StartVLow = 100;	// Стартовое напряжение для напряжений до 1000В (В)
 cbvt_StartVHigh = 500;	// Стартовое напряжение для напряжений от 1000В (В)
 
-cbvt_VmaxDC	= 4500;		// in V
+cbvt_VminDC	= 500;		// in V
+cbvt_VmaxDC	= 2000;		// in V
 //
 cbvt_Shunt	= 99.45;	// in Ohms
 cbvt_R		= 215930;	// in Ohms
@@ -71,7 +72,7 @@ cbvt_v_corr = [];
 cbvt_i_corr = [];
 
 cbvt_chMeasureV = 1;
-cbvt_chMeasureI = 1;
+cbvt_chMeasureI = 2;
 
 // Iterations
 cbvt_Iterations = 3;
@@ -238,9 +239,9 @@ function CBVT_VerifyIx(FileName)
 
 function CBVT_CalibrateVDC()
 {
-	cbvt_Vmin	= 500;
+	cbvt_Vmin	= cbvt_VminDC;
 	cbvt_Vmax	= cbvt_VmaxDC;
-	cbvt_Vstp	= 500;
+	cbvt_Vstp	= Math.round((cbvt_Vmax - cbvt_Vmin) / 10);
 	
 	CBVT_Prepare();
 	CBVT_ResetVCal();
@@ -250,7 +251,7 @@ function CBVT_CalibrateVDC()
 		CBVT_SaveV("bvt_v_dc");
 		
 		// Plot relative error distribution
-		scattern(cbvt_v_sc, cbvt_v_err, "Voltage (in V)", "Error (in %)", "DC voltage relative error");
+		scattern(cbvt_v_sc, cbvt_v_err, "Voltage (in V)", "Error (in %)", "DC voltage relative error " + cbvt_Vmin + "..." + cbvt_Vmax + " V");
 		
 		if (CGEN_UseQuadraticCorrection())
 		{
@@ -284,7 +285,7 @@ function CBVT_CalibrateIDC()
 		CBVT_SaveI("bvt_i_dc");
 		
 		// Plot relative error distribution
-		scattern(cbvt_i_sc, cbvt_i_err, "Voltage (in V)", "Error (in %)", "DC current relative error");
+		scattern(cbvt_i_sc, cbvt_i_err, "Current (in V)", "Error (in %)", "DC current relative error");
 		
 		if (CGEN_UseQuadraticCorrection())
 		{
@@ -304,9 +305,9 @@ function CBVT_CalibrateIDC()
 
 function CBVT_VerifyVDC()
 {
-	cbvt_Vmin	= 500;
+	cbvt_Vmin	= cbvt_VminDC;
 	cbvt_Vmax	= cbvt_VmaxDC;
-	cbvt_Vstp	= 500;
+	cbvt_Vstp	= Math.round((cbvt_Vmax - cbvt_Vmin) / 10);
 	
 	CBVT_Prepare();
 	
@@ -315,15 +316,15 @@ function CBVT_VerifyVDC()
 		CBVT_SaveV("bvt_v_dc_fixed");
 		
 		// Plot relative error distribution
-		scattern(cbvt_v_sc, cbvt_v_err, "Voltage (in V)", "Error (in %)", "DC voltage relative error");
+		scattern(cbvt_v_sc, cbvt_v_err, "Voltage (in V)", "Error (in %)", "DC voltage relative error " + cbvt_Vmin + "..." + cbvt_Vmax + " V");
 	}
 }
 
 function CBVT_VerifyIDC()
 {
-	var Vmax = Math.round((cbvt_DC_LowI ? 100 : 5000) * cbvt_RDC * 0.9 / 1e6);
-	cbvt_Vmin = 500;
-	cbvt_Vmax = (Vmax > cbvt_VmaxDC) ? cbvt_VmaxDC : Vmax;
+	//var Vmax = Math.round((cbvt_DC_LowI ? 100 : 5000) * cbvt_RDC * 0.9 / 1e6);
+	cbvt_Vmin = cbvt_VminDC;
+	cbvt_Vmax = cbvt_VmaxDC;
 	cbvt_Vstp = Math.round((cbvt_Vmax - cbvt_Vmin) / 10);
 	
 	CBVT_Prepare();
@@ -333,7 +334,7 @@ function CBVT_VerifyIDC()
 		CBVT_SaveI("bvt_i_dc_fixed");
 		
 		// Plot relative error distribution
-		scattern(cbvt_i_sc, cbvt_i_err, "Voltage (in V)", "Error (in %)", "DC current relative error");
+		scattern(cbvt_i_sc, cbvt_i_err, "Current (in uA)", "Error (in %)", "DC current relative error");
 	}
 }
 
@@ -418,9 +419,18 @@ function CBVT_CollectDC(VoltageValues, IterationsCount, PrintMode)
 	CBVT_TekMeasurement(cbvt_chMeasureV);
 	CBVT_TekMeasurement(cbvt_chMeasureI);
 	// Horizontal settings
-	TEK_Horizontal("0.5", "1");
+	TEK_Horizontal("0.25", "-0.75");
 	// Init trigger
-	TEK_TriggerInit(cbvt_chMeasureV, "100");
+	if(PrintMode == 1)
+	{
+		CBVT_TriggerInit(cbvt_chMeasureV, "100");
+	}
+
+	if(PrintMode == 2)
+	{
+		CBVT_TriggerInit(cbvt_chMeasureI, "0.05");
+	}
+	
 	sleep(500);
 	
 	cbvt_cntTotal = IterationsCount * VoltageValues.length;
@@ -437,7 +447,7 @@ function CBVT_CollectDC(VoltageValues, IterationsCount, PrintMode)
 	// Global configuration
 	dev.w(128, 4);			// Test type - DC
 	dev.w(138, 2000);		// Plate time
-	dev.w(141, 30);			// Rise rate
+	dev.w(141, 10);			// Rise rate
 	dev.w(140, 500);		// Start voltage
 	dev.w(139, (cbvt_DC_LowI) ? 100 : 5000);		// Limit current
 	
@@ -452,7 +462,18 @@ function CBVT_CollectDC(VoltageValues, IterationsCount, PrintMode)
 				CBVT_TekScale(cbvt_chMeasureI, VoltageValues[j] / cbvt_RDC * cbvt_ShuntDC);
 			}
 			
-			TEK_TriggerLevelF(VoltageValues[j] / 2);
+			
+
+			if(PrintMode == 1)
+			{
+				TEK_TriggerLevelF(VoltageValues[j] / 2);
+			}
+
+			if(PrintMode == 2)
+			{
+				TEK_TriggerLevelF((VoltageValues[j] / cbvt_RDC * cbvt_ShuntDC) / 2);
+			}
+
 			sleep(1000);
 			
 			dev.w(140, VoltageValues[j]);
@@ -463,6 +484,16 @@ function CBVT_CollectDC(VoltageValues, IterationsCount, PrintMode)
 	}
 	
 	return 1;
+}
+
+function CBVT_TriggerInit(Channel, Level)
+{
+	TEK_Send("trigger:main:level " + Level);
+	TEK_Send("trigger:main:mode normal");
+	TEK_Send("trigger:main:type edge");
+	TEK_Send("trigger:main:edge:coupling dc");
+	TEK_Send("trigger:main:edge:slope fall");
+	TEK_Send("trigger:main:edge:source ch" + Channel);
 }
 
 function CBVT_MeasureV(Channel)
@@ -486,7 +517,7 @@ function CBVT_MeasureIDC(Channel)
 	var f = TEK_Measure(Channel);
 	if (Math.abs(f) > 2e+4)
 		f = 0;
-	return ((f * 1e6) / cbvt_ShuntDC).toFixed(2);
+	return ((f * 1000000) / cbvt_ShuntDC);
 }
 
 function CBVT_Probe(PrintMode)
@@ -542,19 +573,19 @@ function CBVT_ProbeDC(PrintMode)
 	dev.c(100);
 	while (dev.r(192) == 5) sleep(100);
 	
-	sleep(3000);
+	sleep(2000);
 	
 	var f_v = CBVT_MeasureV(cbvt_chMeasureV);
 	var f_i = CBVT_MeasureIDC(cbvt_chMeasureI);
 	
 	var v = Math.abs(dev.rs(198));
-	var i = dev.r(199);
+	var i = BVT_ReadCurrent(cbvt_UseMicroAmps) * 1000;
 	
-	cbvt_v.push(v);
-	cbvt_i.push(i);
+	cbvt_v.push(v.toFixed(2));
+	cbvt_i.push(i.toFixed(3));
 	//
-	cbvt_v_sc.push(f_v);
-	cbvt_i_sc.push(f_i);
+	cbvt_v_sc.push(f_v.toFixed(2));
+	cbvt_i_sc.push(f_i.toFixed(3));
 	//
 	cbvt_v_err.push(((v - f_v) / f_v * 100).toFixed(2));
 	cbvt_i_err.push(((i - f_i) / f_i * 100).toFixed(2));
@@ -564,11 +595,13 @@ function CBVT_ProbeDC(PrintMode)
 		case 1:
 			print("V,     V: " + v);
 			print("Vtek,  V: " + f_v);
+			print("Погр,  %: " + ((v - f_v) / f_v * 100).toFixed(2));
 			break;
 		
 		case 2:
 			print("I,    uA: " + i);
-			print("Itek, uA: " + f_i);
+			print("Itek, uA: " + f_i.toFixed(3));
+			print("Погр,  %: " + ((i - f_i) / f_i * 100).toFixed(2));
 			break;
 	}
 	
@@ -636,8 +669,10 @@ function CBVT_TekMeasurement(Channel)
 
 function CBVT_TekScale(Channel, Value)
 {
-	Value = Value * 0.95
-	TEK_ChannelScale(Channel, Value);
+	// 0.8 - use 80% of full range
+	// 8 - number of scope grids in full scale
+	var scale = (Value / (8 * 0.9));
+	TEK_Send("ch" + Channel + ":scale " + scale);
 }
 
 function CBVT_Prepare()

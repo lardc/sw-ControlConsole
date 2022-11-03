@@ -369,3 +369,37 @@ function FWU_RestoreLCTU()
 	dev.Restore("../../hw-LCTUControlBoard/Firmware/LCTUControlBoard.regdump");
 }
 //------------------------
+
+// FCROVU
+function FWU_FCROVU()
+{
+	FWUpdateSTM("../../hw-FCROVUControlBoard/Firmware/Release/FCROVUControlBoard.binary");
+}
+
+function FWU_DumpFCROVU()
+{
+	dev.Dump("../../hw-FCROVUControlBoard/Firmware/FCROVUControlBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreFCROVU()
+{
+	dev.Restore("../../hw-FCROVUControlBoard/Firmware/FCROVUControlBoard.regdump");
+}
+//------------------------
+
+// PAU
+function FWU_PAU()
+{
+	FWUpdateSTM("../../hw-PAUControlBoard/Firmware/Release/PAUControlBoard.binary");
+}
+
+function FWU_DumpPAU()
+{
+	dev.Dump("../../hw-PAUControlBoard/Firmware/PAUControlBoard.regdump", 0, 126);
+}
+
+function FWU_RestorePAU()
+{
+	dev.Restore("../../hw-PAUControlBoard/Firmware/PAUControlBoard.regdump");
+}
+//------------------------

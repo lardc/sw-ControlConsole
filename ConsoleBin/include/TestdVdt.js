@@ -3,8 +3,10 @@ include("CalGeneral.js")
 
 // Voltage settings for unit test
 dvdt_Vmin = 500;
-dvdt_Vmax = 4500;
+dvdt_Vmax = 4355;
 dvdt_Vstp = 500;
+
+dvdt_RatePoint = [20, 50, 100, 200];
 
 function _dVdt_Active()
 {
@@ -159,19 +161,62 @@ function dVdt_CellCall(CellID, Action)
 	dev.c(122);
 }
 
-function dVdt_CellPulse(CellID, Voltage, Gate, NoShutdown)
+function dVdt_CellPulse(CellID, Voltage, Gate, Range, NoShutdown)
 {
 	dVdt_CellCall(CellID, 1);
-	
+
+	dVdt_SelectRange(CellID, Range);	
 	dVdt_CellSetV(CellID, Voltage);
-	dVdt_CellSetGate(CellID, Gate);
 	
-	while (dVdt_CellReadReg(CellID, 14) != 1)
+	while (dVdt_CellReadReg(CellID, 14) == 0)
+	{
+		if (anykey()) return 0;
 		sleep(100);
+	}		
 	
+	dVdt_CellSetGate(CellID, Gate);
 	sleep(500);
 	dev.c(114);
+
+	while(_dVdt_Active())
+		sleep(50);
 	
 	if ((typeof NoShutdown == 'undefined') || NoShutdown == 0)
 		dVdt_CellCall(CellID, 2);
+}
+
+function dVdt_IdleShortTestDetector()
+{
+	var SetV = CGEN_GetRange(dvdt_Vmin, dvdt_Vmax, (dvdt_Vmax - dvdt_Vmin) / 4);
+
+	
+	for (var i = 0; i < dvdt_RatePoint.length; i++)
+	{
+		dev.w(129, dvdt_RatePoint[i] * 10);
+		for (var j = 0; j < SetV.length; j++)
+		{
+			dev.w(128, SetV[i]);
+			dev.c(100);
+			while(_dVdt_Active()) sleep(50);
+			
+			p("Скорость:" + dvdt_RatePoint[i] + " В/мкс");
+			p("Напряжение:" + SetV[j] + " В");
+
+			sleep(300);
+			if(dev.r(197) == 1)
+			{
+				p("Режим ХХ");
+			}
+			else
+			{
+				p("Режим КЗ");
+			}
+			//while(anykey() == 0);
+
+			p("______________");
+
+			if (anykey()) return;				
+		}	
+
+	}
 }

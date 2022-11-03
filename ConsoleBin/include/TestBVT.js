@@ -9,8 +9,8 @@ csv_array = [];
 
 bvt_direct = 1;
 bvt_use_microamps = 1;		// use microampere precision
-bvt_start_v = 200;			// in V
-bvt_rate = 20;				// in kV/s x10
+bvt_start_v = 500;			// in V
+bvt_rate = 10;				// in kV/s x10
 bvt_test_time = 3000;		// in ms
 bvt_pulse_sleep = 1000;		// in ms
 bvt_5hz_current = 50;		// in mA
@@ -120,7 +120,7 @@ function BVT_StartDC(N, Voltage, Current)
 		while (dev.r(192) == 5) sleep(100);
 	
 		print("Vdc,   V: " + dev.r(198));
-		print("Idc,  uA: " + dev.r(199));
+		print("Idc,  mA: " + BVT_ReadCurrent(bvt_use_microamps).toFixed(bvt_use_microamps ? 3 : 1));
 		print("-------------");
 		
 		if (anykey()) return;
@@ -145,7 +145,7 @@ function BVT_StartDCStep(N, Voltage, Current)
 		while (dev.r(192) == 5) sleep(100);
 	
 		print("Vdc,   V: " + dev.r(198));
-		print("Idc,  uA: " + dev.r(199));
+		print("Idc,  mA: " + BVT_ReadCurrent(bvt_use_microamps).toFixed(bvt_use_microamps ? 3 : 1));
 		print("-------------");
 		
 		if (anykey()) return;
@@ -167,7 +167,7 @@ function BVT_StartRes(N, Voltage)
 		while (dev.r(192) == 5) sleep(100);
 		
 		var warn = dev.r(195);
-		print("R,  MOhm: " + (dev.r(200) / 10));
+		print("R,  MOhm: " + (dev.r(201) / 10));
 		if (warn)
 			print("Warning : " + warn);
 		print("-------------");

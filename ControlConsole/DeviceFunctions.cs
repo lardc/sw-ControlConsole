@@ -842,7 +842,7 @@ namespace PE.ControlConsole
             }
             catch (ProtocolErrorFrameException e)
             {
-                if (e.Error == SCCIErrors.InvalidSfunction)
+                if (e.Error == SCCIErrors.InvalidSfunction || e.Error == SCCIErrors.NotSupported)
                     UseFloat = false;
             }
             catch (Exception e)
@@ -882,7 +882,7 @@ namespace PE.ControlConsole
             }
             catch (ProtocolErrorFrameException e)
             {
-                if (e.Error == SCCIErrors.InvalidSfunction)
+                if (e.Error == SCCIErrors.InvalidSfunction || e.Error == SCCIErrors.NotSupported)
                     UseFloat = false;
             }
             catch (Exception e)

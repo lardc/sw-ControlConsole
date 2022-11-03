@@ -1,0 +1,34 @@
+// Пояснения
+
+
+// Посмотреть версию прошивки
+i("PrintStatus.js");
+PrintFWInfo();
+
+// Обновление прошивки
+i("STM_FWUpdate.js");
+FWU_FCROVU();
+
+// Скачать дамп регистров
+i("STM_FWUpdate.js");
+FWU_DumpFCROVU();
+
+// Загрузить дамп регистров
+i("STM_FWUpdate.js");
+FWU_RestoreFCROVU();
+
+// Подготовка блока
+dev.co(11);
+dev.c(1)
+i("CalFCROVU.js");
+
+// Формирование сигнала
+fdVdt_DiagPulse(Gate);
+
+// Калибровка платы
+i("CalFCROVU.js");
+CfdVdt_Init(11, 12, 1);
+
+CfdVdt_CalibrateRate()
+
+// Диапазон dV/dt

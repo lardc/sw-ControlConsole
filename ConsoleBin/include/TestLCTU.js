@@ -1,5 +1,7 @@
 include("PrintStatus.js")
 
+PrintData = 1;
+
 function LCTU_Start(Voltage, PulseWidth)
 {
 	if(dev.r(192) == 3)
@@ -28,8 +30,11 @@ function LCTU_Start(Voltage, PulseWidth)
 		return 0;
 	}
 	
-	p("Voltage,  V: " + dev.rf(200).toFixed(2))
-	p("Current, uA: " + dev.rf(201).toFixed(2))
+	if(PrintData)
+	{
+		p("Voltage,  V: " + dev.rf(200).toFixed(2))
+		p("Current, mA: " + dev.rf(201).toFixed(3))
+	}
 	
 	return 1;
 }
@@ -52,10 +57,10 @@ function LCTU_TestOpAmp(Voltage)
 	// Voltage содержит значения в диапазоне ЦАП (0 - 4095)	
 	dev.w(150, Voltage);
 	dev.c(50);
-	dev.c(51);
+	dev.c(52);
 	sleep(100);
 	dev.w(150, 0);
-	dev.c(51);
+	dev.c(52);
 }
 //-----------------------------
 

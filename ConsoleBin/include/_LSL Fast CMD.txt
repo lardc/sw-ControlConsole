@@ -33,13 +33,13 @@ LSLH_StartMeasure(200);
 / (Offset: 2) (K: 3)
 / [P0: 4] [P1: 5] [P2: 6]
 i("CalLSL.js");
-cal_ItmMin = [160, 301];
-cal_ItmMax = [299, 1500];
+cal_ItmMin = [400, 1351];
+cal_ItmMax = [1349, 12600];
 cal_Rshunt = 750;
 cal_CurrentRange = 0;
 cal_UseAvg = 0;
 cal_Iterations = 1;
-CAL_Init(1,2,1,2,3);
+CAL_Init(8,9,1,2,3);
 
 CAL_VerifyItm();
 
@@ -49,13 +49,13 @@ CAL_CalibrateItm();
 / (Offset: 7) (K: 8)
 / [P0: 9] [P1: 10] [P2: 11]
 i("CalLSL.js");
-cal_ItmMin = [160, 301];
-cal_ItmMax = [299, 1500];
-cal_Rshunt = 750;
+cal_ItmMin = [400, 1351];
+cal_ItmMax = [1349, 12600];
+cal_Rshunt = 250;
 cal_CurrentRange = 1;
 cal_Iterations = 1;
 cal_UseAvg = 0;
-CAL_Init(1,2,1,2,3);
+CAL_Init(8,9,1,2,3);
 
 CAL_VerifyItm();
 
@@ -65,13 +65,14 @@ CAL_CalibrateItm();
 / (Offset: ) (K: )
 / [P0: 41] [P1: 42] [P2: 43]
 i("CalLSL.js");
-cal_IsetMin = 160;	
-cal_IsetMax = 1500;
-cal_Rshunt = 750;
+cal_IsetMin = 400;	
+cal_IsetMax = 12600;
+cal_IsetStp = (cal_IsetMax - cal_IsetMin) / cal_Points;
+cal_Rshunt = 250;
 cal_CurrentRange = 0;
 cal_Iterations = 1;
 cal_UseAvg = 0;
-CAL_Init(1,2,1,2,3);
+CAL_Init(8,9,1,2,3);
 
 CAL_VerifyIset();
 
@@ -82,12 +83,12 @@ CAL_CalibrateIset();
 / [P0: 14] [P1: 15] [P2: 16]
 i("CalLSL.js");
 cal_UtmMin = 500;
-cal_UtmMax = 5000;
-cal_Rload = 0.22/66*1000000;
+cal_UtmMax = 4000;
+cal_Rload = 1300; // 0.22/66*1000000
 cal_CurrentRange = 0;
-cal_Iterations = 1;
+cal_Iterations = 5;
 cal_UseAvg = 0;
-CAL_Init(1,2,1,2,3);
+CAL_Init(8,9,1,2,3);
 
 CAL_VerifyUtm();
 
