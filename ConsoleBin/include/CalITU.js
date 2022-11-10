@@ -9,7 +9,7 @@ citu_Vmax = 8000
 citu_IRange = 1
 
 // Время считывания результата от готовности напряжения (в сек)
-citu_ProbeTime = 1
+citu_ProbeTime = 3
 
 // Сопротивление нагрузки для калибровки/верификации тока (в Ом)
 citu_LoadRes = 10e6
@@ -135,9 +135,11 @@ function CITU_Collect(VoltageValues, MaxCurrent, IterationsCount)
 	{
 		for(var j = 0; j < VoltageValues.length; j++)
 		{
-			p('Test ' + (cnt++) + ' of ' + total_cnt)
-			
 			var VoltageSet = Math.floor(VoltageValues[j])
+			
+			p('Test ' + (cnt++) + ' of ' + total_cnt)
+			p('Set voltage,   V: ' + VoltageSet)
+			
 			citu_VReadyTime = undefined
 			if(ITU_Start(VoltageSet, MaxCurrent, CITU_TestCallback, true))
 			{
@@ -158,7 +160,6 @@ function CITU_Collect(VoltageValues, MaxCurrent, IterationsCount)
 					var err  = citu_i_err[idx]
 				}
 				
-				p('Set voltage,   V: ' + VoltageSet)
 				p('Unit' + name + ': ' + unit)
 				p('Ref ' + name + ': ' + ref)
 				p('Err,           %: ' + err)
@@ -221,52 +222,53 @@ function CITU_GetIRangeParameters()
 	switch(citu_IRange)
 	{
 		case 1:
-			return {StartReg : 9,  Limit : dev.r(215)}
+			return {StartReg : 9,  Limit : dev.r(215), P0div : 10}
 		
 		case 2:
-			return {StartReg : 14, Limit : dev.r(216)}
+			return {StartReg : 14, Limit : dev.r(216), P0div : 100}
 		
 		case 3:
-			return {StartReg : 19, Limit : dev.r(217)}
+			return {StartReg : 19, Limit : dev.r(217), P0div : 1000}
 	}
 }
 
-function CITU_CalX(StartReg, P2, P1, P0)
+function CITU_CalX(Params, P2, P1, P0)
 {
-	dev.ws(StartReg, Math.round(P2 * 1e6))
-	dev.w(StartReg + 1, Math.round(P1 * 1000))
-	dev.ws(StartReg + 2, Math.round(P0 * 10))
+	dev.ws(Params.StartReg, Math.round(P2 * 1e6))
+	dev.w(Params.StartReg + 1, Math.round(P1 * 1000))
+	dev.ws(Params.StartReg + 2, Math.round(P0 * Params.P0div))
 }
 
 function CITU_CalV(P2, P1, P0)
 {
-	CITU_CalX(4, P2, P1, P0)
+	CITU_CalX({StartReg : 4, P0div : 10}, P2, P1, P0)
 }
 
 function CITU_CalI(P2, P1, P0)
 {
-	var params = CITU_GetIRangeParameters()
-	if(params)
-		CITU_CalX(params.StartReg, P2, P1, P0)
+	var Params = CITU_GetIRangeParameters()
+	if(Params)
+		CITU_CalX(Params, P2, P1, P0)
 }
 
-function CITU_PrintCalX(Title, StartReg)
+function CITU_PrintCalX(Title, Params)
 {
 	p(Title)
-	p('P2 x1e6 : ' + dev.rs(StartReg))
-	p('P1 x1000: ' + dev.r(StartReg + 1))
-	p('P0 x10  : ' + dev.rs(StartReg + 2))
+	p('P2 x1e6 : ' + dev.rs(Params.StartReg))
+	p('P1 x1000: ' + dev.r(Params.StartReg + 1))
+	p('P0 x' + Params.P0div + (Params.P0div == 100 ? ' ' : Params.P0div == 10 ? '  ' : '') +
+		': ' + dev.rs(Params.StartReg + 2))
 }
 
 function CITU_PrintCalV()
 {
-	CITU_PrintCalX('Voltage', 4)
+	CITU_PrintCalX('Voltage', {StartReg : 4, P0div : 10})
 }
 
 function CITU_PrintCalI()
 {
-	var params = CITU_GetIRangeParameters()
-	if(params)
+	var Params = CITU_GetIRangeParameters()
+	if(Params)
 		CITU_PrintCalX('Current range ' + citu_IRange +
-			' up to ' + params.Limit + ' mA', params.StartReg)
+			' up to ' + Params.Limit + ' mA', Params)
 }
