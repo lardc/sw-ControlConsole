@@ -229,7 +229,7 @@ function CBVT_VerifyIx(FileName)
 		CBVT_SaveI(FileName);
 		
 		// Plot relative error distribution
-		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + 30 + "..." + 300 + " mA");
+		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + 0.5 + "..." + 30 + " mA");
 
 		// Plot relative error distribution
 		if(cbvt_EnableSumError)
@@ -531,7 +531,7 @@ function CBVT_Probe(PrintMode)
 	
 	var v = Math.abs(dev.rs(198));
 	var i = BVT_ReadCurrent(cbvt_UseMicroAmps);
-	
+
 	cbvt_v.push(v.toFixed(0));
 	cbvt_i.push(i.toFixed(3));
 	//
@@ -568,18 +568,25 @@ function CBVT_Probe(PrintMode)
 	sleep(bvt_pulse_sleep);
 }
 
+function CBVT_ReadCurrent()
+{
+	return (dev.rs(199) / 10) + ((dev.rs(200) % 100) / 1000) + (dev.rs(202) / 1000000);
+}
+
 function CBVT_ProbeDC(PrintMode)
 {
 	dev.c(100);
 	while (dev.r(192) == 5) sleep(100);
 	
-	sleep(2000);
+	sleep(2200);
 	
 	var f_v = CBVT_MeasureV(cbvt_chMeasureV);
 	var f_i = CBVT_MeasureIDC(cbvt_chMeasureI);
 	
 	var v = Math.abs(dev.rs(198));
-	var i = BVT_ReadCurrent(cbvt_UseMicroAmps) * 1000;
+	var i = CBVT_ReadCurrent() * 1000;
+
+	sleep(200);
 	
 	cbvt_v.push(v.toFixed(2));
 	cbvt_i.push(i.toFixed(3));
