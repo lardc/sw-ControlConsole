@@ -21,3 +21,13 @@ function CU_SetPin(PinID, Action, ResetMode)
 	dev.c(100);
 	dev.c(102);
 }
+
+
+function CU_TestInd (repeat)
+{
+	for (i = 0; i < repeat; i++)
+	{
+		dev.c(50);
+		sleep(1500);
+	}	
+}
