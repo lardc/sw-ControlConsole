@@ -1,6 +1,13 @@
 include("PrintStatus.js")
 include("CalGeneral.js")
 
+// DeviceState
+DS_None = 0;
+DS_Fault = 1;
+DS_Disabled = 2;
+DS_Ready = 3;
+DS_InProcess = 4;
+
 // Voltage settings for unit test
 dvdt_Vmin = 500;
 dvdt_Vmax = 4355;
@@ -12,7 +19,7 @@ function _dVdt_Active()
 {
 	if (dev.r(192) == 4)
 		return 1;
-	else
+	else if (dev.r(192) == 3)
 		return 0;
 }
 
@@ -178,8 +185,7 @@ function dVdt_CellPulse(CellID, Voltage, Gate, Range, NoShutdown)
 	sleep(500);
 	dev.c(114);
 
-	while(_dVdt_Active())
-		sleep(50);
+	while(_dVdt_Active()) sleep(50);
 	
 	if ((typeof NoShutdown == 'undefined') || NoShutdown == 0)
 		dVdt_CellCall(CellID, 2);
@@ -203,7 +209,7 @@ function dVdt_IdleShortTestDetector()
 			p("Напряжение:" + SetV[j] + " В");
 
 			sleep(300);
-			if(dev.r(197) == 1)
+			if (dev.r(197) == 1)
 			{
 				p("Режим ХХ");
 			}
@@ -219,4 +225,22 @@ function dVdt_IdleShortTestDetector()
 		}	
 
 	}
+}
+
+function dVdt_StartPulse(Voltage, Rate)
+{
+	if(dev.r(192) == DS_None)
+	{
+		dev.c(1);
+		while (dev.r(192) != DS_Ready)
+			sleep(100);
+	}
+	dev.w(128, Voltage);
+	dev.w(129, Rate * 10);
+	dev.c(100);
+	while(_dVdt_Active()) sleep(50);
+	if (dev.r(197) == 2)
+		print("Test Failed");
+	else if (dev.r(197) == 1)
+		print("Test OK");
 }
