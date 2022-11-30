@@ -48,6 +48,9 @@ CAL_VerifyIrate(1);
 
 i("CalDCU016.js");
 CAL_Init(1,2,1);
+CAL_VerifyIrate(0);
+
+dev.c(1);
 CAL_CalibrateIrate(1);
 
 // Диапазон Id
