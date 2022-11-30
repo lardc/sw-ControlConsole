@@ -267,7 +267,11 @@ function CAL_CollectId(CurrentValues, IterationsCount,CurrentRateNTest)
 			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 			//
 			DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
-			sleep(1000);
+			sleep(800);
+			while (dev.r(197) !=0)
+				{
+					sleep(500);
+				}
 			
 			for (var k = 0; k < AvgNum; k++)
 				DRCU_Pulse(CurrentValues[j], CurrentRateNTest );
@@ -462,38 +466,41 @@ function CAL_CollectIrate(CurrentValues, IterationsCount, CurrentRateNTest)
 		TEK_AcquireSample();
 	}
 	
+	cal_IdSc = [];
+	cal_IdsetErr = [];
+	cal_IrateErr = [];
+	
+
 	for (var i = 0; i < IterationsCount; i++)
 	{
-		
-		cal_IdSc = [];
-		cal_IdsetErr = [];
-		cal_IrateErr = [];
-		
-		k = CurrentRateNTest;
 		
 			for (var j = 0; j < CurrentValues.length; j++)
 			{
 				print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
 
 				DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
-				TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.25);
-				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.4);
-				sleep(800);
-				
+				TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[CurrentRateNTest]) * 1e-6) * 0.25);
+				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[CurrentRateNTest]) * 1e-6) * 0.4);
+				sleep(100);
+				while (dev.r(197) !=0)
+				{
+					sleep(500);
+				}
 				for (var m = 0; m < AvgNum; m++)
 				{
-					if(!DRCU_Pulse(CurrentValues[j], CurrentRateN[k]))
+					if(!DRCU_Pulse(CurrentValues[j], CurrentRateN[CurrentRateNTest]))
 						return 0;
 				}
 				sleep(1000);
 				
-				CAL_MeasureIrate(CurrentRate[k], CurrentValues[j]);
+				CAL_MeasureIrate(CurrentRate[CurrentRateNTest], CurrentValues[j]);
 				if (anykey()) return 0;
 			}
-			scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "DCU Current rate relative error " + CurrentRate[k] + " A/us");
+			//scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "DCU Current rate relative error " + CurrentRate[k] + " A/us");
 			//scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "DCU Set current relative error " + CurrentRateTest[k] + " A/us");
 				
 	}
+			scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "DCU Current rate relative error " + CurrentRate[CurrentRateNTest] + " A/us");
 	save("data/dcu_404.csv", cdcu_scatter);
 	return 1;
 }
@@ -518,6 +525,7 @@ function CAL_MeasureIrate(RateSet, CurrentSet)
 	print("Current Osc, A = " + CurrentScope);	
 	print("Current Err, % = " + CurrentErr);
 	
+	print("Voltage, V = " + dev.r(201));
 	print("di/dt Set, A/us = " + RateSet);	
 	print("di/dt Osc, A/us = " + RateScope);	
 	print("di/dt Err, % = " + RateErr);
@@ -603,11 +611,9 @@ function CAL_CompensationIrate(CurrentValues, CurrentRateNTest)
 		VoltageMin = cal_IntPsVmin;
 		VoltageMax = cal_IntPsVmax;
 
-		k = CurrentRateNTest;
-
 		DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
-		TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.25);
-		TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.4);
+		TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[CurrentRateNTest]) * 1e-6) * 0.25);
+		TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[CurrentRateNTest]) * 1e-6) * 0.4);
 
 		for (var i = 0; i < cal_Points; i++)
 		{
@@ -626,19 +632,19 @@ function CAL_CompensationIrate(CurrentValues, CurrentRateNTest)
 			p("-------------");
 			
 			for (var n = 0; n < AvgNum; n++)
-				if(!DRCU_Pulse(CurrentValues[j], CurrentRateN[k]))
+				if(!DRCU_Pulse(CurrentValues[j], CurrentRateN[CurrentRateNTest]))
 					return 0;				
 
 			
-			var IrateSc = CAL_MeasureIrate(CurrentRate[k],CurrentValues[j]);
+			var IrateSc = CAL_MeasureIrate(CurrentRate[CurrentRateNTest],CurrentValues[j]);
 			
-			if(IrateSc < CurrentRate[k])
+			if(IrateSc < CurrentRate[CurrentRateNTest])
 
 				VoltageMin = Voltage;
 
 			else
 			{
-				if(IrateSc > CurrentRate[k])
+				if(IrateSc > CurrentRate[CurrentRateNTest])
 
 					VoltageMax = Voltage;
 				else
