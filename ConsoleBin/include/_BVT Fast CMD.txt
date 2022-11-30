@@ -20,14 +20,25 @@ i("FWUpdate.js");
 FWU_RestoreBVT();
 
 // Подготовка блока
-dev.co(7);
-dev.nid(4);
+dev.co(11);
+//dev.nid(4);
 dev.c(1);
 i("TestBVT.js");
 bvt_start_v = 200;
 
 //Ресурсный тест
-BVT_ResourceTest(6000,50);
+/AC
+i("TestBVT.js");
+bvt_pulse_sleep = 16000;
+bvt_test_time = 2000;
+bvt_resource_test = 8;
+BVT_ResourceTest(8200,3000);
+
+/DC
+i("TestBVT.js");
+bvt_pulse_sleep = 6000;
+bvt_resource_test = 7;
+BVT_ResourceTestDC(2000);
 
 // Вывод графиков тока и напряжения на одном
 a = BVT_Plot();
@@ -38,36 +49,37 @@ i("TestBVT.js");
 BVT_StartPulse(1,500,50);
 // Измерение DC
 BVT_StartDC(1, 500, 100)
+BVT_StartRes(1, 500)
 
 
-// Диапазон 500 - 999В (AC)
+// Диапазон 300 - 499В (AC)
 / (Offset: -) (K: 28/29)
 / [P0: 114] [P1: 105] [P2: 104]
 i("CalBVT.js");
-cbvt_Iterations = 1;
+cbvt_Iterations = 3;
 cbvt_RangeV = 1;
 cbvt_VminAC = 300;
 cbvt_VmaxAC = 499;
 cbvt_VstpAC = (cbvt_VmaxAC - cbvt_VminAC) / 9;
 cbvt_StartVLow = 100;
-CBVT_Init(11,12,1,2);
+CBVT_Init(4,5,1,2);
 //dev.nid(4);
 
 CBVT_VerifyV();
 
 CBVT_CalibrateV();
 
-// Диапазон 1001 - 4200В (AC)
+// Диапазон 501 - 8000В (AC)
 / (Offset: -) (K: 30/31)
 / [P0: 115] [P1: 107] [P2: 106]
 i("CalBVT.js");
-cbvt_Iterations = 1;
+cbvt_Iterations = 3;
 cbvt_RangeV = 2;
 cbvt_VminAC = 510;
 cbvt_VmaxAC = 8000;
 cbvt_VstpAC = (cbvt_VmaxAC - cbvt_VminAC) / 9;
 cbvt_StartVLow = 100;
-CBVT_Init(11,12,1,2);
+CBVT_Init(4,5,1,2);
 //dev.nid(4);
 
 CBVT_VerifyV();
@@ -76,87 +88,111 @@ CBVT_CalibrateV();
 
 // Диапазон 0.5 - 30мА (AC)
 / (Offset: -) (K: 24/25)
-/ [P0: 116] [P1: 96/97] [P2:]
+/ [P0: 116] [P1: 97] [P2: 96]
 i("CalBVT.js");
-cbvt_Iterations = 1;
+cbvt_Iterations = 3;
 cbvt_RangeI = 1;
 cbvt_UseMicroAmps = 1;
-cbvt_VmaxAC = 6900; 
-cbvt_VminAC = 112;
+cbvt_VmaxAC = 7000; 
+cbvt_VminAC = 120;
 cbvt_StartVLow = 100;
-cbvt_R = 217855;
-cbvt_Shunt = 100.16;
-CBVT_Init(10,5,1,2);
-dev.nid(4);
+cbvt_R = 220000;
+cbvt_Shunt = 100;
+bvt_test_time = 1000;
+CBVT_Init(4,5,1,2);
+/dev.nid(4);
 
 CBVT_VerifyI();
 
 CBVT_CalibrateI();
 
-// Диапазон 30 - 100мА (AC)
+// Диапазон 30 - 300мА (AC)
 / (Offset: -) (K: 26/27)
-/ [P0: 117] [P1: 98/99] [P2: ]
+/ [P0: 117] [P1: 99] [P2: 98]
 i("CalBVT.js");
-cbvt_Iterations = 1;
+cbvt_Iterations = 3;
 cbvt_RangeI = 2;
 cbvt_UseMicroAmps = 1;
-cbvt_VmaxAC = 7440; 
-cbvt_VminAC = 750;
+cbvt_VmaxAC = 6500; 
+cbvt_VminAC = 660;
 cbvt_StartVLow = 300;
-cbvt_RP = 24807;
-cbvt_ShuntP = 9.99;
-CBVT_Init(10,5,1,2);
-dev.nid(4);
+cbvt_RP = 22000;
+cbvt_ShuntP = 10;
+CBVT_Init(4,5,1,2);
+//dev.nid(4);
 
 CBVT_VerifyIP();
 
 CBVT_CalibrateIP();
 
+
+
 // Диапазон 500 - 2000В (DC)
 i("CalBVT.js");
-cbvt_Iterations = 1;
+cbvt_Iterations = 3;
 cbvt_VminDC = 500;
 cbvt_VmaxDC	= 2000;
 cbvt_ShuntDC = 14950;	// in Ohms
 cbvt_RDC	 = 133.80e6;	// in Ohms
-CBVT_Init(11,12,1,2);
+CBVT_Init(4,5,1,2);
 
 CBVT_VerifyVDC()
 
 
-// Диапазон R_HIGH (DC)
+Диапазон LOW
+/ (Offset: -) (K: 37/38)
+/ [P0: 118] [P1: 113] [P2: 112]
+
+// Нагрузка R_HIGH (DC)
 i("CalBVT.js");
-cbvt_Iterations = 1;
+cbvt_Iterations = 3;
 cbvt_DC_LowI = 1;
 cbvt_VminDC = 500;
 cbvt_VmaxDC	= 2000;
 cbvt_ShuntDC = 14950;	// in Ohms
 cbvt_RDC	 = 133.8e6;	// in Ohms
-CBVT_Init(11,12,1,2);
+CBVT_Init(4,5,1,2);
 
 CBVT_VerifyIDC()
 
 // Диапазон R_MID (DC)
 i("CalBVT.js");
-cbvt_Iterations = 1;
-cbvt_DC_LowI = 0;
+cbvt_Iterations = 3;
+cbvt_DC_LowI = 1;
 cbvt_VminDC = 500;
+cbvt_VmaxDC	= 1450;
+cbvt_ShuntDC = 14950;	// in Ohms
+cbvt_RDC	 = 13.8e6;	// in Ohms
+CBVT_Init(4,5,1,2);
+
+CBVT_VerifyIDC()
+
+
+Диапазон MEDIUM
+/ (Offset: -) (K: 39/40)
+/ [P0: 110] [P1: 109] [P2: 108]
+
+// Диапазон R_MID (DC)
+i("CalBVT.js");
+cbvt_Iterations = 3;
+cbvt_DC_LowI = 0;
+cbvt_VminDC = 1500;
 cbvt_VmaxDC	= 2000;
 cbvt_ShuntDC = 14950;	// in Ohms
 cbvt_RDC	 = 13.8e6;	// in Ohms
-CBVT_Init(11,12,1,2);
+CBVT_Init(4,5,1,2);
 
 CBVT_VerifyIDC()
 
 
 // Диапазон R_LOW (DC)
 i("CalBVT.js");
-cbvt_Iterations = 1;
+cbvt_Iterations = 3;
 cbvt_DC_LowI = 0;
 cbvt_VminDC = 500;
 cbvt_VmaxDC	= 2000;
 cbvt_ShuntDC = 14950;	// in Ohms
 cbvt_RDC	 = 1.8e6;	// in Ohms
-CBVT_Init(11,12,1,2);
+CBVT_Init(4,5,1,2);
 
 CBVT_VerifyIDC()
