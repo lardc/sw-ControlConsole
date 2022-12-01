@@ -1,7 +1,21 @@
-include("TestDRCU.js")
-include("Tektronix.js")
-include("CalGeneral.js")
-include("TestQRR.js");
+include("Tektronix.js");
+include("AddCalDCU016.js")
+include("Sic_GetData.js")
+
+// CAN Nomber
+UseCAN = 0;
+CANadap = 0;
+CAN = 5;
+QSU  = 10;
+//DCU1 = 160;
+//DCU2 = 161;
+//DCU3 = 162;
+portDevice = 0;
+
+// Данные активаных блоков
+Unit = 0;
+UnitEn = 2;
+
 
 // Calibration setup parameters
 cal_Rshunt = 1000;	// uOhm
@@ -12,7 +26,7 @@ cal_UseAvg = 1;
 // CurrentArray
 cal_IdMin = 100;	
 cal_IdMax = 1100;
-cal_IdStp = 0;
+cal_IdStp = 100;
 
 // VoltageRete
 cal_IntPsVmin = 80;	// V
@@ -22,6 +36,7 @@ cal_IntPsVmax = 120;
 CurrentRateNTest = 0;
 CurrentRateN = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 CurrentRate = [0.167, 0.25, 0.334, 0.834, 1.667, 2.5, 3.334, 5, 8.334, 10, 16.667]; // in A/us 1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100
+
 
 // Counters
 cal_CntTotal = 0;
@@ -55,11 +70,53 @@ cal_IrateCorr = [];
 cdcu_scatter = [];
 
 
-//Function first setting
-
-function CAL_Init(portDevice, portTek, channelMeasureId)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Включение всех блоков DCU для калибровки
+function ALL_DCU_SW()		
 {
-if (channelMeasureId < 1 || channelMeasureId > 4)
+	print("UseCANadap ? (press 'y' or 'n')");
+	var key;
+		do
+		{
+			key = readkey();
+		}
+	while (key != "y" && key != "n");
+	if (key == "y")
+		UseCAN = 1;
+	else if (key == "n")
+		UseCAN = 0	
+	if (UseCAN == 1)
+		{ 
+		print("Enter number CANadap")
+		CANadap = readline();
+		dev.co(CANadap);
+		print("Enter number CAN QSU")
+		QSU = readline();
+		dev.nid(QSU);
+		print("Enter number use unit")
+		UnitEn = readline();
+		for (var a = 0; a < UnitEn ; a++)
+			{
+			Unit = dev.r(12 + a);
+			dev.nid(Unit);
+			dev.w(140,1);
+			dev.c(1);
+			dev.nid(QSU);
+			} 
+		portDevice = Unit;
+		}
+	else
+		{
+		print("Enter number RS232")
+		portDevice = readline();
+		dev.co(portDevice);
+		}	
+} 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//блок настройки осцилограффа и выходов
+function CAL_Init(portTek, channelMeasureId)
+{
+	if (channelMeasureId < 1 || channelMeasureId > 4)
 	{
 		print("Wrong channel numbers");
 		return;
@@ -69,9 +126,30 @@ if (channelMeasureId < 1 || channelMeasureId > 4)
 	cal_chMeasureId = channelMeasureId;
 
 	// Init device port
-	dev.Disconnect();
-	dev.Connect(portDevice);
+	
+	
+	if(UseCAN == 1)
+		{
+		if( CANadap == 0)	
+			{
+			print("Namber CANadap ?");
+			CANadap = readline();
+			print("CANadap = " + CANadap );
+			dev.Connect(CANadap);
+			dev.nid(portDevice);
+			}
+		else
+			print("CANadap = " + CANadap );
+			dev.Connect(CANadap);
+			dev.nid(portDevice);
+		}	
+	
 
+	else
+	{
+		dev.Connect(portDevice);
+	}	
+	
 	// Init Tektronix port
 	TEK_PortInit(portTek);
 	
@@ -83,10 +161,74 @@ if (channelMeasureId < 1 || channelMeasureId > 4)
 		else
 			TEK_ChannelOff(i);
 	}
-	cal_IdStp = (cal_IdMax - cal_IdMin ? cal_IdMax - cal_IdMin : 1) / cal_Points;
 }
 
-//Verification Function 
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//Блок формирования одиночного импульса
+function DRCU_Pulse(Current, CurrentRate)
+{
+	if( UnitEn == 1) // Когда проверяется 1 блок
+	{
+		dev.w(128, Current);
+		dev.w(129, CurrentRate);
+	
+		if(dev.r(192) == 3)
+		{
+			dev.c(100);
+		
+			while(dev.r(192) != 4)
+			{
+				if(dev.r(192) == 1)
+				{
+					PrintStatus();
+					return 0;
+				}
+			}
+		
+			dev.c(101);
+			sleep(50);
+		
+			while(dev.r(192) != 3)
+			{
+				if(dev.r(192) == 1)
+				{
+					PrintStatus();
+					return 0;
+				}
+			}
+		}
+		else
+			if(dev.r(192) == 1)
+			{
+				PrintStatus();
+				return 0;
+			}
+	
+		return 1;
+	}
+	else			// Когда проверяется более 1 блока
+	{
+		for(var i = 0; i < UnitEn; i++)
+		{
+			dev.nid(10);
+			Unit = dev.r(12 + i);  
+			CONFIG_UNIT(Unit, Current, CurrentRate);
+
+		}
+
+		dev.nid(QSU);
+		sleep(200);
+		dev.c(22);
+		dev.nid(Unit);
+		while (dev.r(197) == 6)
+			{
+				sleep(500);
+			}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//Блок верификации амплитуды тока (компенсация) 
 
 function CAL_VerifyId(CurrentRateNTest)
 {
@@ -110,7 +252,8 @@ function CAL_VerifyId(CurrentRateNTest)
 		}
 	}	
 
-//--------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//Блок верификации скорости спада
 
 function CAL_VerifyIrate(CurrentRateNTest)
 {		
@@ -124,10 +267,8 @@ function CAL_VerifyIrate(CurrentRateNTest)
 	CAL_CollectIrate(CurrentArray, cal_Iterations, CurrentRateNTest);		
 }
 
-
-//--------------------
-
-//Calibration Function
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//Блок калибровки амплитуды тока (компенсация) (Для 1 блока)
 
 function CAL_CalibrateId(CurrentRateNTest)
 {		
@@ -160,7 +301,9 @@ function CAL_CalibrateId(CurrentRateNTest)
 		CAL_PrintCoefIdset();
 	}
 }
-//--------------------
+
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//Блок калибровки скорости спада (Для 1 блока)
 
 function CAL_CalibrateIrate(CurrentRateNTest)
 {
@@ -183,592 +326,94 @@ function CAL_CalibrateIrate(CurrentRateNTest)
 	}	
 }
 
-//function CAL_Calibrate
-//--------------------
-
-//Аdditional Functions 
-
-	function CAL_ResetA()
-{	
-	// Results storage
-	cal_Id = [];
-	cal_Idset = [];
-	cal_Irateset = [];
-	cal_VintPS = [];
-
-	// Tektronix data
-	cal_IdSc = [];
-	cal_IdSc = [];
-	cal_IrateSc = [];
-
-	// Relative error
-	cal_IdErr = [];
-	cal_IdsetErr = [];
-	cal_IrateErr = [];
-
-	// Correction
-	cal_IdCorr = [];
-	cal_IdsetCorr = [];
-	cal_IrateCorr = [];
-	
-	// Data arrays
-	cdcu_scatter = [];
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//Импульс управления (Когда проверяется 1 блок)
+function DRCU_Debug(PWM, Range)
+{
+	dev.w(150, Range);
+	dev.c(59);
+	dev.w(150, PWM);
+	dev.w(151, PWM);
+	dev.c(60);
 }
 
-//--------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//Ресурсный тест (Когда проверяется 1 блок)
 
-function CAL_TekInitId()
+function DRCU_Test(N)
+
 {
-	TEK_ChannelInit(cal_chMeasureId, "1", "0.02");
-	TEK_TriggerInit(cal_chMeasureId, "0.06");
-	TEK_Send("trigger:main:edge:slope fall");
-	TEK_Horizontal("0.5e-3", "0.4e-3");
-	TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
-	TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
-}
-
-//--------------------
-
-function CAL_CollectId(CurrentValues, IterationsCount,CurrentRateNTest)
-{
-	cal_CntTotal = IterationsCount * CurrentValues.length;
-	cal_CntDone = 1;
-
-	var AvgNum;
-	if (cal_UseAvg)
+	for (var i = 0; i < N; i++)
 	{
-		AvgNum = 4;
-		TEK_AcquireAvg(AvgNum);
-	}
-	else
-	{
-		AvgNum = 1;
-		TEK_AcquireSample();
-	}
-	
-	for (var i = 0; i < IterationsCount; i++)
-	{
-		for (var j = 0; j < CurrentValues.length; j++)
+		for (var j = 0; j < 11; j++)
 		{
-			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-			//
-			DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt / 1000000);
-			sleep(800);
-			while (dev.r(197) !=0)
-				{
-					sleep(500);
-				}
+			p("#" + (i * 11 + j) + " / "+ (i + 1) );
+			p("№ dI/dt = " + CurrentRateArray[j]);
+			p("----------------");
+			p("");
 			
-			for (var k = 0; k < AvgNum; k++)
-				DRCU_Pulse(CurrentValues[j], CurrentRateNTest );
+			if(!DRCU_Pulse(CurrentTest, CurrentRateArray[j]))
+				return;
 			
-			// Unit data
-			var Id = dev.r(202) / 10;
-			cal_Id.push(Id);
-			print("Id, A: " + Id);
-			
-			var IdSet = dev.r(128);
-			cal_Idset.push(IdSet);
-			print("Idset, A: " + IdSet);
-
-			// Scope data
-			var IdSc = (CAL_MeasureId(cal_chMeasureId) / cal_Rshunt * 1000).toFixed(2);
-			cal_IdSc.push(IdSc);
-			print("Idtek, A: " + IdSc);
-
-			// Relative error
-			var IdErr = ((Id - IdSc) / IdSc * 100).toFixed(2);
-			cal_IdErr.push(IdErr);
-			print("Iderr, %: " + IdErr);
-			
-			var IdsetErr = ((IdSet - IdSc) / IdSc * 100).toFixed(2);
-			cal_IdsetErr.push(IdsetErr);
-			print("Idseterr, %: " + IdsetErr);
-			print("--------------------");
-			
-			if (anykey()) return 0;
+			if (anykey())
+				return;
 		}
 	}
-
-	return 1;
 }
 
-//--------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//одиночное включение-выключение формирования flyback (Когда проверяется 1 блок)
 
-function CAL_SaveId(NameId)
-{
-	CGEN_SaveArrays(NameId, cal_Id, cal_IdSc, cal_IdErr);
+function DRCU_SinglePS(delay)
+{ 
+dev.w(150,0);
+dev.c(55);
+dev.w(150,1);
+ print("Включение");
+ dev.c(54);
+ 
+ sleep (delay);
+dev.w(150,0);
+ print("Выключение");
+ dev.c(54);
+ sleep (100);
 }
 
-//--------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//Включение разрядки БП (Когда проверяется 1 блок)
 
-function DCU_TekScaleId(Channel, Value)
+function DRCU_PSDischarge() //Включение разрядки БП
 {
-	Value = Value / 7;
-	TEK_Send("ch" + Channel + ":scale " + Value);
-	TEK_TriggerInit(cal_chMeasureId, Value * 6);
-	TEK_Send("trigger:main:edge:slope fall");
-}
-
-//--------------------
-
-function CAL_MeasureId(Channel)
-{
-	return (TEK_Exec("measurement:meas1:value?") * 1000).toFixed(1);
-}
-
-
-//--------------------
-
-function CAL_TekInitIrate()
-{
-	TEK_ChannelInit(cal_chMeasureId, "1", "0.02");
-	TEK_TriggerInit(cal_chMeasureId, "0.06");
-	TEK_Send("ch" + cal_chMeasureId + ":position -4");
-	TEK_Send("trigger:main:edge:slope fall");
-	TEK_Send("measurement:meas" + cal_chMeasureId + ":source ch" + cal_chMeasureId);
-	TEK_Send("measurement:meas" + cal_chMeasureId + ":type maximum");
-	TEK_Send("measurement:meas1:source ch" + cal_chMeasureId);
-	TEK_Send("measurement:meas1:type maximum");
-	TEK_Send("measurement:meas2:source ch" + cal_chMeasureId);
-	TEK_Send("measurement:meas2:type fall");
-	TEK_Send("CURSor:HBArs:POSITION 0.1");
-	CAL_TekSetHorizontalScale();
-}
-
-//--------------------
-
-function CAL_TekSetHorizontalScale()
-{
-	switch(CurrentRateN)
+	dev.w(150,0);
+	dev.c(55);
+	
+while(!anykey())
 
 	{
-		case 0:
-			TEK_Horizontal("100e-6", "0");
-			break;
-		case 1:
-			TEK_Horizontal("100e-6", "0");
-			break;
-		case 2:
-			TEK_Horizontal("50e-6", "0");
-			break;
-		case 3:
-			TEK_Horizontal("25e-6", "0");
-			break;
-		case 4:
-			TEK_Horizontal("10e-6", "0");
-			break;
-		case 5:
-			TEK_Horizontal("10e-6", "0");
-			break;
-		case 6:
-			TEK_Horizontal("5e-6", "0");
-			break;
-		case 7:
-			TEK_Horizontal("5e-6", "0");
-			break;
-		case 8:
-			TEK_Horizontal("2.5e-6", "0");
-			break;
-		case 9:
-			TEK_Horizontal("2.5e-6", "0");
-			break;
-		case 10:
-			TEK_Horizontal("1e-6", "0");
-			break;
+	dev.w(150,1);
+	dev.c(55);
+	sleep(100);
 	}
+
+	dev.w(150,0);
+	dev.c(55);
+	
 }
 
-//--------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//Выставление напряжения на внутреннем источнике (Когда проверяется 1 блок)
 
-function CAL_CollectIrateALL(CurrentValues, IterationsCount)
+
+function DRCU_PSSetpoint(voltage)
 {
-	cal_CntTotal = IterationsCount * CurrentValues.length * CurrentRateN.length;
-	cal_CntDone = 1;
+	dev.w(130,voltage*10);
 
-	var AvgNum;
-	if (cal_UseAvg)
+	while(!anykey())
 	{
-		AvgNum = 4;
-		TEK_AcquireAvg(AvgNum);
+		p(dev.r(201));
+		sleep(2000);
 	}
-	else
-	{
-		AvgNum = 1;
-		TEK_AcquireSample();
-	}
-	
-	for (var i = 0; i < IterationsCount; i++)
-	{
-		for (var k = 0; k < CurrentRateN.length; k++)
-		{	
-			cal_IdSc = [];
-			cal_IdsetErr = [];
-			cal_IrateErr = [];
-			
-			for (var j = 0; j < CurrentValues.length; j++)
-			{
-				print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-						
-				DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
-				TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.25);
-				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[k]) * 1e-6) * 0.4);
-				sleep(800);
-				
-				for (var m = 0; m < AvgNum; m++)
-				{
-					if(!DRCU_Pulse(CurrentValues[j], CurrentRateN[k]))
-						return 0;
-				}
-				sleep(1000);
-				
-				CAL_MeasureIrate(CurrentRate[k], CurrentValues[j]);
-				if (anykey()) return 0;
-			}
-			scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "DCU Current rate relative error " + CurrentRate[k] + " A/us");
-			//scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "DCU Set current relative error " + CurrentRateTest[k] + " A/us");
-		}		
-	}
-	save("data/dcu_404.csv", cdcu_scatter);
-	return 1;
+	dev.w(130,0);
 }
 
-//--------------------
-
-function CAL_CollectIrate(CurrentValues, IterationsCount, CurrentRateNTest)
-{
-	cal_CntTotal = IterationsCount * CurrentValues.length;
-	cal_CntDone = 1;
-
-	var AvgNum;
-	if (cal_UseAvg)
-	{
-		AvgNum = 4;
-		TEK_AcquireAvg(AvgNum);
-	}
-	else
-	{
-		AvgNum = 1;
-		TEK_AcquireSample();
-	}
-	
-	cal_IdSc = [];
-	cal_IdsetErr = [];
-	cal_IrateErr = [];
-	
-
-	for (var i = 0; i < IterationsCount; i++)
-	{
-		
-			for (var j = 0; j < CurrentValues.length; j++)
-			{
-				print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-
-				DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
-				TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[CurrentRateNTest]) * 1e-6) * 0.25);
-				TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[CurrentRateNTest]) * 1e-6) * 0.4);
-				sleep(100);
-				while (dev.r(197) !=0)
-				{
-					sleep(500);
-				}
-				for (var m = 0; m < AvgNum; m++)
-				{
-					if(!DRCU_Pulse(CurrentValues[j], CurrentRateN[CurrentRateNTest]))
-						return 0;
-				}
-				sleep(1000);
-				
-				CAL_MeasureIrate(CurrentRate[CurrentRateNTest], CurrentValues[j]);
-				if (anykey()) return 0;
-			}
-			//scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "DCU Current rate relative error " + CurrentRate[k] + " A/us");
-			//scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "DCU Set current relative error " + CurrentRateTest[k] + " A/us");
-				
-	}
-			scattern(cal_IdSc, cal_IrateErr, "Current (in A)", "Error (in %)", "DCU Current rate relative error " + CurrentRate[CurrentRateNTest] + " A/us");
-	save("data/dcu_404.csv", cdcu_scatter);
-	return 1;
-}
-
-//--------------------
-
-function CAL_MeasureIrate(RateSet, CurrentSet)
-{
-	var RateScope = (TEK_Measure(cal_chMeasureId) * 0.8 / cal_Rshunt * 1e6 / TEK_Exec("measurement:meas2:value?") * 1e-6).toFixed(3);
-	var RateErr = ((RateScope - RateSet) / RateSet * 100).toFixed(2);
-	
-	var CurrentScope = (TEK_Measure(cal_chMeasureId) / (cal_Rshunt * 1e-6)).toFixed(2);
-	var CurrentErr = ((CurrentScope - CurrentSet) / CurrentSet * 100).toFixed(2);
-	
-	cdcu_scatter.push(RateSet + ";" + RateScope + ";" + RateErr + ";" + CurrentSet + ";" + CurrentScope + ";" + CurrentErr);
-	
-	cal_IdSc.push(CurrentScope);
-	cal_IdsetErr.push(CurrentErr);
-	cal_IrateErr.push(RateErr);
-
-	print("Current Set, A = " + CurrentSet);	
-	print("Current Osc, A = " + CurrentScope);	
-	print("Current Err, % = " + CurrentErr);
-	
-	print("Voltage, V = " + dev.r(201));
-	print("di/dt Set, A/us = " + RateSet);	
-	print("di/dt Osc, A/us = " + RateScope);	
-	print("di/dt Err, % = " + RateErr);
-
-	return RateScope;	
-}
-
-//--------------------
-
-function CAL_ResetIdCal()
-{
-	CAL_SetCoefId(0, 1, 0);
-}
-
-//--------------------
-
-function CAL_ResetIdsetCal()
-{
-	CAL_SetCoefIdset(0, 1, 0);
-}
-
-//--------------------
-
-function CAL_SaveIdset(NameIdset)
-{
-	CGEN_SaveArrays(NameIdset, cal_IdSc, cal_Idset, cal_IdsetErr);
-}
-
-//--------------------
-
-function CAL_PrintCoefId()
-{
-	print("Id P2 x1e6		: " + dev.rs(8));
-	print("Id P1 x1000		: " + dev.rs(7));
-	print("Id P0 			: " + dev.rs(6));
-}
-
-//--------------------
-
-function CAL_PrintCoefIdset()
-{
-	print("Idset P2 x1e6	: " + dev.rs(124));
-	print("Idset P1 x1000	: " + dev.rs(123));
-	print("Idset P0 		: " + dev.rs(122));
-}
-
-//--------------------
-
-function CAL_SetCoefId(P2, P1, P0)
-{
-	dev.ws(8, Math.round(P2 * 1e6));
-	dev.w(7, Math.round(P1 * 1000));
-	dev.ws(6, Math.round(P0));	
-}
-
-//--------------------
-
-function CAL_SetCoefIdset(P2, P1, P0)
-{
-	dev.ws(124, Math.round(P2 * 1e6));
-	dev.w(123, Math.round(P1 * 1000));
-	dev.ws(122, Math.round(P0));	
-}
-
-function CAL_CompensationIrate(CurrentValues, CurrentRateNTest)
-{	
-	cal_CntTotal = CurrentValues.length;
-	cal_CntDone = 1;
-		
-
-	var AvgNum, VoltageMin, VoltageMax, Voltage;
-	
-	if (cal_UseAvg)
-		AvgNum = 4;
-	else
-		AvgNum = 1;
-
-	for (var j = 0; j < CurrentValues.length; j++)
-	{
-		
-		print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-		
-		VoltageMin = cal_IntPsVmin;
-		VoltageMax = cal_IntPsVmax;
-
-		DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
-		TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[CurrentRateNTest]) * 1e-6) * 0.25);
-		TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[CurrentRateNTest]) * 1e-6) * 0.4);
-
-		for (var i = 0; i < cal_Points; i++)
-		{
-			TEK_AcquireSample();
-			TEK_AcquireAvg(AvgNum);
-		
-			Voltage = Math.round((VoltageMin + (VoltageMax - VoltageMin) / 2) * 10) / 10;
-			
-			dev.w(130, Voltage * 10);
-			p("Voltage DCU : " + Voltage);
-
-			p("Current, A : " + CurrentValues[j]);
-			p("VintPS max : " + VoltageMax);
-			p("VintPS,  V : " + Voltage);
-			p("VintPS min : " + VoltageMin);
-			p("-------------");
-			
-			for (var n = 0; n < AvgNum; n++)
-				if(!DRCU_Pulse(CurrentValues[j], CurrentRateN[CurrentRateNTest]))
-					return 0;				
-
-			
-			var IrateSc = CAL_MeasureIrate(CurrentRate[CurrentRateNTest],CurrentValues[j]);
-			
-			if(IrateSc < CurrentRate[CurrentRateNTest])
-
-				VoltageMin = Voltage;
-
-			else
-			{
-				if(IrateSc > CurrentRate[CurrentRateNTest])
-
-					VoltageMax = Voltage;
-				else
-					break;
-			
-			if((VoltageMin + 0.2) >= VoltageMax)
-				break;
-			
-			if (anykey()) return 0;
-
-			}
-		}
-		cal_Idset.push(CurrentValues[j]);
-		cal_VintPS.push(Voltage * 10);
-	}	
-	dev.w(130, 0);	
-	return 1;
-}
-
-//--------------------
-
-function CAL_SaveVintPS(NameVintPS)
-{	
-	var csv_array = [];
-	
-	for (var i = 0; i < cal_Idset.length; i++)
-		csv_array.push(cal_Idset[i] + ";" + cal_VintPS[i]);
-	
-	save(cgen_correctionDir + "/" + NameVintPS + ".csv", csv_array);
-}
-
-//--------------------
-
-function CAL_SetCoefIrateCompens(K, Offset)
-{
-	K = parseFloat(K);
-	Offset = parseFloat(Offset);
-	
-	switch(CurrentRateN[k])
-	{
-		case 0:
-			dev.ws(41, Offset);
-			dev.ws(42, K * 1000);
-			break;
-		case 1:
-			dev.ws(43, Offset);
-			dev.ws(44, K * 1000);
-			break;
-		case 2:
-			dev.ws(45, Offset);
-			dev.ws(46, K * 1000);
-			break;
-		case 3:
-			dev.ws(47, Offset);
-			dev.ws(48, K * 1000);
-			break;
-		case 4:
-			dev.ws(49, Offset);
-			dev.ws(50, K * 1000);
-			break;
-		case 5:
-			dev.ws(51, Offset);
-			dev.ws(52, K * 1000);
-			break;
-		case 6:
-			dev.ws(53, Offset);
-			dev.ws(54, K * 1000);
-			break;
-		case 7:
-			dev.ws(55, Offset);
-			dev.ws(56, K * 1000);
-			break;
-		case 8:
-			dev.ws(57, Offset);
-			dev.ws(58, K * 1000);
-			break;
-		case 9:
-			dev.ws(59, Offset);
-			dev.ws(60, K * 1000);
-			break;
-		case 10:
-			dev.ws(61, Offset);
-			dev.ws(62, K * 1000);
-			break;
-	}
-}
-
-//--------------------
-
-function CAL_PrintCoefIrateCompens()
-{
-	switch(CurrentRateN[k])
-	{
-		case 0:
-			print("Irate compensation Offset	: " + dev.rs(41));
-			print("Irate compensation K x1000	: " + dev.rs(42));
-			break;
-		case 1:
-			print("Irate compensation Offset	: " + dev.rs(43));
-			print("Irate compensation K x1000	: " + dev.rs(44));
-			break;
-		case 2:
-			print("Irate compensation Offset	: " + dev.rs(45));
-			print("Irate compensation K x1000	: " + dev.rs(46));
-			break;
-		case 3:
-			print("Irate compensation Offset	: " + dev.rs(47));
-			print("Irate compensation K x1000	: " + dev.rs(48));
-			break;
-		case 4:
-			print("Irate compensation Offset	: " + dev.rs(49));
-			print("Irate compensation K x1000	: " + dev.rs(50));	
-			break;
-		case 5:
-			print("Irate compensation Offset	: " + dev.rs(51));
-			print("Irate compensation K x1000	: " + dev.rs(52));	
-			break;
-		case 6:
-			print("Irate compensation Offset	: " + dev.rs(53));
-			print("Irate compensation K x1000	: " + dev.rs(54));
-			break;
-		case 7:
-			print("Irate compensation Offset	: " + dev.rs(55));
-			print("Irate compensation K x1000	: " + dev.rs(56));
-			break;
-		case 8:
-			print("Irate compensation Offset	: " + dev.rs(57));
-			print("Irate compensation K x1000	: " + dev.rs(58));
-			break;
-		case 9:
-			print("Irate compensation Offset	: " + dev.rs(59));
-			print("Irate compensation K x1000	: " + dev.rs(60));	
-			break;
-		case 10:
-			print("Irate compensation Offset	: " + dev.rs(61));
-			print("Irate compensation K x1000	: " + dev.rs(62));
-			break;
-	}
-}
-
-//--------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------
