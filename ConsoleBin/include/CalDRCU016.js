@@ -7,9 +7,6 @@ UseCAN = 0;
 CANadap = 0;
 CAN = 5;
 QSU  = 10;
-//DCU1 = 160;
-//DCU2 = 161;
-//DCU3 = 162;
 portDevice = 0;
 
 // Данные активаных блоков
