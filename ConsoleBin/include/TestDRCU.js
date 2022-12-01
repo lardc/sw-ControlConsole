@@ -60,7 +60,7 @@ function DRCU_Test(N)
 	{
 		for (var j = 0; j < 11; j++)
 		{
-			p("#" + (i * 11 + j) + " / "+ i );
+			p("#" + (i * 11 + j) + " / "+ (i + 1) );
 			p("№ dI/dt = " + CurrentRateArray[j]);
 			p("----------------");
 			p("");

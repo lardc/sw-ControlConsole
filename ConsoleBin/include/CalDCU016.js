@@ -112,20 +112,6 @@ function CAL_VerifyId(CurrentRateNTest)
 
 //--------------------
 
-function CAL_VerifyIrateALL()
-{		
-	CAL_ResetA();
-	
-	// Tektronix init
-	CAL_TekInitIrate();
-
-	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
-	CAL_CollectIrateALL(CurrentArray, cal_Iterations);		
-}
-
-//--------------------
-
 function CAL_VerifyIrate(CurrentRateNTest)
 {		
 	CAL_ResetA();
