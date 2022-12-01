@@ -65,10 +65,12 @@ function ITU_PlotFull()
 		res.cosphi[i] = a[8][i] / 1000
 	}
 	
-	plot(res.pwm, 50, 0)
-	plot(res.cosphi, 50, 0)
-	plot2(res.vrms, res.irms, 50, 0)
-	plot2(res.v, res.i_, 50, 0)
+	var scale = dev.r(133)
+	var time_scale = 50e-6 * (scale == 0 ? 1 : scale)
+	plot(res.pwm, time_scale, 0)
+	plot(res.cosphi, time_scale, 0)
+	plot2(res.vrms, res.irms, time_scale, 0)
+	plot2(res.v, res.i_, time_scale, 0)
 	
 	return res
 }
@@ -89,10 +91,12 @@ function ITU_PlotFast()
 		cosphi[i] /= 1000
 	}
 	
-	plot(dev.rafs(7), 50, 0)
-	plot(cosphi, 50, 0)
-	plot2(dev.rafs(4), irms, 50, 0)
-	plot2(dev.rafs(1), i_, 50, 0)
+	var scale = dev.r(133)
+	var time_scale = 50e-6 * (scale == 0 ? 1 : scale)
+	plot(dev.rafs(7), time_scale, 0)
+	plot(cosphi, time_scale, 0)
+	plot2(dev.rafs(4), irms, time_scale, 0)
+	plot2(dev.rafs(1), i_, time_scale, 0)
 }
 
 function ITU_TestOptics()
