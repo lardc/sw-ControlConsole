@@ -5,10 +5,15 @@ bvt_vrrm = [];
 bvt_idrm = [];
 bvt_irrm = [];
 
+bvt_VDC = [];
+bvt_IDC = [];
+bvt_RDC = [];
+
 csv_array = [];
 
 bvt_direct = 1;
 bvt_use_microamps = 1;		// use microampere precision
+bvt_use_nanoamps = 1;		// use nanoampere precision
 bvt_start_v = 500;			// in V
 bvt_rate = 10;				// in kV/s x10
 bvt_test_time = 3000;		// in ms
@@ -105,6 +110,35 @@ function BVT_ResourceTest(Voltage, Current)
 	}
 }
 
+function BVT_ResourceTestDC(Voltage)
+{
+	csv_array = [];
+
+	bvt_VDC = [];
+	bvt_IDC = [];
+
+	var i = 0;
+	var today = new Date();								// Узнаем и сохраняем текущее время
+	var hours = today.getHours() + bvt_resource_test;	// Узнаем кол-во часов в текущем времени и прибавляем к нему продолжительность ресурсного теста
+	today.setHours(hours);								// Задаем новое количество часов в дату
+
+	csv_array.push("Time; VDC, in V; IDC, in uA; RDC, in MOhm");
+	while((new Date()).getTime() < today.getTime())		// Сравниваем текущее время на компьютере в мс, с конечным временем в мс
+	{
+		sleep(100);
+		BVT_StartRes(1, Voltage);
+		var left_time = new Date((today.getTime()) - ((new Date()).getTime()));
+		print("#" + i + " Осталось " + (left_time.getHours()-3) + " ч и " + left_time.getMinutes() + " мин");
+		
+		csv_array.push((new Date()) + ";" + bvt_VDC[i] + ";" + bvt_IDC[i] + ";" + bvt_RDC[i]);
+		save("data/BVTDC_ResourceTest" + today.getTime() + ".csv", csv_array);
+
+		i++;
+		sleep(bvt_pulse_sleep);
+		if (anykey()) break;
+	}
+}
+
 function BVT_StartDC(N, Voltage, Current)
 {
 	dev.w(128, 4);
@@ -118,11 +152,11 @@ function BVT_StartDC(N, Voltage, Current)
 		if (N > 1) print("#" + (i + 1));
 		dev.c(100);
 		while (dev.r(192) == 5) sleep(100);
-	
+		
 		print("Vdc,   V: " + dev.r(198));
 		print("Idc,  mA: " + BVT_ReadCurrent(bvt_use_microamps).toFixed(bvt_use_microamps ? 3 : 1));
 		print("-------------");
-		
+
 		if (anykey()) return;
 		
 		if ((i + 1) < N)
@@ -168,9 +202,16 @@ function BVT_StartRes(N, Voltage)
 		
 		var warn = dev.r(195);
 		print("R,  MOhm: " + (dev.r(201) / 10));
+		print("Vdc,   V: " + dev.r(198));
+		print("Idc,  uA: " + ((dev.rs(199) / 10) + ((dev.rs(200) % 100) / 1000) + (dev.rs(202) / 1000000)) * 1000);
+
 		if (warn)
 			print("Warning : " + warn);
 		print("-------------");
+		
+		bvt_RDC.push(dev.r(201) / 10);
+		bvt_VDC.push(dev.r(198));
+		bvt_IDC.push(((dev.rs(199) / 10) + ((dev.rs(200) % 100) / 1000) + (dev.rs(202) / 1000000)) * 1000);
 		
 		if (anykey()) return;
 		
@@ -222,7 +263,7 @@ function BVT_ReadCurrent(UseMicroAmps)
 {
 	var CoarseI = Math.abs(dev.rs(199) / 10);
 	if (UseMicroAmps)
-		return Math.floor(CoarseI) + dev.rs(200) / 1000;
+		return Math.floor(dev.r(199) / 10) + dev.r(200) / 1000 + dev.r(202) / 1000000;
 	else
 		return CoarseI;
 }
