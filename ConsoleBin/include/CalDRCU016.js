@@ -1,6 +1,6 @@
 include("Tektronix.js");
-include("AddCalDCU016.js")
-include("Sic_GetData.js")
+include("AddDRCU016.js");
+include("Sic_GetData.js");
 
 // CAN Nomber
 UseCAN = 0;
@@ -12,6 +12,7 @@ portDevice = 0;
 // Данные активаных блоков
 Unit = 0;
 UnitEn = 2;
+MOD = 0;
 
 
 // Calibration setup parameters
@@ -33,7 +34,7 @@ cal_IntPsVmax = 120;
 CurrentRateNTest = 0;
 CurrentRateN = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 CurrentRate = [0.167, 0.25, 0.334, 0.834, 1.667, 2.5, 3.334, 5, 8.334, 10, 16.667]; // in A/us 1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100
-
+CurrentTest = 1100;
 
 // Counters
 cal_CntTotal = 0;
@@ -87,16 +88,29 @@ function ALL_DCU_SW()
 		print("Enter number CANadap")
 		CANadap = readline();
 		dev.co(CANadap);
-		print("Enter number CAN QSU")
-		QSU = readline();
 		dev.nid(QSU);
+		print("Use calibrate MOD?")
+		var key;
+		do
+		{
+			keym = readkey();
+		}
+	while (keym != "y" && keym != "n");
+	if (keym == "y")
+		MOD = 1;
+	else if (keym == "n")
+		MOD = 0;
+
 		print("Enter number use unit")
 		UnitEn = readline();
 		for (var a = 0; a < UnitEn ; a++)
 			{
 			Unit = dev.r(12 + a);
 			dev.nid(Unit);
-			dev.w(140,1);
+			if (MOD == 1 )
+				dev.w(140,1);
+			else
+				dev.w(140,0);
 			dev.c(1);
 			dev.nid(QSU);
 			} 
@@ -107,6 +121,7 @@ function ALL_DCU_SW()
 		print("Enter number RS232")
 		portDevice = readline();
 		dev.co(portDevice);
+		UnitEn = 1;
 		}	
 } 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -204,23 +219,24 @@ function DRCU_Pulse(Current, CurrentRate)
 		return 1;
 	}
 	else			// Когда проверяется более 1 блока
-	{
+	{	
+		dev.nid(160);
+		while (dev.r(192) !=3)
+			sleep(100);
 		for(var i = 0; i < UnitEn; i++)
 		{
+				
 			dev.nid(10);
 			Unit = dev.r(12 + i);  
 			CONFIG_UNIT(Unit, Current, CurrentRate);
 
 		}
-
-		dev.nid(QSU);
-		sleep(200);
+		dev.nid(161);	
+		while (dev.r(192) !=4)
+			sleep(100);
+		dev.nid(QSU);	
 		dev.c(22);
-		dev.nid(Unit);
-		while (dev.r(197) == 6)
-			{
-				sleep(500);
-			}
+
 	}
 }
 
@@ -345,15 +361,13 @@ function DRCU_Test(N)
 		for (var j = 0; j < 11; j++)
 		{
 			p("#" + (i * 11 + j) + " / "+ (i + 1) );
-			p("№ dI/dt = " + CurrentRateArray[j]);
+			p("№ dI/dt = " + CurrentRateN[j]);
 			p("----------------");
 			p("");
-			
-			if(!DRCU_Pulse(CurrentTest, CurrentRateArray[j]))
-				return;
-			
 			if (anykey())
 				return;
+			DRCU_Pulse(CurrentTest, CurrentRateN[j])
+			p("----------------");	
 		}
 	}
 }
@@ -414,3 +428,13 @@ function DRCU_PSSetpoint(voltage)
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------
+// цикл включения
+function DRCU_PulseN(N, Current, CurrentRate)
+{
+for (var i = 0; i < N; i++)
+	{
+		DRCU_Pulse(Current, CurrentRate);
+		if (anykey())
+			return;
+	}			
+}

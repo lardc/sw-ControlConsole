@@ -16,7 +16,6 @@ function CONFIG_UNIT(Unit, Current, CurrentRate)
 		dev.c(100);
 
 		}
-
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -62,7 +61,7 @@ function CAL_TekInitId()
 
 //--------------------
 
-function CAL_CollectId(CurrentValues, IterationsCount,CurrentRateNTest)
+function CAL_CollectId(CurrentValues, IterationsCount, CurrentRateNTest)
 {
 
 	cal_CntTotal = IterationsCount * CurrentValues.length;
@@ -99,6 +98,7 @@ function CAL_CollectId(CurrentValues, IterationsCount,CurrentRateNTest)
 				}
 
 			// Unit data
+			dev.nid(160);
 			var Id = dev.r(202) * UnitEn / 10;
 			cal_Id.push(Id);
 			print("Id, A: " + Id);
