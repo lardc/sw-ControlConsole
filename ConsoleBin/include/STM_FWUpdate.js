@@ -403,3 +403,20 @@ function FWU_RestorePAU()
 	dev.Restore("../../hw-PAUControlBoard/Firmware/PAUControlBoard.regdump");
 }
 //------------------------
+
+// MCU (v.3.0)
+function FWU_MCU()
+{
+	FWUpdateSTM("../../hw-ControlUnitBoard/Firmware/Release/ControlUnitBoard.binary");
+}
+
+function FWU_DumpMCU()
+{
+	dev.Dump("../../hw-ControlUnitBoard/Firmware/Release/ControlUnitBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreMCU()
+{
+	dev.Restore("../../hw-ControlUnitBoard/Firmware/Release/ControlUnitBoard.regdump");
+}
+//------------------------

@@ -1,14 +1,14 @@
 include("PrintStatus.js")
 
-CurrentRateArray = [50, 75, 100, 250, 500, 750, 1000, 1500, 2500, 3000, 5000]; // A/us * 100
-CurrentTest = 500;	// A
+CurrentRateArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // A/us * 100
+CurrentTest = 1100;	// A
 bi = 0; //счётчик
-function DRCU_Debug(Current, Range)
+function DRCU_Debug(PWM, Range)
 {
 	dev.w(150, Range);
 	dev.c(59);
-	dev.w(150, Current);
-	dev.w(151, Current);
+	dev.w(150, PWM);
+	dev.w(151, PWM);
 	dev.c(60);
 }
 
@@ -54,13 +54,14 @@ function DRCU_Pulse(Current, CurrentRate)
 //---------------------------------------------
 
 function DRCU_Test(N)
+
 {
 	for (var i = 0; i < N; i++)
 	{
 		for (var j = 0; j < 11; j++)
 		{
-			p("#" + (i * 11 + j));
-			p("dI/dt = " + CurrentRateArray[j] / 100 + "A/us")
+			p("#" + (i * 11 + j) + " / "+ (i + 1) );
+			p("№ dI/dt = " + CurrentRateArray[j]);
 			p("----------------");
 			p("");
 			
@@ -124,6 +125,8 @@ dev.w(150,bi);
  //p(bi);
  dev.c(54);
  sleep (5);}
+ dev.w(150,0);
+ dev.c(54);
 }
 
 function DRCU_SinglePS(delay) //одиночное включение-выключение формирования flyback
@@ -131,14 +134,44 @@ function DRCU_SinglePS(delay) //одиночное включение-выклю
 dev.w(150,0);
 dev.c(55);
 dev.w(150,1);
- p(dev.r(150));
+ print("Включение");
  dev.c(54);
  
  sleep (delay);
 dev.w(150,0);
- p(dev.r(150));
+ print("Выключение");
  dev.c(54);
  sleep (100);
+}
+
+function DRCU_PSDischarge() //Включение разрядки БП
+{
+	dev.w(150,0);
+	dev.c(55);
+	
+while(!anykey())
+
+	{
+	dev.w(150,1);
+	dev.c(55);
+	sleep(100);
+	}
+
+	dev.w(150,0);
+	dev.c(55);
+	
+}
+
+function DRCU_PSSetpoint(voltage)
+{
+	dev.w(130,voltage*10);
+
+	while(!anykey())
+	{
+		p(dev.r(201));
+		sleep(2000);
+	}
+	dev.w(130,0);
 }
 
 function CAL_DCUTestV(voltage, current, rate){
