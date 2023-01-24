@@ -6,6 +6,10 @@ function ITU_Start(Voltage, Current, VReadyCallback, MutePrint)
 	dev.w(129, Math.floor(Current))
 	dev.w(130, Math.floor(Current % 1 * 1000))
 	dev.c(100)
+	var start_time = Date.now() / 1000
+	var time_div = 0
+	if(!MutePrint)
+		p('Start:  ' + (new Date()).toLocaleTimeString())
 	
 	while(dev.r(192) == 4)
 	{
@@ -18,8 +22,21 @@ function ITU_Start(Voltage, Current, VReadyCallback, MutePrint)
 			return false
 		}
 		
+		if(!MutePrint)
+		{
+			var new_div = Math.floor((Date.now() / 1000 - start_time) / 10)
+			if(new_div != time_div)
+			{
+				time_div = new_div
+				p('Point:  ' + (new Date()).toLocaleTimeString() + ', V: ' + dev.r(200) +
+					', I: ' + (dev.r(201) + dev.r(202) / 1000).toFixed(3))
+			}
+		}
+		
 		sleep(100)
 	}
+	if(!MutePrint)
+		p('Finish: ' + (new Date()).toLocaleTimeString())
 	
 	if(dev.r(192) == 3)
 	{
@@ -41,6 +58,27 @@ function ITU_Start(Voltage, Current, VReadyCallback, MutePrint)
 	{
 		PrintStatus()
 		return false
+	}
+}
+
+function ITU_Cycle(Count, Voltage, Current, Sleep)
+{
+	if(typeof citu_Count == 'undefined')
+		citu_Count = 0
+	
+	for(var i = 0; i < Count; i++)
+	{
+		p('Test #' + (citu_Count++ + 1))
+		if(ITU_Start(Voltage, Current))
+		{
+			p('-----')
+			sleep(Sleep ? Sleep : 1000)
+		}
+		else
+		{
+			p('Stopped')
+			return
+		}
 	}
 }
 
