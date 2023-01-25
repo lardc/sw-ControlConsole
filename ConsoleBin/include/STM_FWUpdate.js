@@ -141,12 +141,12 @@ function FWU_ATUHP()
 
 function FWU_DumpATUHP()
 {
-	dev.Dump("../../hw-ATUControlBoard/Firmware/Release/ATUControlBoard.regdump", 0, 126);
+	dev.Dump("../../hw-ATUControlBoard/Firmware/ATUControlBoard.regdump", 0, 95);
 }
 
 function FWU_RestoreATUHP()
 {
-	dev.Restore("../../hw-ATUControlBoard/Firmware/Release/ATUControlBoard.regdump");
+	dev.Restore("../../hw-ATUControlBoard/Firmware/ATUControlBoard.regdump");
 }
 
 // TOMU
