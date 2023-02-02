@@ -6,6 +6,9 @@ GTU_PulseId(Current); //  in mA
 GTU_PulseVg(Voltage); //  in mV
 GTU_PulseIg(Current); //  in mA
 
+// Посмотреть версию прошивки
+i("PrintStatus.js");
+PrintFWInfo();
 
 // Обновление прошивки
 i("FWUpdate.js");
@@ -36,6 +39,10 @@ GTU_PulseId(50);
 GTU_PulseVg(100);
 GTU_PulseIg(10);
 
+// Ресурсный тест
+i("TestGTU_4.0.js");
+GTU_ResourceTest(3000);
+
 /// Igt 10 - 49мА
 // Регистры измерения ADC
 / (Offset: 119) (K: 118)
@@ -50,7 +57,7 @@ cgtu_Imin = 10;
 cgtu_Istp = 18;
 cgtu_Iterations = 1;
 cgtu_UseAvg = 1;
-CGTU_Init(8,9,1,2,3);
+CGTU_Init(12,14,1,2,3);
 CGTU_VerifyIGate();
 
 /// Igt 50 - 1000мА
@@ -61,13 +68,13 @@ CGTU_VerifyIGate();
 / (Offset: 51) (K: 50)
 / [P0: 49] [P1: 48] [P2: 47]
 i("CalGTU_4.0.js");
-cgtu_ResGate = 9.87;
-cgtu_Imax = 570;
+cgtu_ResGate = 9.83;
+cgtu_Imax = 600;
 cgtu_Imin = 50;
-cgtu_Istp = 72;
+cgtu_Istp = 50;
 cgtu_Iterations = 1;
 cgtu_UseAvg = 0;
-CGTU_Init(8,9,1,2,3);
+CGTU_Init(12,14,1,2,3);
 CGTU_VerifyIGate();
 
 /// Vgt 0.1 - 5В
@@ -79,11 +86,11 @@ CGTU_VerifyIGate();
 / [P0: -] [P1: -] [P2: -]
 i("CalGTU_4.0.js");
 cgtu_Vgmax = 5000;
-cgtu_Vgmin = 30;
-cgtu_Vgstp = 700;
+cgtu_Vgmin = 500;
+cgtu_Vgstp = 500;
 cgtu_Iterations = 1;
 cgtu_UseAvg = 0;
-CGTU_Init(8,9,1,2,3);
+CGTU_Init(12,14,1,2,3);
 CGTU_VerifyVGate();
 
 /// Id 50 - 1000мА
@@ -100,7 +107,7 @@ cgtu_Imin = 50;
 cgtu_Istp = 100;
 cgtu_Iterations = 1;
 cgtu_UseAvg = 0;
-CGTU_Init(8,9,1,2,3);
+CGTU_Init(12,14,1,2,3);
 CGTU_VerifyIPower();
 
 /// Vd 2 - 12В
@@ -116,5 +123,5 @@ cgtu_Vdmin = 2000;
 cgtu_Vdstp = 1000;
 cgtu_Iterations = 1;
 cgtu_UseAvg = 0;
-CGTU_Init(8,9,1,2,3);
+CGTU_Init(12,14,1,2,3);
 CGTU_VerifyVPower();
