@@ -420,3 +420,20 @@ function FWU_RestoreMCU()
 	dev.Restore("../../hw-ControlUnitBoard/Firmware/Release/ControlUnitBoard.regdump");
 }
 //------------------------
+
+// IGTU
+function FWU_IGTU()
+{
+	FWUpdateSTM("../../hw-IGTUControlBoard/Firmware/Release/hw-IGTUControlBoard.binary");
+}
+
+function FWU_DumpIGTU()
+{
+	dev.Dump("../../hw-IGTUControlBoard/Firmware/Release/hw-IGTUControlBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreIGTU()
+{
+	dev.Restore("../../hw-IGTUControlBoard/Firmware/Release/hw-IGTUControlBoard.regdump");
+}
+//------------------------
