@@ -11,6 +11,8 @@ gtu_id_lim	= 1000;
 gtu_diag = 1;
 gtu_plot = 0;
 
+gtu_resource_test = 8		// Продолжительность реусрного теста в часах
+
 gtu_igt = [];
 gtu_vgt = [];
 gtu_res = [];
@@ -324,46 +326,52 @@ function GTU_PulsePow(Time, Current)
 	GTU_PulseX(Time, Current, 111);
 }
 
-function GTU_ResourceTest(N)
+function GTU_ResourceTest(Sleep)
 {
+	csv_array = [];
 	gtu_igt   = [];
 	gtu_vgt   = [];
 	gtu_res   = [];
 	gtu_hold  = [];
 	gtu_latch = [];
-	
-	
-	for(i=0;i<N;i++)
+
+	var i = 0;
+	var today = new Date();								// Узнаем и сохраняем текущее время
+	var hours = today.getHours() + gtu_resource_test;	// Узнаем кол-во часов в текущем времени и прибавляем к нему продолжительность ресурсного теста
+	today.setHours(hours);								// Задаем новое количество часов в дату
+
+	csv_array.push("Current Time; igt, in mA; vgt, in mV; res, in Ohm; hold, in mA; latch, in mA");
+
+	while((new Date()).getTime() < today.getTime())		// Сравниваем текущее время на компьютере в мс, с конечным временем в мс
 	{
 		print("-----------------------------------");
 		GTU_Kelvin();
 		print("");
 		
 		GTU_Gate();
-		print("");
 		gtu_igt[i] = dev.r(199);
 		gtu_vgt[i] = dev.r(200);
 		
-		
 		GTU_Res();
-		print("");
-		gtu_res[i] = dev.r(203);
-		
+		gtu_res[i] = dev.r(203) / 10;
 		
 		GTU_Holding();
-		print("");
-		gtu_hold[i] = dev.r(201);
-		
+		gtu_hold[i] = dev.r(201) + dev.r(231) / 1000;
 		
 		GTU_Latching();
-		print("");
 		gtu_latch[i] = dev.r(202);
+
+		var left_time = new Date((today.getTime()) - ((new Date()).getTime()));
+		print("#" + i + " Осталось " + (left_time.getHours()-3) + " ч и " + left_time.getMinutes() + " мин");
 		
-		print("N = " + i);
-		
-		sleep(10000);
+		csv_array.push((new Date()) + ";" + gtu_igt[i] + ";" + gtu_vgt[i] +
+			";" + gtu_res[i] + ";" + gtu_hold[i] + ";" + gtu_latch[i]);
+
+		save("data/GTU_ResourceTest" + today.getTime() + ".csv", csv_array);
+		i++;
+		sleep(Sleep);
+		if (anykey()) break;
 	}
-	//CGEN_SaveArrays(GTU_ResourceTest, gtu_igt, gtu_vgt, gtu_res, gtu_hold, gtu_latch);
 }
 
 function GTU_HeatingTest(Voltage, Current)
