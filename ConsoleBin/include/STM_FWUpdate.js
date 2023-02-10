@@ -424,16 +424,16 @@ function FWU_RestoreMCU()
 // IGTU
 function FWU_IGTU()
 {
-	FWUpdateSTM("../../hw-IGTUControlBoard/Firmware/Release/hw-IGTUControlBoard.binary");
+	FWUpdateSTM("../../hw-IGTUControlBoard/Firmware/Release/IGTUControlBoard.binary");
 }
 
 function FWU_DumpIGTU()
 {
-	dev.Dump("../../hw-IGTUControlBoard/Firmware/Release/hw-IGTUControlBoard.regdump", 0, 126);
+	dev.Dump("../../hw-IGTUControlBoard/Firmware/Release/IGTUControlBoard.regdump", 0, 126);
 }
 
 function FWU_RestoreIGTU()
 {
-	dev.Restore("../../hw-IGTUControlBoard/Firmware/Release/hw-IGTUControlBoard.regdump");
+	dev.Restore("../../hw-IGTUControlBoard/Firmware/Release/IGTUControlBoard.regdump");
 }
 //------------------------
