@@ -69,27 +69,35 @@ function TOUHP_PrintFault()
 
 // TOCU HP
 function TOCUHP_Pulse(N, Voltage, Bit)
-{
-	dev.w(128, Voltage);
-	dev.w(129, Bit);
-	
+{	
 	if(dev.r(192) == 3)
+	{
+		dev.w(128, Voltage);
+		dev.w(129, Bit);
 		dev.c(100);
 	
-	for(i=0; i < N; i++)
-	{
-		while(dev.r(192) == 4){}
-		
-		if(dev.r(192) == 3)
+		for(i=0; i < N; i++)
 		{
-			dev.c(101);
-			dev.c(102);
+			while(dev.r(192) == 4){}
+			
+			if(dev.r(192) == 3)
+			{
+				dev.c(101);
+				dev.c(102);
+			}
+			
+			while(dev.r(192) == 4){}
+			
+			print("N          = " + i)
+			print("Voltage, V = " + dev.r(200));
+			print("-----------");
+			
+			if(anykey())
+				break;
 		}
-		
-		print("N          = " + i)
-		print("Voltage, V = " + dev.r(200));
-		print("-----------");
 	}
+	else
+		PrintStatus();
 }
 
 // TOMU HP
