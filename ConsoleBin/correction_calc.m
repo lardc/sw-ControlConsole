@@ -5,7 +5,7 @@ function correction_calc(Dir, fileInput, fileFlag)
     p = polyfit(csv_input(:, 1), csv_input(:, 2), 1);
     % write output
     f = fopen(strcat(pwd, '\', Dir, '\', fileInput, '_corr.csv'), 'w+');
-    fprintf(f, '%.3f;%.3f;', p(1), p(2));
+    fprintf(f, '%e;%e;', p(1), p(2));
     fclose(f);
     % write flag
     f = fopen(strcat(pwd, '\', Dir, '\', fileFlag), 'w+');
