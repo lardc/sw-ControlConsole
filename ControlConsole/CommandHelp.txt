@@ -112,7 +112,8 @@ Types:
 		- Dump(@filename, @start, @end)
 		- Restore(@filename)
 	- TMCObject - provides access to TMC device I/O functions
-		- co() - connect to device
+		- list() - list USB-TMC devices
+		- co() - connect to the first USB-TMC device
 		- dco() - disconnect device
 		- q(@string) : [@value] - query data from the device
 		- w(@string) - write command to device
