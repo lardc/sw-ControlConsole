@@ -1,25 +1,95 @@
 include("PrintStatus.js")
 
-function ITU_Start(Voltage, Current)
+function ITU_Start(Voltage, Current, VReadyCallback, MutePrint)
 {
 	dev.w(128, Voltage)
 	dev.w(129, Math.floor(Current))
 	dev.w(130, Math.floor(Current % 1 * 1000))
 	dev.c(100)
+	var start_time = Date.now() / 1000
+	var time_div = 0
+	if(!MutePrint)
+		p('Start:  ' + (new Date()).toLocaleTimeString())
 	
 	while(dev.r(192) == 4)
+	{
+		if(typeof(VReadyCallback) == 'function')
+			VReadyCallback(dev.r(198) == 1)
+		
+		if(anykey())
+		{
+			dev.c(101)
+			return false
+		}
+		
+		if(!MutePrint)
+		{
+			var new_div = Math.floor((Date.now() / 1000 - start_time) / 10)
+			if(new_div != time_div)
+			{
+				time_div = new_div
+				p('Point:  ' + (new Date()).toLocaleTimeString() + ', V: ' + dev.r(200) +
+					', I: ' + (dev.r(201) + dev.r(202) / 1000).toFixed(3))
+			}
+		}
+		
 		sleep(100)
+	}
+	if(!MutePrint)
+		p('Finish: ' + (new Date()).toLocaleTimeString())
 	
 	if(dev.r(192) == 3)
 	{
-		p('Voltage,      V: ' + dev.r(200))
-		p('Current,     mA: ' + (dev.r(201) + dev.r(202) / 1000).toFixed(3))
-		p('Current act, mA: ' + (dev.r(203) + dev.r(204) / 1000).toFixed(3))
-		if(dev.r(195) == 1)
-			p('Output current saturation')
+		if(!MutePrint)
+		{
+			var res = ITU_ReadResult()
+			
+			p('Voltage,      V: ' + res.v)
+			p('Current,     mA: ' + res.i.toFixed(3))
+			p('Current act, mA: ' + res.i_act.toFixed(3))
+			p('Cos Phi        : ' + res.cos_phi.toFixed(3))
+			if(dev.r(195) == 1)
+				p('Output current saturation')
+		}
+		
+		return true
 	}
 	else
+	{
 		PrintStatus()
+		return false
+	}
+}
+
+function ITU_Cycle(Count, Voltage, Current, Sleep)
+{
+	if(typeof citu_Count == 'undefined')
+		citu_Count = 0
+	
+	for(var i = 0; i < Count; i++)
+	{
+		p('Test #' + (citu_Count++ + 1))
+		if(ITU_Start(Voltage, Current))
+		{
+			p('-----')
+			sleep(Sleep ? Sleep : 1000)
+		}
+		else
+		{
+			p('Stopped')
+			return
+		}
+	}
+}
+
+function ITU_ReadResult()
+{
+	var voltage 	= dev.r(200)
+	var current 	= dev.r(201) + dev.r(202) / 1000
+	var current_act = dev.r(203) + dev.r(204) / 1000
+	var cos_phi		= dev.rs(205) / 1000
+	
+	return {v : voltage, i : current, i_act : current_act, cos_phi : cos_phi}
 }
 
 function ITU_PlotFull()
@@ -33,10 +103,12 @@ function ITU_PlotFull()
 		res.cosphi[i] = a[8][i] / 1000
 	}
 	
-	plot(res.pwm, 50, 0)
-	plot(res.cosphi, 50, 0)
-	plot2(res.vrms, res.irms, 50, 0)
-	plot2(res.v, res.i_, 50, 0)
+	var scale = dev.r(133)
+	var time_scale = 50e-6 * (scale == 0 ? 1 : scale)
+	plot(res.pwm, time_scale, 0)
+	plot(res.cosphi, time_scale, 0)
+	plot2(res.vrms, res.irms, time_scale, 0)
+	plot2(res.v, res.i_, time_scale, 0)
 	
 	return res
 }
@@ -57,10 +129,12 @@ function ITU_PlotFast()
 		cosphi[i] /= 1000
 	}
 	
-	plot(dev.rafs(7), 50, 0)
-	plot(cosphi, 50, 0)
-	plot2(dev.rafs(4), irms, 50, 0)
-	plot2(dev.rafs(1), i_, 50, 0)
+	var scale = dev.r(133)
+	var time_scale = 50e-6 * (scale == 0 ? 1 : scale)
+	plot(dev.rafs(7), time_scale, 0)
+	plot(cosphi, time_scale, 0)
+	plot2(dev.rafs(4), irms, time_scale, 0)
+	plot2(dev.rafs(1), i_, time_scale, 0)
 }
 
 function ITU_TestOptics()
