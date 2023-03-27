@@ -6,57 +6,40 @@ function IGTU_Iges(Voltage, CurrentRange)
 	dev.w(137,CurrentRange);
 	dev.c(102);
 	
-	//p("Start process...")
+	p("Start process...")
 	
 	sleep(dev.r(56) * 30);
 	
 	while(dev.r(192) != 3)
 	{
-		//p("Iges, nA:" + (dev.rf(205)*1e6).toFixed(2));
+		if(dev.r(192) == 1)
+		{
+			PrintStatus();
+			return;
+		}
 	}
+	
+	if(dev.r(196) != 0)
+		PrintStatus();
+	
+	p("Iges, nA:" + (dev.rf(205)*1e6).toFixed(2));
 }
+//--------------------
 
-IGES = [];
-function IGES_Collect(N)
+function IGTU_Vgs(Voltage, Current)
 {
-	Iges = 0;
-	Imin = 0;
-	Imax = 0;
-	Imean = 0;
-	Ipp = 0;
+	dev.wf(128, Current);
+	dev.wf(129, Voltage);
+	dev.c(100);
 	
-	Noise = 0;
-	IGES = [];
+	sleep(100);
 	
-	for(i = 0; i < N; i++)
+	if(dev.r(192) == 3 && !dev.r(196))
 	{
-		p("#" + i);
-		
-		IGTU_Iges(4.7, 1);
-		
-		Iges = (dev.rf(205)*1e6).toFixed(2);
-		Imean += Math.pow(Iges, 2);
-		
-		if(Imin == 0)
-			Imin = Iges;
-		if(Imax == 0)
-			Imax = Iges;
-		if(Iges < Imin)
-			Imin = Iges;
-		if(Iges > Imax)
-			Imax = Iges;
-		
-		IGES.push(Iges)
+		p("Vgs, V:" + dev.rf(200).toFixed(4));
+		p("Igs, mA:" + dev.rf(201).toFixed(2));
 	}
-	
-	Imean = Math.sqrt(Imean / N);
-	Ipp = Imax - Imin;
-	
-	
-	Noise = 20 * Math.log(Imean / Ipp) / Math.log(10);
-	
-	p("Ip-p,  nA: " + Ipp)
-	p("Imean, nA: " + Imean)
-	p("Noise, db: " + Noise)
-	pl(IGES);
+	else
+		PrintStatus();
 }
+//--------------------
