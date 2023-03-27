@@ -64,8 +64,8 @@ function KEI_ConfigExtTrigger(Delay)
 	tmc.w(':TRIG:EXT:IN:EDGE RIS');
 	
 	tmc.w('TRIG:LOAD "EMPTY"');
-	tmc.w('TRIG:BLOC:WAIT 1, EXT, ENT, OR');
-	tmc.w('TRIG:BLOC:BUFF:CLEAR 2, "TestBuffer"');
+	tmc.w('TRIG:BLOC:BUFF:CLEAR 1, "TestBuffer"');
+	tmc.w('TRIG:BLOC:WAIT 2, EXT, ENT, OR');
 	tmc.w('TRIG:BLOC:DEL:CONS 3, ' + Delay);
 	tmc.w('TRIG:BLOC:MDIG 4, "TestBuffer", AUTO');
 }
@@ -80,6 +80,7 @@ function KEI_ActivateTrigger()
 
 function KEI_ReadAverage()
 {
+	tmc.q('TRAC:STAT:AVER? "TestBuffer"');
 	return tmc.q('TRAC:STAT:AVER? "TestBuffer"');
 }
 //--------------------
