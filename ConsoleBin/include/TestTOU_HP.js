@@ -78,7 +78,7 @@ function TOCUHP_Pulse(N, Voltage, Bit)
 	
 		for(i=0; i < N; i++)
 		{
-			while(dev.r(192) == 4){}
+			while(dev.r(192) == 4){sleep(50)}
 			
 			if(dev.r(192) == 3)
 			{
@@ -86,7 +86,7 @@ function TOCUHP_Pulse(N, Voltage, Bit)
 				dev.c(102);
 			}
 			
-			while(dev.r(192) == 4){}
+			while(dev.r(192) == 4){sleep(50)}
 			
 			print("N          = " + i)
 			print("Voltage, V = " + dev.r(200));
