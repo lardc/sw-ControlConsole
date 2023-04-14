@@ -23,6 +23,12 @@ function TEK_Exec(Request)
 	return r.join("").replace(/(\n)/, "");
 }
 
+function TEK_Busy()
+{
+	while(TEK_Exec("BUSY?") == 1)
+		sleep(100);
+}
+
 function TEK_ForceTrig()
 {
 	TEK_Send("trigger force");
