@@ -66,7 +66,8 @@ cdvdt_scatter16 = [];
 cdvdt_scatter20 = [];
 cdvdt_scatter25 = [];
 //
-cdvdt_realRate = [];
+cdvdt_gate = [];
+cdvdt_ratesc = [];
 
 function CdVdt_Init(portdVdt, portTek, channelMeasure)
 {
@@ -310,6 +311,9 @@ function CdVdt_CellCalibrateRate(CellNumber)
 			return 1;
 		}
 		
+		cdvdt_gate.push(GateSetpointV[i]);
+		cdvdt_ratesc.push(rate);
+
 		print("Vgt,     mV: " + GateSetpointV[i]);
 		print("dV/dt, V/us: " + rate);
 		print("Vmax,     V: " + v);
@@ -321,7 +325,7 @@ function CdVdt_CellCalibrateRate(CellNumber)
 		
 		if (anykey()) return 1;
 	}
-	
+	scattern(GateSetpointV, cfdvdt_ratesc, "Gate voltage (in mV)", "Rate voltage (in V/us)", "Проверка на линейную зависимость параметров");
 	// Power disable cell
 	sleep(3000);
 	dVdt_CellCall(CellNumber, 2);
@@ -622,7 +626,8 @@ function CdVdt_ResetA()
 	cdvdt_scatter20 = [];
 	cdvdt_scatter25 = [];
 	//
-	cdvdt_realRate = [];
+	cdvdt_gate = [];
+	cdvdt_ratesc = [];
 }
 
 function CdVdt_SaveA(Name)
