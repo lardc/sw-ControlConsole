@@ -79,13 +79,13 @@ function CGEN_CorrectionToFloat(InputData)
 function CGEN_GetRange(Start, End, Step)
 {
 	var ResArray = [];
-	var N = Math.round((End - Start) / Step);
+	var Num = ((End - Start) / Step);
+	var N = Math.round(Num) ? Math.round(Num) : 0;
 	var Value = Start;
-	
+
 	for (var i = 0; i <= N; i++)
 	{
 		ResArray.push(Value);
-		
 		Value += Step;
 		if (Value > End) Value = End;
 	}
