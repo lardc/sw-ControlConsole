@@ -1,7 +1,7 @@
 // Пояснения
+
 CAL_Init(portDevice, portTek, channelMeasureId);
 DRCU_Pulse(Current, CurrentRate);
-CurrentRateTest // 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50 A/us
 
 // Посмотреть версию прошивки
 i("PrintStatus.js");
@@ -43,13 +43,20 @@ cal_UseCursors = 0;
 cal_UseQRR = 1;
 cal_CoolSwitch = 0;
 CurrentRateTest = [0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 25, 30, 50];
-CAL_Init(13,14,1);
+CAL_Init(1,2,1);
 
 dev.c(1);
 sleep(1000);
-CAL_VerifyIrate();
 
-CAL_CalibrateIrate();
+
+
+i("CalRCU.js");
+CAL_Init(1,2,1);
+CAL_VerifyIrate(2);
+Hand_Cal_CompensationIrete(2);
+CAL_CalibrateIrate(2);
+CAL_PrintCoefIrateCompens(2);
+
 
 // Диапазон Id
 i("CalRCU.js");

@@ -24,7 +24,7 @@ i("TestDRCU.js");
 dev.c(1);
 
 // Формирование сигнала и измерение
-DRCU_Pulse(50, 50)
+DRCU_Pulse(100,0)
 
 //Тестирование напряжения flyback (V flyback(V), I, dA/dT)
 CAL_DCUTestV(90,100,50);
@@ -32,8 +32,8 @@ CAL_DCUTestV(90,100,50);
 // Диапазон di/dt
 i("CalDCU016.js");
 cal_IdMin = 100;	
-cal_IdMax = 500;
-cal_Rshunt = 999;
+cal_IdMax = 1100;
+cal_Rshunt = 998;
 cal_IntPsVmin = 80;
 cal_IntPsVmax = 120;
 cal_Iterations = 1;
@@ -51,7 +51,7 @@ CAL_Init(1,2,1);
 CAL_VerifyIrate(0);
 
 dev.c(1);
-CAL_CalibrateIrate(1);
+CAL_CalibrateIrate(0);
 
 // Диапазон Id
 i("CalDCU.js");

@@ -1,3 +1,6 @@
+//Скрипт для Калибровки и Верификации блока DCU
+//Подключение библиотек
+
 include("TestDRCU.js")
 include("Tektronix.js")
 include("CalGeneral.js")
@@ -57,9 +60,13 @@ Cal_IrateCorr = [];
 // Data arrays
 Cdcu_scatter = [];
 
-
+//--------------------
+//--------------------
 
 //Function first setting
+
+//--------------------
+// Функция инициализации портов блока и осциллографа
 
 function CAL_Init(portDevice, portTek, ChannelMeasureId)
 {
@@ -90,7 +97,13 @@ if (ChannelMeasureId < 1 || ChannelMeasureId > 4)
 	Cal_IdStp = (Cal_IdMax - Cal_IdMin ? Cal_IdMax - Cal_IdMin : 1) / Cal_Points;
 }
 
+//--------------------
+//--------------------
+
 //Verification Function 
+
+//--------------------
+// Функция верификации тока для указаной скорости
 
 function CAL_VerifyId(CurrentRateNTest)
 {
@@ -115,6 +128,7 @@ function CAL_VerifyId(CurrentRateNTest)
 	}	
 
 //--------------------
+// Функция верификации скорости спада для указаной скорости
 
 function CAL_VerifyIrate(CurrentRateNTest)
 {		
@@ -130,6 +144,7 @@ function CAL_VerifyIrate(CurrentRateNTest)
 
 
 //--------------------
+// Функция верификации всех скоростей и тока
 
 function CAL_VerifyALL()
 {
@@ -144,9 +159,13 @@ function CAL_VerifyALL()
     }
 
 }
+//--------------------
+//--------------------
+
+//Calibration Function
 
 //--------------------
-//Calibration Function
+// Функция калибровки тока 
 
 function CAL_CalibrateId(CurrentRateNTest)
 {		
@@ -179,7 +198,9 @@ function CAL_CalibrateId(CurrentRateNTest)
 		CAL_PrintCoefIdset();
 	}
 }
+
 //--------------------
+// Функция калибровки скорости спада для указаной скорости
 
 function CAL_CalibrateIrate(CurrentRateNTest)
 {
@@ -202,10 +223,28 @@ function CAL_CalibrateIrate(CurrentRateNTest)
 	}	
 }
 
-//function CAL_Calibrate
+//--------------------
+// Функция ручного пересчета скорости спада (для изменения P4)
+
+function Hand_Cal_CompensationIrete(CurrentRateNTest)
+{
+	CAL_CompensationIratecorr("RCU_IintPS","RCU_VintPS","RCU_VintPScorr", CurrentRateNTest);
+	Cal_IrateCorr = CGEN_GetCorrection2("RCU_VintPScorr");
+	CAL_SetCoefIrateCompens(Cal_IrateCorr[0], Cal_IrateCorr[1], Cal_IrateCorr[2], CurrentRateNTest);
+	CAL_PrintCoefIrateCompens(CurrentRateNTest);
+}
+
+
 //--------------------
 
-//Аdditional Functions 
+
+//--------------------
+//--------------------
+
+//Аdditional Functions
+
+//--------------------
+// Функция сброса переменных
 
 	function CAL_ResetA()
 {	
@@ -218,7 +257,6 @@ function CAL_CalibrateIrate(CurrentRateNTest)
 	Cal_Vintcorr = [];
 
 	// Tektronix data
-	Cal_IdSc = [];
 	Cal_IdSc = [];
 	Cal_IrateSc = [];
 
@@ -237,6 +275,7 @@ function CAL_CalibrateIrate(CurrentRateNTest)
 }
 
 //--------------------
+// Функция выбора вертикальной развертки и тригера для осцилограффа для тока ?
 
 function CAL_TekInitId()
 {
@@ -249,6 +288,7 @@ function CAL_TekInitId()
 }
 
 //--------------------
+// Функция сбора данных для калибровки тока
 
 function CAL_CollectId(CurrentValues, IterationsCount,CurrentRateNTest)
 {
@@ -315,6 +355,7 @@ function CAL_CollectId(CurrentValues, IterationsCount,CurrentRateNTest)
 }
 
 //--------------------
+// Функция сохранения данных измерения тока 
 
 function CAL_SaveId(NameId)
 {
@@ -322,6 +363,7 @@ function CAL_SaveId(NameId)
 }
 
 //--------------------
+// Функция выбора вертикальной развертки и тригера для осцилограффа для тока
 
 function DCU_TekScaleId(Channel, Value)
 {
@@ -332,6 +374,7 @@ function DCU_TekScaleId(Channel, Value)
 }
 
 //--------------------
+// Функция возвращения значения тока от осцилограффа
 
 function CAL_MeasureId(Channel)
 {
@@ -340,6 +383,7 @@ function CAL_MeasureId(Channel)
 
 
 //--------------------
+// Функция выбора вертикальной развертки и тригера для осцилограффа для скорости спада
 
 function CAL_TekInitIrate()
 {
@@ -358,6 +402,7 @@ function CAL_TekInitIrate()
 }
 
 //--------------------
+// Функция выбора горизонтальной развертки для осцилограффа
 
 function CAL_TekSetHorizontalScale()
 {
@@ -401,6 +446,7 @@ function CAL_TekSetHorizontalScale()
 }
 
 //--------------------
+// Функция сбора данных для калибровки скорости спада
 
 function CAL_CollectIrate(CurrentValues, IterationsCount, CurrentRateNTest)
 {
@@ -456,6 +502,7 @@ function CAL_CollectIrate(CurrentValues, IterationsCount, CurrentRateNTest)
 }
 
 //--------------------
+// Функция перевода полученных значений при сборе и сохранения
 
 function CAL_MeasureIrate(RateSet, CurrentSet)
 {
@@ -484,6 +531,7 @@ function CAL_MeasureIrate(RateSet, CurrentSet)
 }
 
 //--------------------
+// Функция сброса данных измерения тока 
 
 function CAL_ResetIdCal()
 {
@@ -491,6 +539,7 @@ function CAL_ResetIdCal()
 }
 
 //--------------------
+// Функция сброса данных задания тока 
 
 function CAL_ResetIdsetCal()
 {
@@ -498,6 +547,7 @@ function CAL_ResetIdsetCal()
 }
 
 //--------------------
+// Функция сохранения данных задания тока
 
 function CAL_SaveIdset(NameIdset)
 {
@@ -505,6 +555,7 @@ function CAL_SaveIdset(NameIdset)
 }
 
 //--------------------
+// Функция вызова значений регистров для измерения тока
 
 function CAL_PrintCoefId()
 {
@@ -514,6 +565,7 @@ function CAL_PrintCoefId()
 }
 
 //--------------------
+// Функция вызова значений регистров для компенсации
 
 function CAL_PrintCoefIdset()
 {
@@ -523,6 +575,7 @@ function CAL_PrintCoefIdset()
 }
 
 //--------------------
+// Функция записи регистров измерения тока
 
 function CAL_SetCoefId(P2, P1, P0)
 {
@@ -532,6 +585,7 @@ function CAL_SetCoefId(P2, P1, P0)
 }
 
 //--------------------
+// Функция записи регистров для компенсации
 
 function CAL_SetCoefIdset(P2, P1, P0)
 {
@@ -539,6 +593,9 @@ function CAL_SetCoefIdset(P2, P1, P0)
 	dev.w(123, Math.round(P1 * 1000));
 	dev.ws(122, Math.round(P0));	
 }
+
+//--------------------
+// Функция подбора напряжения относительно тока для указанной скорости
 
 function CAL_CompensationIrate(CurrentValues, CurrentRateNTest)
 {	
@@ -616,7 +673,7 @@ function CAL_CompensationIrate(CurrentValues, CurrentRateNTest)
 	}	
 	dev.w(130, 0);	
 
-	save(cgen_correctionDir + "/" + NameIdintPS + ".csv", Cal_Idset);
+	save(cgen_correctionDir + "/" + NameIintPS + ".csv", Cal_Idset);
 	save(cgen_correctionDir + "/" + NameVintPS + ".csv", Cal_VintPS);
 	
 	return 1;
@@ -624,9 +681,12 @@ function CAL_CompensationIrate(CurrentValues, CurrentRateNTest)
 
 
 //--------------------
-function CAL_CompensationIratecorr(NameIintPS, NameVintPS, NameVintPScorr)
+//Функция пересчета полученых значений для указанной скорости
+
+function CAL_CompensationIratecorr(NameIintPS, NameVintPS, NameVintPScorr, CurrentRateNTest)
 {
-	
+	CAL_ResetA();
+	P4_corr = (dev.r(43 + 4 * CurrentRateNTest));
 	var LoadI = [];
 	var LoadV = [];
 	var csv_array = [];
@@ -637,13 +697,16 @@ function CAL_CompensationIratecorr(NameIintPS, NameVintPS, NameVintPScorr)
 	{
 
 		Cal_Vintcorr.push ((P4corr * 10000000)/(LoadI[l]*LoadI[l]*LoadI[l]*LoadI[l]));
+		
 		Cal_VintPStotal.push (LoadV[l] - Cal_Vintcorr[l]);
 	
 		csv_array.push(LoadI[l] + ";" + Cal_VintPStotal[l] + ";" + LoadV[l] + ";" + Cal_Vintcorr[l]);
 	}
 	save(cgen_correctionDir + "/" + NameVintPScorr + ".csv", csv_array);
 }
+
 //--------------------
+//Функция записи регистров для указаной скорости 
 
 function CAL_SetCoefIrateCompens(K2, K, Offset, CurrentRateNTest)
 {
@@ -712,65 +775,77 @@ function CAL_SetCoefIrateCompens(K2, K, Offset, CurrentRateNTest)
 }
 
 //--------------------
+// Функция вызова значений регистров скорости спада для указанной скорости
 
 function CAL_PrintCoefIrateCompens(CurrentRateNTest)
 {
 	switch(CurrentRateNTest)
 	{
 		case 0:
-			print("Irate compensation Offset	: " + dev.rs(40));
-			print("Irate compensation K x1000	: " + dev.rs(41));
-			print("Irate compensation K2 x1e6	: " + dev.rs(42));
+			print("Irate compensation Offset	: 40 : " + dev.rs(40));
+			print("Irate compensation K x1000	: 41 : " + dev.rs(41));
+			print("Irate compensation K2 x1e6	: 42 : " + dev.rs(42));
+			print("Irate compensation K4 x1e7	: 43 : " + dev.rs(43));
 			break;
 		case 1:
-			print("Irate compensation Offset	: " + dev.rs(44));
-			print("Irate compensation K x1000	: " + dev.rs(45));
-			print("Irate compensation K2 x1e6	: " + dev.rs(46));
+			print("Irate compensation Offset	: 44 : " + dev.rs(44));
+			print("Irate compensation K x1000	: 45 : " + dev.rs(45));
+			print("Irate compensation K2 x1e6	: 46 : " + dev.rs(46));
+			print("Irate compensation K4 x1e7	: 47 : " + dev.rs(47));
 			break;
 		case 2:
-			print("Irate compensation Offset	: " + dev.rs(48));
-			print("Irate compensation K x1000	: " + dev.rs(49));
-			print("Irate compensation K2 x1e6	: " + dev.rs(50));
+			print("Irate compensation Offset	: 48 : " + dev.rs(48));
+			print("Irate compensation K x1000	: 49 : " + dev.rs(49));
+			print("Irate compensation K2 x1e6	: 50 : " + dev.rs(50));
+			print("Irate compensation K4 x1e7	: 51 : " + dev.rs(51));
 			break;
 		case 3:
-			print("Irate compensation Offset	: " + dev.rs(52));
-			print("Irate compensation K x1000	: " + dev.rs(53));
-			print("Irate compensation K2 x1e6	: " + dev.rs(54));
+			print("Irate compensation Offset	: 52 : " + dev.rs(52));
+			print("Irate compensation K x1000	: 53 : " + dev.rs(53));
+			print("Irate compensation K2 x1e6	: 54 : " + dev.rs(54));
+			print("Irate compensation K4 x1e7	: 55 : " + dev.rs(55));
 			break;
 		case 4:
-			print("Irate compensation Offset	: " + dev.rs(56));
-			print("Irate compensation K x1000	: " + dev.rs(57));	
-			print("Irate compensation K2 x1e6	: " + dev.rs(58));
+			print("Irate compensation Offset	: 56 : " + dev.rs(56));
+			print("Irate compensation K x1000	: 57 : " + dev.rs(57));	
+			print("Irate compensation K2 x1e6	: 58 : " + dev.rs(58));
+			print("Irate compensation K4 x1e7	: 59 : " + dev.rs(59));
 			break;
 		case 5:
-			print("Irate compensation Offset	: " + dev.rs(60));
-			print("Irate compensation K x1000	: " + dev.rs(61));
-			print("Irate compensation K2 x1e6	: " + dev.rs(62));	
+			print("Irate compensation Offset	: 60 : " + dev.rs(60));
+			print("Irate compensation K x1000	: 61 : " + dev.rs(61));
+			print("Irate compensation K2 x1e6	: 62 : " + dev.rs(62));
+			print("Irate compensation K4 x1e7	: 63 : " + dev.rs(63));	
 			break;
 		case 6:
-			print("Irate compensation Offset	: " + dev.rs(64));
-			print("Irate compensation K x1000	: " + dev.rs(65));
-			print("Irate compensation K2 x1e6	: " + dev.rs(66));
+			print("Irate compensation Offset	: 64 : " + dev.rs(64));
+			print("Irate compensation K x1000	: 65 : " + dev.rs(65));
+			print("Irate compensation K2 x1e6	: 66 : " + dev.rs(66));
+			print("Irate compensation K4 x1e7	: 67 : " + dev.rs(67));
 			break;
 		case 7:
-			print("Irate compensation Offset	: " + dev.rs(68));
-			print("Irate compensation K x1000	: " + dev.rs(69));
-			print("Irate compensation K2 x1e6	: " + dev.rs(70));
+			print("Irate compensation Offset	: 68 : " + dev.rs(68));
+			print("Irate compensation K x1000	: 69 : " + dev.rs(69));
+			print("Irate compensation K2 x1e6	: 70 : " + dev.rs(70));
+			print("Irate compensation K4 x1e7	: 71 : " + dev.rs(76));
 			break;
 		case 8:
-			print("Irate compensation Offset	: " + dev.rs(72));
-			print("Irate compensation K x1000	: " + dev.rs(73));
-			print("Irate compensation K2 x1e6	: " + dev.rs(74));
+			print("Irate compensation Offset	: 72 : " + dev.rs(72));
+			print("Irate compensation K x1000	: 73 : " + dev.rs(73));
+			print("Irate compensation K2 x1e6	: 74 : " + dev.rs(74));
+			print("Irate compensation K4 x1e7	: 75 : " + dev.rs(75));
 			break;
 		case 9:
-			print("Irate compensation Offset	: " + dev.rs(76));
-			print("Irate compensation K x1000	: " + dev.rs(77));
-			print("Irate compensation K2 x1e6	: " + dev.rs(78));	
+			print("Irate compensation Offset	: 76 : " + dev.rs(76));
+			print("Irate compensation K x1000	: 77 : " + dev.rs(77));
+			print("Irate compensation K2 x1e6	: 78 : " + dev.rs(78));
+			print("Irate compensation K4 x1e7	: 79 : " + dev.rs(79));	
 			break;
 		case 10:
-			print("Irate compensation Offset	: " + dev.rs(80));
-			print("Irate compensation K x1000	: " + dev.rs(81));
-			print("Irate compensation K2 x1e6	: " + dev.rs(82));
+			print("Irate compensation Offset	: 80 : " + dev.rs(80));
+			print("Irate compensation K x1000	: 81 : " + dev.rs(81));
+			print("Irate compensation K2 x1e6	: 82 : " + dev.rs(82));
+			print("Irate compensation K4 x1e7	: 83 : " + dev.rs(83));
 			break;
 	}
 }
