@@ -141,12 +141,12 @@ function FWU_ATUHP()
 
 function FWU_DumpATUHP()
 {
-	dev.Dump("../../hw-ATUControlBoard/atuhp.regdump", 0, 126);
+	dev.Dump("../../hw-ATUControlBoard/Firmware/ATUControlBoard.regdump", 0, 95);
 }
 
 function FWU_RestoreATUHP()
 {
-	dev.Restore("../../hw-ATUControlBoard/atuhp.regdump");
+	dev.Restore("../../hw-ATUControlBoard/Firmware/ATUControlBoard.regdump");
 }
 
 // TOMU
@@ -418,5 +418,22 @@ function FWU_DumpMCU()
 function FWU_RestoreMCU()
 {
 	dev.Restore("../../hw-ControlUnitBoard/Firmware/Release/ControlUnitBoard.regdump");
+}
+//------------------------
+
+// IGTU
+function FWU_IGTU()
+{
+	FWUpdateSTM("../../hw-IGTUControlBoard/Firmware/Release/IGTUControlBoard.binary");
+}
+
+function FWU_DumpIGTU()
+{
+	dev.Dump("../../hw-IGTUControlBoard/Firmware/Release/IGTUControlBoard.regdump", 0, 126);
+}
+
+function FWU_RestoreIGTU()
+{
+	dev.Restore("../../hw-IGTUControlBoard/Firmware/Release/IGTUControlBoard.regdump");
 }
 //------------------------

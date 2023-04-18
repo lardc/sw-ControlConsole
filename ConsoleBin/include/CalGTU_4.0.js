@@ -331,8 +331,6 @@ function CGTU_CollectVGate(IterationsCount)
 {
 	cgtu_CurrentValues = CGEN_GetRange(cgtu_Vgmin, cgtu_Vgmax, cgtu_Vgstp);
 
-	print("Gate resistance set to " + cgtu_ResGate + " Ohms");
-	print("-----------");
 	return CGTU_Collect(110, cgtu_ResGate, cgtu_CurrentValues, IterationsCount);
 }
 
@@ -349,8 +347,6 @@ function CGTU_CollectVPower(IterationsCount)
 {
 	cgtu_CurrentValues = CGEN_GetRange(cgtu_Vdmin, cgtu_Vdmax, cgtu_Vdstp);
 
-	print("Power resistance set to " + cgtu_ResPower + " Ohms");
-	print("-----------");
 	return CGTU_Collect(112, cgtu_ResPower, cgtu_CurrentValues, IterationsCount);
 }
 
@@ -491,17 +487,19 @@ function CGTU_Probe(ProbeCMD)
 		// tektronix data
 		cgtu_vgt_sc.push(vgt_sc);
 		// relative error
-		cgtu_vgt_err.push(((vgt - vgt_sc) / vgt_sc * 100).toFixed(2));
+		cgtu_vgt_err.push(((vgt_sc - vgt) / vgt * 100).toFixed(2));
 		// Set error
-		cgtu_vgt_set_err.push(((vgt_set - vgt_sc) / vgt_sc * 100).toFixed(2));
+		cgtu_vgt_set_err.push(((vgt_sc - vgt_set) / vgt_set * 100).toFixed(2));
 		// Summary error
 		E0 = Math.sqrt(Math.pow(EUosc, 2) + Math.pow(ER, 2));
 		cgtu_vgt_err_sum.push(1.1 * Math.sqrt(Math.pow((vgt - vgt_sc) / vgt_sc * 100, 2) + Math.pow(E0, 2)));
 		cgtu_vgt_set_err_sum.push(1.1 * Math.sqrt(Math.pow((vgt_set - vgt_sc) / vgt_sc * 100, 2) + Math.pow(E0, 2)));
 		
-		print("Vset, mV: " + vgt_set);
-		print("Vgt,  mV: " + vgt);
-		print("Tek,  mV: " + vgt_sc);
+		print("Vset,    mV: " + vgt_set);
+		print("Vgt,     mV: " + vgt);
+		print("Tek,     mV: " + vgt_sc);
+		print("Vset err, %: " + ((vgt_set - vgt_sc) / vgt_sc * 100).toFixed(2));
+		print("Vgt err,  %: " + ((vgt - vgt_sc) / vgt_sc * 100).toFixed(2));
 	}
 	
 	if (ProbeCMD == 111)
@@ -517,17 +515,19 @@ function CGTU_Probe(ProbeCMD)
 		// tektronix data
 		cgtu_igt_sc.push(igt_sc);
 		// relative error
-		cgtu_igt_err.push(((igt - igt_sc) / igt_sc * 100).toFixed(2));
+		cgtu_igt_err.push(((igt_sc - igt) / igt * 100).toFixed(2));
 		// Set error
-		cgtu_igt_set_err.push(((igt_set - igt_sc) / igt_sc * 100).toFixed(2));
+		cgtu_igt_set_err.push(((igt_sc - igt_set) / igt_set * 100).toFixed(2));
 		// Summary error
 		E0 = Math.sqrt(Math.pow(EUosc, 2) + Math.pow(ER, 2));
 		cgtu_igt_err_sum.push(1.1 * Math.sqrt(Math.pow((igt - igt_sc) / igt_sc * 100, 2) + Math.pow(E0, 2)));
 		cgtu_igt_set_err_sum.push(1.1 * Math.sqrt(Math.pow((igt_set - igt_sc) / igt_sc * 100, 2) + Math.pow(E0, 2)));
 		
-		print("Iset, mA: " + igt_set);
-		print("Igt,  mA: " + igt);
-		print("Tek,  mA: " + igt_sc);
+		print("Iset,    mA: " + igt_set);
+		print("Igt,     mA: " + igt);
+		print("Tek,     mA: " + igt_sc);
+		print("Iset err, %: " + ((igt_set - igt_sc) / igt_sc * 100).toFixed(2));
+		print("Igt err,  %: " + ((igt - igt_sc) / igt_sc * 100).toFixed(2));
 	}
 	
 	if (ProbeCMD == 112)
@@ -542,17 +542,19 @@ function CGTU_Probe(ProbeCMD)
 		// tektronix data
 		cgtu_vd_sc.push(vd_sc);
 		// relative error
-		cgtu_vd_err.push(((vd - vd_sc) / vd_sc * 100).toFixed(2));
+		cgtu_vd_err.push(((vd_sc - vd) / vd * 100).toFixed(2));
 		// Set error
-		cgtu_vd_set_err.push(((vd_set - vd_sc) / vd_sc * 100).toFixed(2));
+		cgtu_vd_set_err.push(((vd_sc - vd_set) / vd_set * 100).toFixed(2));
 		// Summary error
 		E0 = Math.sqrt(Math.pow(EUosc, 2) + Math.pow(ER, 2));
 		cgtu_vd_err_sum.push(1.1 * Math.sqrt(Math.pow((vd - vd_sc) / vd_sc * 100, 2) + Math.pow(E0, 2)));
 		cgtu_vd_set_err_sum.push(1.1 * Math.sqrt(Math.pow((vd_set - vd_sc) / vd_sc * 100, 2) + Math.pow(E0, 2)));
 		
-		print("Vset, mV: " + vd_set);
-		print("Vd,   mV: " + vd);
-		print("Tek,  mV: " + vd_sc);
+		print("Vset,    mV: " + vd_set);
+		print("Vd,      mV: " + vd);
+		print("Tek,     mV: " + vd_sc);
+		print("Vset err, %: " + ((vd_set - vd_sc) / vd_sc * 100).toFixed(2));
+		print("Vgt err,  %: " + ((vd - vd_sc) / vd_sc * 100).toFixed(2));
 	}
 	
 	if (ProbeCMD == 113)
@@ -568,17 +570,19 @@ function CGTU_Probe(ProbeCMD)
 		// tektronix data
 		cgtu_id_sc.push(id_sc);
 		// relative error
-		cgtu_id_err.push(((id - id_sc) / id_sc * 100).toFixed(2));
+		cgtu_id_err.push(((id_sc - id) / id * 100).toFixed(2));
 		// Set error
-		cgtu_id_set_err.push(((id_set - id_sc) / id_sc * 100).toFixed(2));
+		cgtu_id_set_err.push(((id_sc - id_set) / id_set * 100).toFixed(2));
 		// Summary error
 		E0 = Math.sqrt(Math.pow(EUosc, 2) + Math.pow(ER, 2));
 		cgtu_id_err_sum.push(1.1 * Math.sqrt(Math.pow((id - id_sc) / id_sc * 100, 2) + Math.pow(E0, 2)));
 		cgtu_id_set_err_sum.push(1.1 * Math.sqrt(Math.pow((id_set - id_sc) / id_sc * 100, 2) + Math.pow(E0, 2)));
 		
-		print("Iset, mA: " + id_set);
-		print("Id,   mA: " + id);
-		print("Tek,  mA: " + id_sc);
+		print("Iset,    mA: " + id_set);
+		print("Id,      mA: " + id);
+		print("Tek,     mA: " + id_sc);
+		print("Iset err, %: " + ((id_set - id_sc) / id_sc * 100).toFixed(2));
+		print("Igt err,  %: " + ((id - id_sc) / id_sc * 100).toFixed(2));
 	}
 	
 	cgtu_cntDone++;

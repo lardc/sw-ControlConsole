@@ -46,38 +46,46 @@ function CGEN_WaitForCorrection(Message)
 function CGEN_GetCorrection(Filename)
 {
 	// reset flag
-	save(cgen_correctionDir + "/" + cgen_correctionFlag, [0]);
+	save(cgen_correctionDir + "/" + cgen_correctionFlag, [0])
 	
-	var Args = cgen_correctionDir + " " + Filename + " " + cgen_correctionFlag;
-	exec(cgen_correctionApp, Args);
+	var Args = cgen_correctionDir + " " + Filename + " " + cgen_correctionFlag
+	exec(cgen_correctionApp, Args)
 	
-	CGEN_WaitForCorrection("Correcting " + Filename + "...");
-	return load(cgen_correctionDir + "/" + Filename + "_corr.csv");
+	CGEN_WaitForCorrection("Correcting " + Filename + "...")
+	return CGEN_CorrectionToFloat(load(cgen_correctionDir + "/" + Filename + "_corr.csv"))
 }
 
 // Quadratic correction
 function CGEN_GetCorrection2(Filename)
 {
 	// reset flag
-	save(cgen_correctionDir + "/" + cgen_correctionFlag, [0]);
+	save(cgen_correctionDir + "/" + cgen_correctionFlag, [0])
 	
-	var Args = cgen_correctionDir + " " + Filename + " " + cgen_correctionFlag;
-	exec(cgen_correction2App, Args);
+	var Args = cgen_correctionDir + " " + Filename + " " + cgen_correctionFlag
+	exec(cgen_correction2App, Args)
 	
-	CGEN_WaitForCorrection("Correcting " + Filename + "...");
-	return load(cgen_correctionDir + "/" + Filename + "_corr.csv");
+	CGEN_WaitForCorrection("Correcting " + Filename + "...")
+	return CGEN_CorrectionToFloat(load(cgen_correctionDir + "/" + Filename + "_corr.csv"))
+}
+
+function CGEN_CorrectionToFloat(InputData)
+{
+	for(var i = 0; i < InputData.length; i++)
+		InputData[i] = parseFloat(InputData[i])
+	
+	return InputData
 }
 
 function CGEN_GetRange(Start, End, Step)
 {
 	var ResArray = [];
-	var N = Math.round((End - Start) / Step);
+	var Num = ((End - Start) / Step);
+	var N = Math.round(Num) ? Math.round(Num) : 0;
 	var Value = Start;
-	
+
 	for (var i = 0; i <= N; i++)
 	{
 		ResArray.push(Value);
-		
 		Value += Step;
 		if (Value > End) Value = End;
 	}

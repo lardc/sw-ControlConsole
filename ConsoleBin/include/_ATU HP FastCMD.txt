@@ -2,12 +2,25 @@
 CATU_Init(portATU, portTek, channelMeasureV, channelMeasureI, channelMeasureS);
 ATU_Pulse(PreCurrent, Current);
 ATU_StartPower(PreCurrent, Power)
+ATU_ResourseTest(PreCurrent, Power, Num, Sleep)
+
+// Посмотреть версию прошивки
+i("PrintStatus.js");
+PrintFWInfo();
 
 // Обновление прошивки
 dev.co(7); //  номер COM-порта блока pp()
 dev.nid(9);
 i("STM_FWUpdate.js");
 FWU_ATUHP();
+
+// Скачать дамп регистров
+i("STM_FWUpdate.js");
+FWU_DumpATUHP();
+
+// Загрузить дамп регистров
+i("STM_FWUpdate.js");
+FWU_RestoreATUHP();
 
 // Подготовка блока
 dev.co(7); //  номер COM-порта блока pp()
@@ -19,46 +32,58 @@ i("TestATU.js");
 ATU_Pulse(150,1000);
 ATU_StartPower(100,2000);
 
-// Диапазон 0 – 9000 В 
-/ (Offset: 7) (K: 8)
-/ [P0: 9] [P1: 10] [P2: 11]
+// Ресурсный тест
 i("CalATUHP.js");
-catu_Iterations = 1;
-catu_Imin = 1000;
-catu_Istp = 1000;
-catu_Vmax	= 9000;	
-catu_LoadR = 1155;  // измерить точно
-CATU_Init(1,2,1,2,3);
-dev.nid(9);
-
-CATU_VerifyV();
-CATU_CalibrateV();
+CATU_Init(12,14,1,2,3);
+catu_LoadV = 3300;
+catu_LoadType = 1;
+ATU_ResourseTest(150, 16000, 200, 5000)
 
 // Диапазон 0.5 – 45 А 
 / (Offset: 12) (K: 13)
 / [P0: 14] [P1: 15] [P2: 16]
-
 i("CalATUHP.js");
-catu_Iterations = 1;
+catu_Iterations = 3;
 catu_Imin = 500;
 catu_Istp = 5000;
+catu_LoadType = 2;
 catu_LoadR = 24.88; // измерить точно
-CATU_Init(1,2,1,2,3);
-dev.nid(9);
+CATU_Init(12,14,1,2,3);
+//dev.nid(9);
 
 CATU_VerifyI();
+
 CATU_CalibrateI();
+
+// Диапазон 0 – 9500 В 
+/ (Offset: 7) (K: 8)
+/ [P0: 9] [P1: 10] [P2: 11]
+i("CalATUHP.js");
+catu_Iterations = 3;
+catu_Imin = 1000;
+catu_Istp = 800;
+catu_Vmax = 9500;
+catu_LoadR = 1070;
+catu_LoadType = 2;
+CATU_Init(12,14,1,2,3);
+dev.nid(9);
+
+CATU_VerifyV();
+
+CATU_CalibrateV();
 
 // Диапазон 2 – 75 кВт
 / (Offset: -) (K: -)
 / [P0: -] [P1: -] [P2: -]
 i("CalATUHP.js");
-catu_Iterations = 1;
+catu_Iterations = 3;
 catu_Pmin = 2000;
-catu_Pstp = 7000;
-catu_LoadR = 1155; // измерить точно
-CATU_Init(1,2,1,2,3);
-dev.nid(9);
+catu_Pstp = 7300;
+catu_LoadType = 2;
+catu_LoadR = 1156; // измерить точно
+CATU_Init(12,14,1,2,3);
+//dev.nid(9);
 
 CATU_VerifyP();
+
 CATU_CalibrateP();
