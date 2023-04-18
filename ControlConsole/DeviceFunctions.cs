@@ -839,6 +839,9 @@ namespace PE.ControlConsole
                 if (!m_Adapter.Connected)
                     throw new InvalidOperationException("No connection to device");
 
+                if (NodeID != 0)
+                    m_Adapter.ReadFloat(0, 0);
+
                 m_Adapter.ReadFloat((ushort)NodeID, 0);
             }
             catch (ProtocolErrorFrameException e)
