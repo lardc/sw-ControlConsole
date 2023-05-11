@@ -1,11 +1,13 @@
 include("CalGeneral.js")
 include("PrintStatus.js")
-include("CalCSM.js")
-include("TestLSLH.js")
+//include("CalCSM.js")
+//include("TestLSLH.js")
+
 
 cs_t_remote1 = [];
 cs_t_remote_ext = [];
 cs_time = [];
+
 
 function CSM_Pos(Distance)
 {
@@ -25,8 +27,28 @@ function CSM_Pos(Distance)
 		PrintStatus()
 	}
 }
+function CSM_PosAdap (DeviceCase)
 
-function CSM_PosAdap(DeviceCase)
+{
+	dev.w(71,DeviceCase);
+	dev.c(110);
+	sleep(1000);
+	dev.c(102);
+	do
+	{
+		if(anykey())
+			return
+		sleep(100)
+	}
+	while(dev.r(96) == 7)
+	
+	if(dev.r(96) != 8)
+	{
+		print("Bad status")
+		PrintStatus()
+	}
+}
+function CSM_PosAdapT (DeviceCase)
 {
 	dev.w(71,DeviceCase);
 	dev.c(110);
@@ -36,32 +58,34 @@ function CSM_PosAdap(DeviceCase)
 	do
 	{
 		if(anykey())
-			return;
-		sleep(100);
+			return
+		sleep(100)
 	}
 	while(dev.r(96) == 7)
-		sleep(50);
-	
 	var end = new Date();
 
 	if(dev.r(96) != 8)
 	{
-		print("Bad status");
-		PrintStatus();
+		print("Bad status")
+		PrintStatus()
 	}
 	p("Время зажатия, с: " + (end - start) / 1000);
 }
 
 function CSM_UNClamp ()
+
 {
+
 	dev.c(120);
 	sleep(1000);
 	dev.c(109);
 	sleep(100);
+
 }
 //-----------------------------------------------------------------------------
 
 function CS_CollectTempFunc(Address)
+
 {
 	var t_remote1;
 
@@ -73,9 +97,12 @@ function CS_CollectTempFunc(Address)
 	print("Tremote1,  C: " + t_remote1);
 	
 	cs_t_remote1[cs_time.length] = t_remote1;
+	
+
 }
 
 function CS_CollectTempExtFunc(AddressExt)
+
 {
 	var t_remote_ext;
 	
@@ -87,6 +114,7 @@ function CS_CollectTempExtFunc(AddressExt)
 	cs_t_remote_ext[cs_time.length] = t_remote_ext;
 	
 	return t_remote_ext;
+
 }
 
 function CS_CollectTimeFunc()
@@ -98,8 +126,8 @@ function CS_CollectTimeFunc()
 	print("#" + (cs_time.length + 1));
 	print("Time,    sec: " + t_stamp);
 	cs_time.push(t_stamp);
-}
 
+}
 function CS_Temp(Sleep, Temp)
 {
 	csm_csv_array = [];
@@ -154,9 +182,12 @@ function CS_Temp(Sleep, Temp)
 	plot2s(cs_t_remote1, cs_t_remote_ext, 10, 0);
 	dev.c(118);
 	save("data/CSM_TempTest.csv", csm_csv_array);
+
+	//---------------------------------------
 }
 
 function CS_ResetA()
+
 {
 
 	cs_t_remote1 = [];
@@ -166,18 +197,22 @@ function CS_ResetA()
 }
 
 function CCS_TempPlot()
+
 {
 	plot(cs_t_remote1, 10, 0);
 	plot(cs_t_remote_ext, 10, 0);
 	plot2s(cs_t_remote1, cs_t_remote_ext, 10, 0);
+
 }
 
 function CSS_TempStart(Temp)
 {
+
 	dev.w(84,0);
 	dev.w(72,Temp);
 	dev.c(108);
 	dev.c(117);
+
 }
 
 function CSM_Res (Num, SleepUp, SleepDown, DeviceCase , Temp)
@@ -218,7 +253,9 @@ function CSM_Res (Num, SleepUp, SleepDown, DeviceCase , Temp)
 		while(dev.r(96) == 10);
 
 		sleep(SleepDown);
+
 	}
+
 }
 
 // SL
@@ -267,9 +304,11 @@ dev.nid(9);
 		while(dev.r(96) == 10);
 	
 		sleep(SleepDown);
+	
 	}
-}
 
+
+}
 function S1 ()
 {
 	dev.nid(1);
@@ -287,7 +326,6 @@ function SL(Current)
 	LSLH_StartMeasure(Current);
 	dev.nid(6);
 }
-
 function SLp(Current)
 {
 	dev.nid(9);
@@ -296,3 +334,4 @@ function SLp(Current)
 	pl(dev.rafs(2));
 	dev.nid(6);
 }
+	

@@ -1,3 +1,5 @@
+// Дополнения для скрипта "CALDRCU016.js"
+
 include("Tektronix.js")
 include("CalGeneral.js")
 
@@ -156,7 +158,7 @@ function CAL_MeasureId(Channel)
 
 //--------------------
 
-function CAL_TekInitIrate()
+function CAL_TekInitIrateDCU()
 {
 	TEK_ChannelInit(cal_chMeasureId, "1", "0.02");
 	TEK_TriggerInit(cal_chMeasureId, "0.06");
@@ -358,15 +360,17 @@ function CAL_SetCoefIdset(P2, P1, P0)
 	dev.ws(122, Math.round(P0));	
 }
 
-function CAL_CompensationIrate(CurrentValues, CurrentRateNTest)
+//--------------------
+
+function CAL_CompensationIrate(CurrentValues, CurrentRateNTest, NameIintPS, NameVintPS)
 {	
-	cal_CntTotal = CurrentValues.length;
-	cal_CntDone = 1;
+	Cal_CntTotal = CurrentValues.length;
+	Cal_CntDone = 1;
 		
 
 	var AvgNum, VoltageMin, VoltageMax, Voltage;
 	
-	if (cal_UseAvg)
+	if (Cal_UseAvg)
 		AvgNum = 4;
 	else
 		AvgNum = 1;
@@ -374,24 +378,28 @@ function CAL_CompensationIrate(CurrentValues, CurrentRateNTest)
 	for (var j = 0; j < CurrentValues.length; j++)
 	{
 		
-		print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
+		print("-- result " + Cal_CntDone++ + " of " + Cal_CntTotal + " --");
 		
 		VoltageMin = cal_IntPsVmin;
 		VoltageMax = cal_IntPsVmax;
 
-		DCU_TekScaleId(cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
+		DCU_TekScaleId(Cal_chMeasureId, CurrentValues[j] * cal_Rshunt * 1e-6);
 		TEK_Send("horizontal:scale "  + ((CurrentValues[j] / CurrentRate[CurrentRateNTest]) * 1e-6) * 0.25);
 		TEK_Send("horizontal:main:position "+ ((CurrentValues[j] / CurrentRate[CurrentRateNTest]) * 1e-6) * 0.4);
 
-		for (var i = 0; i < cal_Points; i++)
+		for (var i = 0; i < Cal_Points; i++)
 		{
 			TEK_AcquireSample();
 			TEK_AcquireAvg(AvgNum);
 		
 			Voltage = Math.round((VoltageMin + (VoltageMax - VoltageMin) / 2) * 10) / 10;
 			
+			p("-------------------------");
+			p("-------------------------");
 			dev.w(130, Voltage * 10);
+
 			p("Voltage DCU : " + Voltage);
+
 			p("Current, A : " + CurrentValues[j]);
 			p("VintPS max : " + VoltageMax);
 			p("VintPS,  V : " + Voltage);
@@ -424,15 +432,40 @@ function CAL_CompensationIrate(CurrentValues, CurrentRateNTest)
 
 			}
 		}
-		cal_Idset.push(CurrentValues[j]);
-		cal_VintPS.push(Voltage * 10);
+		Cal_Idset.push(CurrentValues[j]);
+		Cal_VintPS.push (Voltage * 10);
+
 	}	
 	dev.w(130, 0);	
+
+	save(cgen_correctionDir + "/" + NameIintPS + ".csv", Cal_Idset);
+	save(cgen_correctionDir + "/" + NameVintPS + ".csv", Cal_VintPS);
+	
 	return 1;
 }
 
-//--------------------
 
+//--------------------
+function CAL_CompensationIratecorr(NameIintPS, NameVintPS, NameVintPScorr)
+{
+	
+	var LoadI = [];
+	var LoadV = [];
+	var csv_array = [];
+	LoadI = load(cgen_correctionDir + "/" + NameIintPS + ".csv");
+	LoadV = load(cgen_correctionDir + "/" + NameVintPS + ".csv");
+
+	for (var l = 0; l < LoadI.length; l++)
+	{
+
+		Cal_Vintcorr.push ((P4corr * 10000000)/(LoadI[l]*LoadI[l]*LoadI[l]*LoadI[l]));
+		Cal_VintPStotal.push (LoadV[l] - Cal_Vintcorr[l]);
+	
+		csv_array.push(LoadI[l] + ";" + Cal_VintPStotal[l] + ";" + LoadV[l] + ";" + Cal_Vintcorr[l]);
+	}
+	save(cgen_correctionDir + "/" + NameVintPScorr + ".csv", csv_array);
+}
+//--------------------
 function CAL_SaveVintPS(NameVintPS)
 {	
 	var csv_array = [];
@@ -445,109 +478,132 @@ function CAL_SaveVintPS(NameVintPS)
 
 //--------------------
 
-function CAL_SetCoefIrateCompens(K, Offset)
+function CAL_SetCoefIrateCompens(K2, K, Offset, CurrentRateNTest)
 {
+	K2 = parseFloat(K2);
 	K = parseFloat(K);
 	Offset = parseFloat(Offset);
 	
-	switch(CurrentRateN[k])
+	switch(CurrentRateNTest)
 	{
 		case 0:
-			dev.ws(41, Offset);
-			dev.ws(42, K * 1000);
+			dev.ws(40, Offset);
+			dev.ws(41, K * 1000);
+			dev.ws(42, K2 * 1e6);
 			break;
 		case 1:
-			dev.ws(43, Offset);
-			dev.ws(44, K * 1000);
+			dev.ws(44, Offset);
+			dev.ws(45, K * 1000);
+			dev.ws(46, K2 * 1e6);
 			break;
 		case 2:
-			dev.ws(45, Offset);
-			dev.ws(46, K * 1000);
+			dev.ws(48, Offset);
+			dev.ws(49, K * 1000);
+			dev.ws(50, K2 * 1e6);
 			break;
 		case 3:
-			dev.ws(47, Offset);
-			dev.ws(48, K * 1000);
+			dev.ws(52, Offset);
+			dev.ws(53, K * 1000);
+			dev.ws(54, K2 * 1e6);
 			break;
 		case 4:
-			dev.ws(49, Offset);
-			dev.ws(50, K * 1000);
+			dev.ws(56, Offset);
+			dev.ws(57, K * 1000);
+			dev.ws(58, K2 * 1e6);
 			break;
 		case 5:
-			dev.ws(51, Offset);
-			dev.ws(52, K * 1000);
+			dev.ws(60, Offset);
+			dev.ws(61, K * 1000);
+			dev.ws(62, K2 * 1e6);
 			break;
 		case 6:
-			dev.ws(53, Offset);
-			dev.ws(54, K * 1000);
+			dev.ws(64, Offset);
+			dev.ws(65, K * 1000);
+			dev.ws(66, K2 * 1e6);
 			break;
 		case 7:
-			dev.ws(55, Offset);
-			dev.ws(56, K * 1000);
+			dev.ws(68, Offset);
+			dev.ws(69, K * 1000);
+			dev.ws(70, K2 * 1e6);
 			break;
 		case 8:
-			dev.ws(57, Offset);
-			dev.ws(58, K * 1000);
+			dev.ws(72, Offset);
+			dev.ws(73, K * 1000);
+			dev.ws(74, K2 * 1e6);
 			break;
 		case 9:
-			dev.ws(59, Offset);
-			dev.ws(60, K * 1000);
+			dev.ws(76, Offset);
+			dev.ws(77, K * 1000);
+			dev.ws(78, K2 * 1e6);
 			break;
 		case 10:
-			dev.ws(61, Offset);
-			dev.ws(62, K * 1000);
+			dev.ws(80, Offset);
+			dev.ws(81, K * 1000);
+			dev.ws(82, K2 * 1e6);
 			break;
 	}
 }
 
 //--------------------
 
-function CAL_PrintCoefIrateCompens()
+function CAL_PrintCoefIrateCompens(CurrentRateNTest)
 {
-	switch(CurrentRateN[k])
+	switch(CurrentRateNTest)
 	{
 		case 0:
-			print("Irate compensation Offset	: " + dev.rs(41));
-			print("Irate compensation K x1000	: " + dev.rs(42));
+			print("Irate compensation Offset	: " + dev.rs(40));
+			print("Irate compensation K x1000	: " + dev.rs(41));
+			print("Irate compensation K2 x1e6	: " + dev.rs(42));
 			break;
 		case 1:
-			print("Irate compensation Offset	: " + dev.rs(43));
-			print("Irate compensation K x1000	: " + dev.rs(44));
+			print("Irate compensation Offset	: " + dev.rs(44));
+			print("Irate compensation K x1000	: " + dev.rs(45));
+			print("Irate compensation K2 x1e6	: " + dev.rs(46));
 			break;
 		case 2:
-			print("Irate compensation Offset	: " + dev.rs(45));
-			print("Irate compensation K x1000	: " + dev.rs(46));
+			print("Irate compensation Offset	: " + dev.rs(48));
+			print("Irate compensation K x1000	: " + dev.rs(49));
+			print("Irate compensation K2 x1e6	: " + dev.rs(50));
 			break;
 		case 3:
-			print("Irate compensation Offset	: " + dev.rs(47));
-			print("Irate compensation K x1000	: " + dev.rs(48));
+			print("Irate compensation Offset	: " + dev.rs(52));
+			print("Irate compensation K x1000	: " + dev.rs(53));
+			print("Irate compensation K2 x1e6	: " + dev.rs(54));
 			break;
 		case 4:
-			print("Irate compensation Offset	: " + dev.rs(49));
-			print("Irate compensation K x1000	: " + dev.rs(50));	
+			print("Irate compensation Offset	: " + dev.rs(56));
+			print("Irate compensation K x1000	: " + dev.rs(57));	
+			print("Irate compensation K2 x1e6	: " + dev.rs(58));
 			break;
 		case 5:
-			print("Irate compensation Offset	: " + dev.rs(51));
-			print("Irate compensation K x1000	: " + dev.rs(52));	
+			print("Irate compensation Offset	: " + dev.rs(60));
+			print("Irate compensation K x1000	: " + dev.rs(61));
+			print("Irate compensation K2 x1e6	: " + dev.rs(62));	
 			break;
 		case 6:
-			print("Irate compensation Offset	: " + dev.rs(53));
-			print("Irate compensation K x1000	: " + dev.rs(54));
+			print("Irate compensation Offset	: " + dev.rs(64));
+			print("Irate compensation K x1000	: " + dev.rs(65));
+			print("Irate compensation K2 x1e6	: " + dev.rs(66));
 			break;
 		case 7:
-			print("Irate compensation Offset	: " + dev.rs(55));
-			print("Irate compensation K x1000	: " + dev.rs(56));
+			print("Irate compensation Offset	: " + dev.rs(68));
+			print("Irate compensation K x1000	: " + dev.rs(69));
+			print("Irate compensation K2 x1e6	: " + dev.rs(70));
 			break;
 		case 8:
-			print("Irate compensation Offset	: " + dev.rs(57));
-			print("Irate compensation K x1000	: " + dev.rs(58));
+			print("Irate compensation Offset	: " + dev.rs(72));
+			print("Irate compensation K x1000	: " + dev.rs(73));
+			print("Irate compensation K2 x1e6	: " + dev.rs(74));
 			break;
 		case 9:
-			print("Irate compensation Offset	: " + dev.rs(59));
-			print("Irate compensation K x1000	: " + dev.rs(60));	
+			print("Irate compensation Offset	: " + dev.rs(76));
+			print("Irate compensation K x1000	: " + dev.rs(77));
+			print("Irate compensation K2 x1e6	: " + dev.rs(78));	
 			break;
 		case 10:
-			print("Irate compensation Offset	: " + dev.rs(61));
-			print("Irate compensation K x1000	: " + dev.rs(62));
+			print("Irate compensation Offset	: " + dev.rs(80));
+			print("Irate compensation K x1000	: " + dev.rs(81));
+			print("Irate compensation K2 x1e6	: " + dev.rs(82));
 			break;
 	}
 }

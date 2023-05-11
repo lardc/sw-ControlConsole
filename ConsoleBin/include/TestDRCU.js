@@ -74,41 +74,41 @@ function DRCU_Test(N)
 	}
 }
 
-function DRCU_InPsVoltageSet(CurrentRate, Voltage)
+function DRCU_InPsVoltageSet(CurrentRateN, Voltage)
 {
-	switch(CurrentRate * 100)
+	switch(CurrentRateN)
 	{
-		case 50:
+		case 0:
 			dev.w(52, Voltage * 10);
 			break;
-		case 75:
+		case 1:
 			dev.w(53, Voltage * 10);
 			break;
-		case 100:
+		case 2:
 			dev.w(54, Voltage * 10);
 			break;
-		case 250:
+		case 3:
 			dev.w(55, Voltage * 10);
 			break;
-		case 500:
+		case 4:
 			dev.w(56, Voltage * 10);
 			break;
-		case 750:
+		case 5:
 			dev.w(57, Voltage * 10);
 			break;
-		case 1000:
+		case 6:
 			dev.w(58, Voltage * 10);
 			break;
-		case 1500:
+		case 7:
 			dev.w(59, Voltage * 10);
 			break;
-		case 2500:
+		case 8:
 			dev.w(60, Voltage * 10);
 			break;
-		case 3000:
+		case 9:
 			dev.w(61, Voltage * 10);
 			break;
-		case 5000:
+		case 10:
 			dev.w(62, Voltage * 10);
 			break;
 	}
@@ -188,3 +188,14 @@ plot(dev.rafs(1), 1, 0);
  }
  plot(dev.rafs(1), 1, 0);
 }
+
+function BL()
+{
+	for (var j = 0; j < 100; j++)
+	{
+	dev.w(129,1);
+	sleep(1000);
+	dev.w(129,0);
+	sleep(1000);
+	}
+}	

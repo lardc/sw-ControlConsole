@@ -1,75 +1,90 @@
+//Скрипт для Калибровки и Верификации Блоков DCU и RCU 
+//Подключение библиотек
+
 include("Tektronix.js");
 include("AddDRCU016.js");
 include("Sic_GetData.js");
 
-// CAN Nomber
+// Адреса по USB(COM) и CAN шине
+
 UseCAN = 0;
 CANadap = 0;
 CAN = 5;
 QSU  = 10;
 portDevice = 0;
 
-// Данные активаных блоков
-Unit = 0;
-UnitEn = 2;
-MOD = 0;
+// Данные активных блоков 
 
+Type = 1; 	// Тип блока DCU = 1, RCU = 2 
+Unit = 0;	// 
+UnitEn = 2;	// Количество блоков
+MOD = 0;	// Включение режима калибровки 0 - ВЫКЛ. 1 - ВКЛ.
 
 // Calibration setup parameters
-cal_Rshunt = 1000;	// uOhm
-cal_Points = 10;
-cal_Iterations = 1;
-cal_UseAvg = 1;
+
+Сal_Rshunt = 1000;	// uOhm
+Сal_Points = 10;
+Сal_Iterations = 1;
+Сal_UseAvg = 1;
 
 // CurrentArray
-cal_IdMin = 100;	
-cal_IdMax = 1100;
-cal_IdStp = 100;
+
+Сal_IdMin = 100;	
+Сal_IdMax = 1100;
+Сal_IdStp = 100;
 
 // VoltageRete
-cal_IntPsVmin = 80;	// V
-cal_IntPsVmax = 120;
+
+Сal_IntPsVmin = 80;	// V
+Сal_IntPsVmax = 120;
 
 //CurrentRate
+
 CurrentRateNTest = 0;
 CurrentRateN = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 CurrentRate = [0.167, 0.25, 0.334, 0.834, 1.667, 2.5, 3.334, 5, 8.334, 10, 16.667]; // in A/us 1, 1.5, 2, 5, 10, 15, 20, 30, 50, 60, 100
 CurrentTest = 1100;
 
 // Counters
-cal_CntTotal = 0;
-cal_CntDone = 0;
+
+Сal_CntTotal = 0;
+Сal_CntDone = 0;
 
 // Channels
-cal_chMeasureId = 1;
-cal_chSync = 3;
+
+Сal_chMeasureId = 1;
+Сal_chSync = 3;
 
 // Results storage
-cal_Id = [];
-cal_Idset = [];
-cal_Irate = [];
-cal_VintPS = [];
+
+Сal_Id = [];
+Сal_Idset = [];
+Сal_Irate = [];
+Сal_VintPS = [];
 
 // Tektronix data
-cal_IdSc = [];
-cal_Irate = [];
+
+Сal_IdSc = [];
+Сal_Irate = [];
 
 // Relative error
-cal_IdErr = [];
-cal_IdsetErr = [];
-cal_Irate = [];
+
+Сal_IdErr = [];
+Сal_IdsetErr = [];
+Сal_Irate = [];
 
 // Correction
-cal_IdCorr = [];
-cal_IdsetCorr = [];
-cal_IrateCorr = [];
+
+Сal_IdCorr = [];
+Сal_IdsetCorr = [];
+Сal_IrateCorr = [];
 
 // Data arrays
-cdcu_scatter = [];
 
+Сdcu_scatter = [];
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Включение всех блоков DCU для калибровки
+// Включение всех блоков DCU для калибровки и опрос необходимых параметров
 function ALL_DCU_SW()		
 {
 	print("UseCANadap ? (press 'y' or 'n')");
@@ -89,7 +104,7 @@ function ALL_DCU_SW()
 		CANadap = readline();
 		dev.co(CANadap);
 		dev.nid(QSU);
-		print("Use calibrate MOD?")
+		print("Use calibrate MOD? (press 'y' or 'n')");
 		var key;
 		do
 		{
@@ -125,17 +140,17 @@ function ALL_DCU_SW()
 		}	
 } 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//блок настройки осцилограффа и выходов
+//Функция настройки осцилограффа и выходов
 function CAL_Init(portTek, channelMeasureId)
 {
-	if (channelMeasureId < 1 || channelMeasureId > 4)
+	if (СhannelMeasureId < 1 || СhannelMeasureId > 4)
 	{
 		print("Wrong channel numbers");
 		return;
 	}
 
 	// Copy channel information
-	cal_chMeasureId = channelMeasureId;
+	Сal_chMeasureId = СhannelMeasureId;
 
 	// Init device port
 	
@@ -218,11 +233,13 @@ function DRCU_Pulse(Current, CurrentRate)
 	
 		return 1;
 	}
-	else			// Когда проверяется более 1 блока
+	else			// Когда проверяется более 1 блока в QRR
 	{	
 		dev.nid(160);
 		while (dev.r(192) !=3)
-			sleep(100);
+		{
+			sleep(50);
+		}	
 		for(var i = 0; i < UnitEn; i++)
 		{
 				
@@ -233,8 +250,11 @@ function DRCU_Pulse(Current, CurrentRate)
 		}
 		dev.nid(161);	
 		while (dev.r(192) !=4)
-			sleep(100);
+		{	
+			sleep(50);
+		}
 		dev.nid(QSU);	
+		sleep(50);
 		dev.c(22);
 
 	}
@@ -280,6 +300,24 @@ function CAL_VerifyIrate(CurrentRateNTest)
 	CAL_CollectIrate(CurrentArray, cal_Iterations, CurrentRateNTest);		
 }
 
+
+
+//-------------------------------------------------------------------------------------------------------------------------------------------
+//Блок верификации общей
+
+function CAL_VerifyALL()
+{
+
+	for (var p = 0; p < 11 ; p++)
+	{
+		
+	CAL_VerifyIrate(p);
+
+	CAL_VerifyId(p);
+
+    }
+
+}
 //-------------------------------------------------------------------------------------------------------------------------------------------
 //Блок калибровки амплитуды тока (компенсация) (Для 1 блока)
 
@@ -323,19 +361,22 @@ function CAL_CalibrateIrate(CurrentRateNTest)
 	CAL_ResetA();
 	
 	// Tektronix init
-	CAL_TekInitIrate();
-	
+	if (Type = 1)
+		CAL_TekInitIrateDCU();
+	if (Type = 2)
+		CAL_TekInitIrateRCU();
+
 	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
+	var CurrentArray = CGEN_GetRange(Cal_IdMin, Cal_IdMax, Cal_IdStp);
 
-	if (CAL_CompensationIrate(CurrentArray, CurrentRateNTest))
+	if (CAL_CompensationIrate(CurrentArray, CurrentRateNTest,"DCU_IintPS","DCU_VintPS"))
 	{
-		CAL_SaveVintPS("DCU_VintPS");
-
+		// Additional correction
+		CAL_CompensationIratecorr("DCU_IintPS","DCU_VintPS","DCU_VintPScorr");
 		// Calculate correction
-		cal_IrateCorr = CGEN_GetCorrection("DCU_VintPS");
-		CAL_SetCoefIrateCompens(cal_IrateCorr[0], cal_IrateCorr[1]);
-		CAL_PrintCoefIrateCompens();
+		Cal_IrateCorr = CGEN_GetCorrection2("DCU_VintPScorr");
+		CAL_SetCoefIrateCompens(Cal_IrateCorr[0], Cal_IrateCorr[1], Cal_IrateCorr[2], CurrentRateNTest);
+		CAL_PrintCoefIrateCompens(CurrentRateNTest);
 	}	
 }
 
