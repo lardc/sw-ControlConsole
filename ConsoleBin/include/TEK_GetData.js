@@ -3,6 +3,8 @@ include("CalGeneral.js")
 
 // Channels
 UsePort = 1;
+sic_gd_filter_points = 50;
+sic_gd_filter_factor = 5;
 
 function TEK_GD_Init(Port)
 {
@@ -77,4 +79,66 @@ function ChannelData(NameFile, Channel)
 	var Data = [];
 	Data = (GetChannelData(Channel));
 	SaveChannelData(NameFile, Data);
+}
+
+
+function SiC_GD_Filter(NameFile, ScaleI)
+{
+	var Data = [];
+	Data = load(cgen_correctionDir + "/" + NameFile + ".csv");
+	var filtered_avg = [];
+	var filtered_spl = [];
+	
+	// avg filtering
+	for (var i = 0; i < (Data.length - Math.pow(sic_gd_filter_points, 2)); ++i)
+	{
+		var avg_point = 0;
+		for (var j = i; j < (i + Math.pow(sic_gd_filter_points, 2)); j += sic_gd_filter_points)
+			avg_point += Data[j];
+		filtered_avg[i] = avg_point / sic_gd_filter_points;
+	}
+	
+	// current shunt scale
+	var scale
+	if (typeof ScaleI === 'undefined')
+		scale = 1;
+	else
+		scale = ScaleI;
+	
+	// spline filtering
+	for (var i = 0; i < (filtered_avg.length - 3); ++i)
+	{
+		filtered_spl[i] =	Math.pow(1 - sic_gd_filter_factor, 3) * filtered_avg[i] +
+							3 * sic_gd_filter_factor * Math.pow(1 - sic_gd_filter_factor, 2) * filtered_avg[i + 1] +
+							3 * Math.pow(sic_gd_filter_factor, 2) * (1 - sic_gd_filter_factor) * filtered_avg[i + 2] +
+							Math.pow(sic_gd_filter_factor, 3) * filtered_avg[i + 3];
+		
+		filtered_spl[i] *= scale;
+	}
+	
+	return filtered_spl;
+
+}
+
+function Fil_Data(NameFile,ScaleI,FilFile)
+{
+	var FilData = [];
+	FilData = (SiC_GD_Filter(NameFile, ScaleI));
+	SaveChannelData(FilFile, FilData);
+}
+
+
+function Derivative(NameFile,DerFile)
+{
+	Der = [];
+	Load = [];
+	K = 4 * 1e-2;
+
+	Load = load(cgen_correctionDir + "/" + NameFile + ".csv");
+
+	for (var N = 2; N < 2500; ++N)
+	{	
+		Der.push((Load[N] - Load[N-1])/K);
+	}
+	save(cgen_correctionDir + "/" + DerFile + ".csv", Der);
 }
