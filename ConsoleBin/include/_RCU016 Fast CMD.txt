@@ -18,6 +18,18 @@ FWU_DumpDRCU();
 i("STM_FWUpdate.js");
 FWU_RestoreDRCU();
 
+// Формирование без напряжения внутреннего БП
+dev.w(140,1);
+dev.w(128,200);
+dev.w(129,2);
+dev.w(15,10);
+dev.w(130,10);
+dev.w(131,10);
+dev.c(1);
+
+dev.c(100);
+dev.c(101);
+
 // Подготовка блока
 dev.co(1);
 dev.w(140,1);
