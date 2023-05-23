@@ -1,6 +1,7 @@
 // Пояснения
 CAL_Init(portDevice, portTek, channelMeasureId);
 LSLPC_Start(Current);
+LSLPC_ResourceTest(Current, hours_resource_test)
 Nid = 150...
 
 // Посмотреть версию прошивки
@@ -28,12 +29,18 @@ i("TestLSLPC.js");
 // Измерение
 LSLPC_Start(200);
 
+// Ресурсный тест
+dev.co(12);
+i("TestLSLPC.js");
+LSLPC_ResourceTest(6500, 8);
+
 // 0 диапазон 100 - 999 А
 / (Offset: 36) (K: 34/35)
 / [P0: 33] [P1: 32] [P2: 31]
 i("CalLSLPC.js");
 cal_IdMin = [100, 1001];	
 cal_IdMax = [999, 6500];
+cal_IdStp = (cal_IdMax[cal_CurrentRange] - cal_IdMin[cal_CurrentRange]) / cal_Points;
 cal_Rshunt = 750; // на 100А шунте
 cal_CurrentRange = 0;
 cal_UseAvg = 1;
@@ -49,6 +56,7 @@ CAL_CalibrateId();
 i("CalLSLPC.js");
 cal_IdMin = [100, 1001];	
 cal_IdMax = [999, 6500];
+cal_IdStp = (cal_IdMax[cal_CurrentRange] - cal_IdMin[cal_CurrentRange]) / cal_Points;
 cal_Rshunt = 250; // на 300А шунте
 cal_CurrentRange = 1;
 cal_UseAvg = 1;

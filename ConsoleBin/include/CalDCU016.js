@@ -4,7 +4,7 @@
 include("TestDRCU.js")
 include("Tektronix.js")
 include("CalGeneral.js")
-include("TestQRR.js");
+include("TestQRR.js")
 
 // Calibration setup parameters
 Cal_Rshunt = 1000;	// uOhm
@@ -52,7 +52,7 @@ Cal_IdsetErr = [];
 Cal_Irate = [];
 
 // Correction
-P4corr = 650;
+P4_corr = 0;
 Cal_IdCorr = [];
 Cal_IdsetCorr = [];
 Cal_IrateCorr = [];
@@ -272,6 +272,8 @@ function Hand_Cal_CompensationIrete(CurrentRateNTest)
 	
 	// Data arrays
 	Cdcu_scatter = [];
+
+	Cal_Volt = [];
 }
 
 //--------------------
@@ -468,6 +470,7 @@ function CAL_CollectIrate(CurrentValues, IterationsCount, CurrentRateNTest)
 	Cal_IdSc = [];
 	Cal_IdsetErr = [];
 	Cal_IrateErr = [];
+	Cal_Volt = [];
 	
 
 	for (var i = 0; i < IterationsCount; i++)
@@ -475,6 +478,11 @@ function CAL_CollectIrate(CurrentValues, IterationsCount, CurrentRateNTest)
 		
 			for (var j = 0; j < CurrentValues.length; j++)
 			{
+//___________________________________________________________				
+			//	print("Enter Temp unit");
+			//	Temp = readline();
+			//	dev.w(131,Temp);
+//___________________________________________________________
 				print("-- result " + Cal_CntDone++ + " of " + Cal_CntTotal + " --");
 
 				DCU_TekScaleId(Cal_chMeasureId, CurrentValues[j] * Cal_Rshunt * 1e-6);
@@ -497,7 +505,7 @@ function CAL_CollectIrate(CurrentValues, IterationsCount, CurrentRateNTest)
 			}	
 	}
 			scattern(Cal_IdSc, Cal_IrateErr, "Current (in A)", "Error (in %)", "DCU Current rate relative error " + CurrentRate[CurrentRateNTest] + " A/us");
-	save("data/dcu_404.csv", cdcu_scatter);
+	save("data/dcu_404.csv", Cdcu_scatter);
 	return 1;
 }
 
@@ -512,7 +520,7 @@ function CAL_MeasureIrate(RateSet, CurrentSet)
 	var CurrentScope = (TEK_Measure(Cal_chMeasureId) / (Cal_Rshunt * 1e-6)).toFixed(2);
 	var CurrentErr = ((CurrentScope - CurrentSet) / CurrentSet * 100).toFixed(2);
 	
-	cdcu_scatter.push(RateSet + ";" + RateScope + ";" + RateErr + ";" + CurrentSet + ";" + CurrentScope + ";" + CurrentErr);
+	Cdcu_scatter.push(RateSet + ";" + RateScope + ";" + RateErr + ";" + CurrentSet + ";" + CurrentScope + ";" + CurrentErr);
 	
 	Cal_IdSc.push(CurrentScope);
 	Cal_IdsetErr.push(CurrentErr);
@@ -521,8 +529,12 @@ function CAL_MeasureIrate(RateSet, CurrentSet)
 	print("Current Set, A = " + CurrentSet);	
 	print("Current Osc, A = " + CurrentScope);	
 	print("Current Err, % = " + CurrentErr);
-	
-	print("Voltage, V = " + dev.r(201));
+//___________________________________________________________	
+	Voltage = dev.r(201);
+	print("Voltage, V = " + Voltage / 10);
+	Cal_Volt.push(Voltage); 
+	save(cgen_correctionDir + "/" + "VoltageDCU" + ".csv", Cal_Volt);
+//___________________________________________________________	
 	print("di/dt Set, A/us = " + RateSet);	
 	print("di/dt Osc, A/us = " + RateScope);	
 	print("di/dt Err, % = " + RateErr);
@@ -696,7 +708,7 @@ function CAL_CompensationIratecorr(NameIintPS, NameVintPS, NameVintPScorr, Curre
 	for (var l = 0; l < LoadI.length; l++)
 	{
 
-		Cal_Vintcorr.push ((P4corr * 10000000)/(LoadI[l]*LoadI[l]*LoadI[l]*LoadI[l]));
+		Cal_Vintcorr.push ((P4_corr * 10000000)/(LoadI[l]*LoadI[l]*LoadI[l]*LoadI[l]));
 		
 		Cal_VintPStotal.push (LoadV[l] - Cal_Vintcorr[l]);
 	

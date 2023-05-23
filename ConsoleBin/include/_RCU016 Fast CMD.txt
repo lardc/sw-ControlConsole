@@ -1,0 +1,67 @@
+// Пояснения
+CAL_Init(portDevice, portTek, channelMeasureId);
+DRCU_Pulse(Current, CurrentRate);
+
+// Посмотреть версию прошивки
+i("PrintStatus.js");
+PrintFWInfo();
+
+// Обновление прошивки
+i("STM_FWUpdate.js");
+FWU_DRCU();
+
+// Скачать дамп регистров
+i("STM_FWUpdate.js");
+FWU_DumpDRCU();
+
+// Загрузить дамп регистров
+i("STM_FWUpdate.js");
+FWU_RestoreDRCU();
+
+// Формирование без напряжения внутреннего БП
+dev.w(140,1);
+dev.w(128,200);
+dev.w(129,2);
+dev.w(15,10);
+dev.w(130,10);
+dev.w(131,10);
+dev.c(1);
+
+dev.c(100);
+dev.c(101);
+
+// Подготовка блока
+dev.co(1);
+dev.w(140,1);
+i("TestDRCU.js");
+dev.c(1);
+
+// Формирование сигнала и измерение
+DRCU_Pulse(100,0)
+
+// Диапазон di/dt
+i("CalRCU016.js");
+CAL_Init(1,2,1);
+dev.w(140,1);
+dev.c(1);
+CAL_CalibrateIrate(0);
+
+i("CalRCU016.js");
+CAL_Init(1,2,1);
+CAL_VerifyIrate(0);
+
+// Диапазон Id
+i("CalRCU016.js");
+CAL_Init(1,2,1);
+dev.w(140,1);
+dev.c(1);
+sleep(1000);
+CAL_VerifyId(0);
+
+// Полная верификация
+i("CalRCU016.js");
+CAL_Init(1,2,1);
+dev.w(140,1);
+dev.c(1);
+sleep(1000);
+CAL_VerifyALL()
