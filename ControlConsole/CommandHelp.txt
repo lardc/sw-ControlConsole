@@ -6,6 +6,7 @@ Commands:
 	- exec(@filename, @arguments) - execute external application with arguments
 	- print(@any) - print value
 	- p(@any) - same as "print"
+	- pinline(@any) - print value without new line
 	- sleep(@milliseconds) - pause for specified time
 	- save(@filename, [@values]) - write array values to file
 	- append(@filename, [@values]) - append array values to file
