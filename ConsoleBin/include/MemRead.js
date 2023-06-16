@@ -18,20 +18,24 @@ function MR_Read(Command)
 			OutString += 'data type: \'' + MR_DataTypeName(DataType) + '\', data len: \'' + DataLen +
 				'\', data: \''
 			
+			var Data = ''
 			for(var i = 0; i < MR_GetWordsToRead(DataType, DataLen); i++)
 			{
 				var w = MR_GetWord()
-				
-				if(DataType == 0)
+				switch(MR_DataTypeName(DataType))
 				{
-					if((w >> 8) != 0)
-						OutString += String.fromCharCode(w >> 8)
-					
-					if((w & 0xFF) != 0)
-						OutString += String.fromCharCode(w & 0xFF)
+					case 'char':
+						var char_code = w >> 8
+						if(char_code != 0 && char_code != 0xFF)
+							Data += String.fromCharCode(char_code)
+						
+						char_code = w & 0xFF
+						if(char_code != 0 && char_code != 0xFF)
+							Data += String.fromCharCode(char_code)
+						break
 				}
 			}
-			OutString += '\'\n'
+			OutString += (Data ? Data : ' -- empty data -- ') + '\'\n'
 		}
 		else
 			break

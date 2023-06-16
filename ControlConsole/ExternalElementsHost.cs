@@ -38,6 +38,7 @@ namespace PE.ControlConsole
             EngineContext.SetParameter(@"exec", new Action<string, string>(Execute));
             EngineContext.SetParameter(@"print", new Action<object>(Print));
             EngineContext.SetParameter(@"p", new Action<object>(Print));
+            EngineContext.SetParameter(@"pinline", new Action<object>(PrintInline));
             EngineContext.SetParameter(@"sleep", new Action<object>(Sleep));
             EngineContext.SetParameter(@"save", new Action<string, IList<object>>(Save));
             EngineContext.SetParameter(@"append", new Action<string, IList<object>>(Append));
@@ -132,6 +133,11 @@ namespace PE.ControlConsole
                 Console.WriteLine(Convert.ToSingle(Arg));
             else
                 Console.WriteLine(Arg);
+        }
+
+        private void PrintInline(object Arg)
+        {
+            Console.Write(Arg);
         }
 
         private void Sleep(object TimemSec)

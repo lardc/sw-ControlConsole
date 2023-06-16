@@ -22,16 +22,16 @@ MOD = 0;	// Включение режима калибровки 0 - ВЫКЛ. 1
 
 // Calibration setup parameters
 
-Сal_Rshunt = 1000;	// uOhm
-Сal_Points = 10;
-Сal_Iterations = 1;
-Сal_UseAvg = 1;
+Cal_Rshunt = 1000;	// uOhm
+Cal_Points = 10;
+Cal_Iterations = 1;
+Cal_UseAvg = 1;
 
 // CurrentArray
 
-Сal_IdMin = 100;	
-Сal_IdMax = 1100;
-Сal_IdStp = 100;
+Cal_IdMin = 100;	
+Cal_IdMax = 1100;
+Cal_IdStp = 100;
 
 // VoltageRete
 
@@ -141,16 +141,16 @@ function ALL_DCU_SW()
 } 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //Функция настройки осцилограффа и выходов
-function CAL_Init(portTek, channelMeasureId)
+function CAL_Init(portTek, ChannelMeasureId)
 {
-	if (СhannelMeasureId < 1 || СhannelMeasureId > 4)
+	if (ChannelMeasureId < 1 || ChannelMeasureId > 4)
 	{
 		print("Wrong channel numbers");
 		return;
 	}
 
 	// Copy channel information
-	Сal_chMeasureId = СhannelMeasureId;
+	Cal_chMeasureId = ChannelMeasureId;
 
 	// Init device port
 	
@@ -183,7 +183,7 @@ function CAL_Init(portTek, channelMeasureId)
 	// Tektronix init
 	for (var i = 1; i <= 4; i++)
 	{
-		if (i == channelMeasureId)
+		if (i == ChannelMeasureId)
 			TEK_ChannelOn(i);
 		else
 			TEK_ChannelOff(i);
@@ -272,16 +272,16 @@ function CAL_VerifyId(CurrentRateNTest)
 	CAL_TekInitId();
 
 	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
+	var CurrentArray = CGEN_GetRange(Cal_IdMin, Cal_IdMax, Cal_IdStp);
  
-	if (CAL_CollectId(CurrentArray, cal_Iterations))
+	if (CAL_CollectId(CurrentArray, Cal_Iterations))
 		{
 		CAL_SaveId("DCU_Id_fixed");
 		CAL_SaveId("DCU_Idset_fixed");
 
 		// Plot relative error distribution
-		scattern(cal_IdSc, cal_IdErr, "Current (in A)", "Error (in %)", "Current relative error");
-		scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "Current set relative error");
+		scattern(Cal_IdSc, Cal_IdErr, "Current (in A)", "Error (in %)", "Current relative error");
+		scattern(Cal_IdSc, Cal_IdsetErr, "Current (in A)", "Error (in %)", "Current set relative error");
 		}
 	}	
 
@@ -296,8 +296,8 @@ function CAL_VerifyIrate(CurrentRateNTest)
 	CAL_TekInitIrate();
 	
 	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
-	CAL_CollectIrate(CurrentArray, cal_Iterations, CurrentRateNTest);		
+	var CurrentArray = CGEN_GetRange(Cal_IdMin, Cal_IdMax, Cal_IdStp);
+	CAL_CollectIrate(CurrentArray, Cal_Iterations, CurrentRateNTest);		
 }
 
 
@@ -331,24 +331,24 @@ function CAL_CalibrateId(CurrentRateNTest)
 	CAL_TekInitId();
 
 	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_IdMin, cal_IdMax, cal_IdStp);
+	var CurrentArray = CGEN_GetRange(Cal_IdMin, Cal_IdMax, Cal_IdStp);
 
-	if (CAL_CollectId(CurrentArray, cal_Iterations, CurrentRateNTest))
+	if (CAL_CollectId(CurrentArray, Cal_Iterations, CurrentRateNTest))
 	{
 		CAL_SaveId("DCU_Id");
 		CAL_SaveIdset("DCU_Idset");
 
 		// Plot relative error distribution
-		scattern(cal_IdSc, cal_IdErr, "Current (in A)", "Error (in %)", "Current relative error");
-		scattern(cal_IdSc, cal_IdsetErr, "Current (in A)", "Error (in %)", "Current set relative error");
+		scattern(Cal_IdSc, Cal_IdErr, "Current (in A)", "Error (in %)", "Current relative error");
+		scattern(Cal_IdSc, Cal_IdsetErr, "Current (in A)", "Error (in %)", "Current set relative error");
 
 		// Calculate correction
-		cal_IdCorr = CGEN_GetCorrection2("DCU_Id");
-		CAL_SetCoefId(cal_IdCorr[0], cal_IdCorr[1], cal_IdCorr[2]);
+		Cal_IdCorr = CGEN_GetCorrection2("DCU_Id");
+		CAL_SetCoefId(Cal_IdCorr[0], Cal_IdCorr[1], Cal_IdCorr[2]);
 		CAL_PrintCoefId();
 		
-		cal_IdsetCorr = CGEN_GetCorrection2("DCU_Idset");
-		CAL_SetCoefIdset(cal_IdsetCorr[0], cal_IdsetCorr[1], cal_IdsetCorr[2]);
+		Cal_IdsetCorr = CGEN_GetCorrection2("DCU_Idset");
+		CAL_SetCoefIdset(Cal_IdsetCorr[0], Cal_IdsetCorr[1], Cal_IdsetCorr[2]);
 		CAL_PrintCoefIdset();
 	}
 }
