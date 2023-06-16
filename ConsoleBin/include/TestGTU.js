@@ -25,7 +25,7 @@ function GTU_Kelvin()
 		print("CC to CP (211): " + dev.r(211));
 		print("AP to CP (212): " + dev.r(212));
 		print("CP to AP (213): " + dev.r(213));
-		print("AC to CC (214): " + dev.r(211));
+		print("AC to CC (214): " + dev.r(214));
 	}
 	else
 	{
