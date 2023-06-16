@@ -19,20 +19,20 @@ FWU_DumpBVT();
 i("FWUpdate.js");
 FWU_RestoreBVT();
 
-// Подготовка блока
-dev.co(11);
-//dev.nid(4);
-dev.c(1);
-i("TestBVT.js");
-bvt_start_v = 200;
+// Настройка для работы в комлексе
+dev.w(81,1)
+dev.w(82,1)
 
 //Ресурсный тест
 /AC
 i("TestBVT.js");
-bvt_pulse_sleep = 16000;
-bvt_test_time = 2000;
+bvt_pulse_sleep = 8000;
+bvt_test_time = 1000;
 bvt_resource_test = 8;
-BVT_ResourceTest(8200,3000);
+bvt_start_v = 200;
+bvt_rate = 10;
+bvt_5hz_current = 50;	
+BVT_ResourceTest(8000,3000);
 
 /DC
 i("TestBVT.js");
@@ -52,39 +52,80 @@ BVT_StartDC(1, 500, 100)
 BVT_StartRes(1, 500)
 
 
-// Диапазон 300 - 499В (AC)
+// Диапазон до 999 В (AC)
 / (Offset: -) (K: 28/29)
 / [P0: 114] [P1: 105] [P2: 104]
 i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_RangeV = 1;
-cbvt_VminAC = 300;
-cbvt_VmaxAC = 499;
+cbvt_VminAC = 200;
+cbvt_VmaxAC = 999;
 cbvt_VstpAC = (cbvt_VmaxAC - cbvt_VminAC) / 9;
 cbvt_StartVLow = 100;
-CBVT_Init(4,5,1,2);
+CBVT_Init(11,5,1,2);
 //dev.nid(4);
 
 CBVT_VerifyV();
 
 CBVT_CalibrateV();
 
-// Диапазон 501 - 8000В (AC)
+// Диапазон свыше 1000 В (AC)
 / (Offset: -) (K: 30/31)
 / [P0: 115] [P1: 107] [P2: 106]
 i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_RangeV = 2;
-cbvt_VminAC = 510;
+cbvt_VminAC = 1000;
 cbvt_VmaxAC = 8000;
 cbvt_VstpAC = (cbvt_VmaxAC - cbvt_VminAC) / 9;
 cbvt_StartVLow = 100;
-CBVT_Init(4,5,1,2);
+CBVT_Init(11,5,1,2);
 //dev.nid(4);
 
 CBVT_VerifyV();
 
 CBVT_CalibrateV();
+
+// Диапазон 0.1 - 5 мА (AC)
+/ (Offset: -) (K: 37/38)
+/ [P0: 118] [P1: 113] [P2: 112]
+i("CalBVT.js");
+cbvt_Iterations = 3;
+cbvt_SelI0 = 1;
+cbvt_UseMicroAmps = 1;
+cbvt_VmaxAC = 5370; 
+cbvt_VminAC = 130;
+cbvt_StartVLow = 100;
+cbvt_R = 1005600;
+cbvt_Shunt = 5600;
+bvt_test_time = 1000;
+CBVT_Init(11,5,1,2);
+//dev.nid(4);
+
+CBVT_VerifyI();
+
+CBVT_CalibrateI();
+
+
+// Диапазон 5 - 30мА (AC)
+/ (Offset: -) (K: 24/25)
+/ [P0: 116] [P1: 97] [P2: 96]
+i("CalBVT.js");
+cbvt_Iterations = 3;
+cbvt_RangeI = 1;
+cbvt_UseMicroAmps = 1;
+cbvt_VmaxAC = 6700; 
+cbvt_VminAC = 1170;
+cbvt_StartVLow = 100;
+cbvt_R = 220100;
+cbvt_Shunt = 100;
+bvt_test_time = 1000;
+CBVT_Init(11,5,1,2);
+//dev.nid(4);
+
+CBVT_VerifyI();
+
+CBVT_CalibrateI();
 
 // Диапазон 0.5 - 30мА (AC)
 / (Offset: -) (K: 24/25)
@@ -93,14 +134,14 @@ i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_RangeI = 1;
 cbvt_UseMicroAmps = 1;
-cbvt_VmaxAC = 7000; 
-cbvt_VminAC = 120;
+cbvt_VmaxAC = 6700; 
+cbvt_VminAC = 115;
 cbvt_StartVLow = 100;
-cbvt_R = 220000;
+cbvt_R = 220100;
 cbvt_Shunt = 100;
 bvt_test_time = 1000;
-CBVT_Init(4,5,1,2);
-/dev.nid(4);
+CBVT_Init(11,5,1,2);
+//dev.nid(4);
 
 CBVT_VerifyI();
 
@@ -113,12 +154,13 @@ i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_RangeI = 2;
 cbvt_UseMicroAmps = 1;
-cbvt_VmaxAC = 6500; 
-cbvt_VminAC = 660;
+cbvt_VmaxAC = 6800; 
+cbvt_VminAC = 710;
 cbvt_StartVLow = 300;
-cbvt_RP = 22000;
+cbvt_RP = 22010;
 cbvt_ShuntP = 10;
-CBVT_Init(4,5,1,2);
+bvt_test_time = 3000;
+CBVT_Init(11,5,1,2);
 //dev.nid(4);
 
 CBVT_VerifyIP();
