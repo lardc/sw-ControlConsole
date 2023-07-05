@@ -19,7 +19,24 @@ FWU_DumpBVT();
 i("FWUpdate.js");
 FWU_RestoreBVT();
 
-// Настройка для работы в комлексе
+// Отладка в комплексе
+dev.co(1)
+dev.nid(1)
+dev.c(113)
+dev.nid(4)
+dev.w(82,0)
+i("TestBVT.js");
+bvt_test_time = 1000;
+BVT_StartPulse(1,8000,50);
+a = BVT_Plot();
+plot2(a.Voltage, a.Current, 1, 0);
+save('volt.csv', a.Voltage)
+save('curr.csv', a.Current)
+dev.w(82,0)
+
+WIN + R: shutdown -r -t 0
+
+// Конфиг для комлпекса
 dev.w(81,1)
 dev.w(82,1)
 
@@ -51,7 +68,7 @@ BVT_StartPulse(1,500,50);
 BVT_StartDC(1, 500, 100)
 BVT_StartRes(1, 500)
 
-
+///Калибровка блока
 // Диапазон до 999 В (AC)
 / (Offset: -) (K: 28/29)
 / [P0: 114] [P1: 105] [P2: 104]
@@ -105,7 +122,6 @@ CBVT_Init(11,5,1,2);
 CBVT_VerifyI();
 
 CBVT_CalibrateI();
-
 
 // Диапазон 5 - 30мА (AC)
 / (Offset: -) (K: 24/25)
@@ -168,7 +184,7 @@ CBVT_VerifyIP();
 CBVT_CalibrateIP();
 
 
-
+БЛОК BVT HP DC. Функционал DC
 // Диапазон 500 - 2000В (DC)
 i("CalBVT.js");
 cbvt_Iterations = 3;
@@ -180,12 +196,11 @@ CBVT_Init(4,5,1,2);
 
 CBVT_VerifyVDC()
 
-
 Диапазон LOW
 / (Offset: -) (K: 37/38)
 / [P0: 118] [P1: 113] [P2: 112]
 
-// Нагрузка R_HIGH (DC)
+// Нагрузка нагрузка R_HIGH (DC)
 i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_DC_LowI = 1;
@@ -197,7 +212,7 @@ CBVT_Init(4,5,1,2);
 
 CBVT_VerifyIDC()
 
-// Диапазон R_MID (DC)
+// Диапазон нагрузка R_MID (DC)
 i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_DC_LowI = 1;
@@ -209,12 +224,11 @@ CBVT_Init(4,5,1,2);
 
 CBVT_VerifyIDC()
 
-
 Диапазон MEDIUM
 / (Offset: -) (K: 39/40)
 / [P0: 110] [P1: 109] [P2: 108]
 
-// Диапазон R_MID (DC)
+// Диапазон нагрузка R_MID (DC)
 i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_DC_LowI = 0;
@@ -226,8 +240,7 @@ CBVT_Init(4,5,1,2);
 
 CBVT_VerifyIDC()
 
-
-// Диапазон R_LOW (DC)
+// Диапазон нагрузка R_LOW (DC)
 i("CalBVT.js");
 cbvt_Iterations = 3;
 cbvt_DC_LowI = 0;
