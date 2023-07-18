@@ -12,6 +12,8 @@ function LCTU_Start(Voltage, PulseWidth)
 		dev.w(130, PulseWidth);
 		dev.c(100);
 		
+		sleep(500);
+		
 		while(dev.r(192) == 4)			
 			sleep(10);
 		
@@ -43,7 +45,7 @@ function LCTU_StartSeq(N)
 {
 	for(i = 0; i < N; i++)
 	{
-		if(!LCTU_Start(1500, 100))
+		if(!LCTU_Start(3300, 100))
 			return;
 		
 		p("#" + i);
