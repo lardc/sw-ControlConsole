@@ -36,7 +36,7 @@ cal_I_Vco			= 6
 cal_I_Vneg			= 7
 cal_I_Vmeas			= 8
 	
-cal_CalibrationType = cal_V_Imeas_R2
+cal_CalibrationType = cal_I_Iset
 
 // Calibration points
 //
@@ -515,8 +515,6 @@ function CAL_ResetCalibration(Calibration)
 				CAL_SetCoef([40,41,42], Data)	// [P2, P1, P0]	
 				break
 		}
-		
-		CAL_SetCoef(Reg, Data)
 	}
 }
 //--------------------
