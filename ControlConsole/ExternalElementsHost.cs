@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using Noesis.Javascript;
 using PE.ControlConsole.Forms;
 using NationalInstruments.Visa;
+using PE.ControlConsole.Properties;
 
 namespace PE.ControlConsole
 {
@@ -393,11 +394,29 @@ namespace PE.ControlConsole
         {
             try
             {
-                if (!File.Exists(FileName))
-                    if (File.Exists(Path.Combine("include/", FileName)))
-                        FileName = Path.Combine("include/", FileName);
-                    else
-                        throw new InvalidOperationException("Specified file not found");
+                bool FileFound = false;
+
+                // Если в папке по умолчанию нет, то просматриваем пути
+                if (File.Exists(FileName))
+                {
+                    FileFound = true;
+                }
+                else
+                {
+                    var Paths = Settings.Default.IncludePath.Split(';');
+                    foreach (var path in Paths)
+                    {
+                        if (path.Length > 0 && File.Exists(Path.Combine(path + "/", FileName)))
+                        {
+                            FileName = Path.Combine(path + "/", FileName);
+                            FileFound = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!FileFound)
+                    throw new InvalidOperationException("Specified file not found");
 
                 using (var stream = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {

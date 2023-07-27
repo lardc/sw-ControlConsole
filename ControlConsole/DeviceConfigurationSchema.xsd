@@ -11,7 +11,7 @@
   <xs:annotation>
     <xs:documentation xml:lang="en">
       Device configuration schema for SCCI control console.
-      Copyright 2011 Proton-Electrotex JSC, Alexey Poleschuk. All rights reserved.
+      Copyright 2023 Proton-Electrotex JSC. All rights reserved.
     </xs:documentation>
     <xs:appinfo>
       SCCI control console
