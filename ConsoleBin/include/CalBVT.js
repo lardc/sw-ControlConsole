@@ -200,10 +200,10 @@ function CBVT_VerifyI()
 {
 	cbvt_MaxP = 0;
 	//
-	var Vmax = Math.round(CBVT_GetILim() * cbvt_R * 0.95 / 1000);
+	var Vmax = Math.round(CBVT_GetILim() * cbvt_R * 1 / 1000);
 	cbvt_Vmin = cbvt_VminAC;
 	cbvt_Vmax = (Vmax > cbvt_VmaxAC) ? cbvt_VmaxAC : Vmax;
-	cbvt_Vstp = Math.round((cbvt_Vmax - cbvt_Vmin) / 10);
+	cbvt_Vstp = Math.round((cbvt_Vmax - cbvt_Vmin) / 9);
 	
 	CBVT_VerifyIx("bvt_i_fixed");
 }
@@ -212,10 +212,10 @@ function CBVT_VerifyIP()
 {
 	cbvt_MaxP = 1;
 	//
-	var Vmax = Math.round(CBVT_GetILim() * cbvt_RP * 0.95 / 1000);
+	var Vmax = Math.round(CBVT_GetILim() * cbvt_RP * 1 / 1000);
 	cbvt_Vmin = cbvt_VminAC;
 	cbvt_Vmax = (Vmax > cbvt_VmaxAC) ? cbvt_VmaxAC : Vmax;
-	cbvt_Vstp = Math.round((cbvt_Vmax - cbvt_Vmin) / 10);
+	cbvt_Vstp = Math.round((cbvt_Vmax - cbvt_Vmin) / 9);
 	
 	CBVT_VerifyIx("bvt_ip_fixed");
 }
@@ -229,11 +229,17 @@ function CBVT_VerifyIx(FileName)
 		CBVT_SaveI(FileName);
 		
 		// Plot relative error distribution
-		scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + 0.5 + "..." + 30 + " mA");
+		if(cbvt_RangeI == 0)
+			scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + 0.1 + "..." + 5 + " mA");
+		else if (cbvt_RangeI == 1)
+			scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + 0.5 + "..." + 30 + " mA");
+		else if (cbvt_RangeI == 2)
+			scattern(cbvt_i_sc, cbvt_i_err, "Current (in mA)", "Error (in %)", "Irrm/Idrm relative error " + 30 + "..." + 300 + " mA");
+
 
 		// Plot relative error distribution
 		if(cbvt_EnableSumError)
-			scattern(cbvt_i_sc, cbvt_i_err_sum, "Current (in mA)", "Error (in %)", "Irrm/Idrm summary error " + cbvt_i_sc[0] + "..." + (cbvt_VmaxAC / ( cbvt_Shunt + cbvt_R))   + " mA");
+			scattern(cbvt_i_sc, cbvt_i_err_sum, "Current (in mA)", "Error (in %)", "Irrm/Idrm summary error " + cbvt_i_sc[0] + "..." + (cbvt_VmaxAC / (cbvt_Shunt + cbvt_R))   + " mA");
 	}
 }
 
@@ -525,7 +531,7 @@ function CBVT_Probe(PrintMode)
 	dev.c(100);
 	while (dev.r(192) == 5) sleep(100);
 	
-	sleep(500);
+	sleep(600);
 	var f_v = CBVT_MeasureV(cbvt_chMeasureV);
 	var f_i = CBVT_MeasureI(cbvt_chMeasureI);
 	

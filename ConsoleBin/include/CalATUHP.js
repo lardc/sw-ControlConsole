@@ -5,7 +5,7 @@ include("CalGeneral.js")
 
 // Input params
 catu_LoadType	= 2;			// Load Type: 1-DUT; 2-Resistor;
-catu_LoadR		= 24.88;			// Load Resistance (in Ohms)
+catu_LoadR		= 1156;			// Load Resistance (in Ohms)
 catu_Vmax		= 9000;			// Max output voltage (in V)
 catu_Power		= 75000;		// Max output power (in W)
 catu_LoadV		= 0;			// Fixed extra voltage for DUT (in V)
@@ -184,7 +184,8 @@ function CATU_VerifyP()
 
 		// Plot relative error distribution for power
 		scattern(catu_p_sc, catu_p_err, "Power (in W)", "Error (in %)", "Power relative error"); sleep(200);
-		scattern(catu_p_set, catu_pset_err, "Power (in W)", "Error (in %)", "Power setpoint relative error");
+		scattern(catu_p_set, catu_pset_err, "Power (in W)", "Error (in %)", "Power setpoint relative error"); sleep(200);
+		scattern(catu_p_set, catu_p_counter, "Power (in W)", "REG_COUNTER_MEASURE", "The number of pulses for the set power");
 	}
 }
 
@@ -251,7 +252,7 @@ function CATU_Init(portATU, portTek, channelMeasureV, channelMeasureI, channelMe
 	// Init trigger
 	TEK_TriggerPulseExtendedInit(channelMeasureS, "3.5", "dc", "1e-3", "negative", "inside");
 	// Horizontal settings
-	TEK_Horizontal("50e-6", "-50e-6");
+	TEK_Horizontal("25e-6", "0e-6");
 	// Init Sample mode
 	TEK_AcquireSample();
 	// Display channels
@@ -314,8 +315,15 @@ function CATU_Collect(CurrentValues, IterationsCount)
 			catu_v_sc.push(v_sc);
 			catu_i_sc.push(i_sc);
 			print("Utek,    V: " + v_sc);
-			print("Itek,   mA: " + (i_sc / 1000).toFixed(2));
+			print("Погр изм. U,  %: " + ((dev.r(110) - v_sc) / v_sc * 100).toFixed(2));
+			print("Itek,   A: " + (i_sc / 1000).toFixed(2));
+			print("Погр зад. I,  %: " + ((i_sc - CurrentValues[j]) / CurrentValues[j] * 100).toFixed(2));
+			print("Погр изм. I,  %: " + ((dev.r(111) - i_sc) / i_sc * 100).toFixed(2));
+			
 			print("Ptek,   kW: " + (p_sc / 1000).toFixed(2));
+
+
+
 
 			// Relative error
 			catu_v_err.push(((UnitData.V - v_sc) / v_sc * 100).toFixed(2));
@@ -379,6 +387,7 @@ function CATU_CollectP(PowerValues, IterationsCount)
 
 			// Save unit data
 			catu_p.push(UnitData.P);
+			catu_p_counter.push(dev.r(105));
 			sleep(2000);
 
 			// Scope data
@@ -390,9 +399,12 @@ function CATU_CollectP(PowerValues, IterationsCount)
 			print("Itek,   mA: " + (i_sc / 1000).toFixed(2));
 			print("Ptek,   kW: " + (p_sc / 1000).toFixed(2));
 
+			print("Погр зад. W,  %: " + ((p_sc - PowerValues[j]) / PowerValues[j] * 100).toFixed(2));
+			print("Погр изм. W,  %: " + ((UnitData.P - p_sc) / p_sc * 100).toFixed(2));
+
 			// Relative error
 			catu_p_err.push(((UnitData.P - p_sc) / p_sc * 100).toFixed(2));
-			catu_pset_err.push(((UnitData.P - PowerValues[j]) / PowerValues[j] * 100).toFixed(2));
+			catu_pset_err.push(((p_sc - PowerValues[j]) / PowerValues[j] * 100).toFixed(2));
 			
 			print("------------------------");
 			sleep(1000);
@@ -440,10 +452,10 @@ function CATU_TekMeasurement(Channel)
 
 function CATU_TekScale(Channel, Value)
 {
-	// 0.93 - use 93% of full range
-	// 7 - number of scope grids in full scale
-	var scale = (Value / (0.93 * 7)).toFixed(2);
-	TEK_Send("ch" + Channel + ":scale " + parseFloat(scale).toExponential());
+	// 0.8 - use 80% of full range
+	// 8 - number of scope grids in full scale
+	var scale = (Value / (8 * 0.8));
+	TEK_Send("ch" + Channel + ":scale " + scale);
 }
 
 function CATU_MeasureV()
@@ -500,6 +512,7 @@ function CATU_ResetA()
 	catu_v = [];
 	catu_i = [];
 	catu_p = [];
+	catu_p_counter = [];
 	catu_i_set = [];
 	catu_p_set = [];
 

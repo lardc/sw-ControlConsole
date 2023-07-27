@@ -1,12 +1,11 @@
 
 
-function PAU_Start(Channel, Range, PulseWidth)
+function PAU_Start(Channel, Range)
 {
 	if(dev.r(192) == 3)
 	{
 		dev.w(128, Channel);
 		dev.wf(129, Range);
-		dev.w(130, PulseWidth);
 		dev.c(101);
 		
 		while(dev.r(192) == 4){}

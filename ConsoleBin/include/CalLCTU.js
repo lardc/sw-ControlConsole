@@ -1,326 +1,401 @@
-include("TestLCTU.js")
+include("DMM6500.js")
 include("CalGeneral.js")
+include("TestLCTU.js")
 
-// Calibration setup parameters
-cal_Points = 10;
+//---------Calibration setup parameters-------
 
-cal_Ice_Rshunt = 100;	// in Ohm
-cal_Ice_Rload = 110		// in kOhm
+// Callibration settings
+//
+cal_V_PulsePlate 	= 90 				// ms
+cal_V_TriggerDelay	= 500e-6			// s
+cal_Vmsr_Low 		= [200, 1301]		// V
+cal_Vmsr_High 		= [1300, 3300]		// V
+cal_Imsr_Low 		= 2					// mA
+cal_Imsr_High 		= 30				// mA
+cal_VmsrProbe 		= 500
 
-cal_IceMin = 2;			// in mA	
-cal_IceMax = 30;		// in mA
-cal_IceStp = (cal_IceMax - cal_IceMin) / cal_Points;
+// Calibration types
+//
+cal_Vm_R0			= 0
+cal_Vm_R1			= 1
+cal_Im				= 2
+	
+cal_CalibrationType = cal_Im
 
-cal_UceProbe = 500;
-cal_UceRange = 1;
-cal_UceMin = [200, 1301];	
-cal_UceMax = [1300, 3300];
-cal_UceStp = (cal_UceMax[cal_UceRange] - cal_UceMin[cal_UceRange]) / cal_Points;
+// Calibration points
+//
+cal_Points 			= 10
+cal_Iterations 		= 5
 
-cal_Iterations = 1;
-//		
+// Load resistance
+//
+cal_Rload 			= 103				// kOhm
+//------------------------------------------
 
 // Counters
 cal_CntTotal = 0;
 cal_CntDone = 0;
+//
+
+// Variables
+Setpoint = [];
+Xmin = 0;
+Xmax = 0;
+Xstp = 0;
 
 // Results storage
-cal_Ice = [];
-cal_Uce = [];
-cal_UceSet = [];
+cal_I = [];
+cal_V = [];
 
 // Keithley data
-cal_UceKei = [];
-cal_IceKei = [];
+cal_KEIData = [];
+cal_Ikei = [];
 
 // Relative error
-cal_IceErr = [];
-cal_UceErr = [];
-cal_UceSetErr = [];
-
-// Correction
-cal_IceCorr = [];
-cal_UceCorr = [];
+cal_Err = [];
+cal_SetErr = [];
 
 
-
-function CAL_Init(portDevice)
-{
-	// Init device port
-	dev.Disconnect();
-	dev.Connect(portDevice);
-}
-//--------------------
-
-function CAL_CalibrateUce()
-{		
-	CAL_ResetA();
-	CAL_ResetUceCal();
-
-	// Reload values
-	var VoltageArray = CGEN_GetRange(cal_UceMin[cal_UceRange], cal_UceMax[cal_UceRange], cal_UceStp);
-
-	if (CAL_CollectUce(VoltageArray, cal_Iterations))
-	{
-		CAL_SaveUce("LCTU_Uce");
-
-		// Plot relative error distribution
-		scattern(cal_UceKei, cal_UceErr, "Voltage (in V)", "Error (in %)", "Voltage relative error");
-		
-		// Plot relative error distribution
-		scattern(cal_UceKei, cal_UceSetErr, "Voltage (in V)", "Error (in %)", "Set voltage relative error");
-
-		// Calculate correction
-		cal_UceCorr = CGEN_GetCorrection2("LCTU_Uce");
-		CAL_SetCoefUce(cal_UceCorr[0], cal_UceCorr[1], cal_UceCorr[2]);
-		CAL_PrintCoefUce();
-	}
-}
-//--------------------
-
-function CAL_CalibrateIce()
-{		
-	CAL_ResetA();
-	CAL_ResetIceCal();
-
-	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_IceMin, cal_IceMax, cal_IceStp);
-
-	if (CAL_CollectIce(CurrentArray, cal_Iterations))
-	{
-		CAL_SaveIce("LCTU_Ice");
-
-		// Plot relative error distribution
-		scattern(cal_IceKei, cal_IceErr, "Current (in mA)", "Error (in %)", "Current relative error");
-
-		// Calculate correction
-		cal_IceCorr = CGEN_GetCorrection2("LCTU_Ice");
-		CAL_SetCoefIce(cal_IceCorr[0], cal_IceCorr[1], cal_IceCorr[2]);
-		CAL_PrintCoefIce();
-	}
-}
-//--------------------
-
-function CAL_VerifyUce()
-{		
-	CAL_ResetA();
-
-	// Reload values
-	var VoltageArray = CGEN_GetRange(cal_UceMin[cal_UceRange], cal_UceMax[cal_UceRange], cal_UceStp);
-
-	if (CAL_CollectUce(VoltageArray, cal_Iterations))
-	{
-		CAL_SaveUce("LCTU_Uce_fixed");
-
-		// Plot relative error distribution
-		scattern(cal_UceKei, cal_UceErr, "Voltage (in V)", "Error (in %)", "Voltage relative error");
-		
-		// Plot relative error distribution
-		scattern(cal_UceKei, cal_UceSetErr, "Voltage (in V)", "Error (in %)", "Set voltage relative error");
-	}
-}
-//--------------------
-
-function CAL_VerifyIce()
-{		
-	CAL_ResetA();
-
-	// Reload values
-	var CurrentArray = CGEN_GetRange(cal_IceMin, cal_IceMax, cal_IceStp);
-
-	if (CAL_CollectIce(CurrentArray, cal_Iterations))
-	{
-		CAL_SaveIce("LCTU_Ice_fixed");
-
-		// Plot relative error distribution
-		scattern(cal_IceKei, cal_IceErr, "Current (in mA)", "Error (in %)", "Current relative error");
-	}
-}
-//--------------------
-
-function CAL_CollectUce(VoltageValues, IterationsCount)
-{
-	cal_CntTotal = IterationsCount * VoltageValues.length;
-	cal_CntDone = 1;
-	
-	for (var i = 0; i < IterationsCount; i++)
-	{
-		for (var j = 0; j < VoltageValues.length; j++)
-		{
-			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-			//
-			
-			PrintData = 0;
-			LCTU_Start(VoltageValues[j], 100);
-			PrintData = 1;
-
-			p("");
-			p("Enter the measured voltage value in Volts and press Enter:");
-			
-			// Keithley data
-			var UceKeithley = readline() * cal_UceProbe;;
-			cal_UceKei.push(UceKeithley);
-			p("");
-			print("UceKeithley, V: " + UceKeithley);
-
-			// Unit data
-			var UceRead = dev.rf(200).toFixed(2);
-			cal_Uce.push(UceRead);
-			print("UceRead,   V: " + UceRead);
-
-			// Relative error
-			var UceErr = ((UceRead - UceKeithley) / UceKeithley * 100).toFixed(2);
-			cal_UceErr.push(UceErr);
-			print("Uceerr,   %: " + UceErr);
-			
-			// Relative set error
-			var UceSetErr = ((UceKeithley - VoltageValues[j]) / VoltageValues[j] * 100).toFixed(2);
-			cal_UceSetErr.push(UceSetErr);
-			print("UceSeterr,   %: " + UceSetErr);
-			print("--------------------");
-		}
-	}
-
-	return 1;
-}
-//--------------------
-
-function CAL_CollectIce(CurrentValues, IterationsCount)
-{
-	cal_CntTotal = IterationsCount * CurrentValues.length;
-	cal_CntDone = 1;
-	
-	
-	for (var i = 0; i < IterationsCount; i++)
-	{
-		for (var j = 0; j < CurrentValues.length; j++)
-		{
-
-			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --");
-			//
-
-			PrintData = 0;
-			LCTU_Start(CurrentValues[j] * cal_Ice_Rload, 100);
-			PrintData = 1;
-			
-			p("");
-			p("Enter the measured current value in mA and press Enter:");
-
-			// Keithley data
-			var IceKeithley = readline();
-			cal_IceKei.push(IceKeithley);
-			p("");
-			print("IceKeithley, mA: " + IceKeithley);
-
-			// Unit data
-			var IceRead = (dev.rf(201)).toFixed(3);
-			cal_Ice.push(IceRead);
-			print("IceRead,   mA: " + IceRead);
-
-			// Relative error
-			var IceErr = ((IceRead - IceKeithley) / IceKeithley * 100).toFixed(2);
-			cal_IceErr.push(IceErr);
-			print("Iceerr,   %: " + IceErr);
-			print("--------------------");
-		}
-	}
-
-	return 1;
-}
-//--------------------
-
-function CAL_ResetA()
+function CAL_Calibrate_V()
 {	
+	CAL_V_Process(1)
+}
+//--------------------
+
+function CAL_Verify_V()
+{	
+	CAL_V_Process(0)
+}
+//--------------------
+
+function CAL_Calibrate_I()
+{	
+	CAL_I_Process(1)
+}
+//--------------------
+
+function CAL_Verify_I()
+{	
+	CAL_I_Process(0)
+}
+//--------------------
+
+function CAL_V_Process(Calibration)
+{
+		var SetpointArray
+	
+	// Reload values
+	switch(cal_CalibrationType)
+	{
+		case cal_Vm_R0:
+		case cal_Vm_R1:
+			Xmin = cal_Vmsr_Low[cal_CalibrationType];
+			Xmax = cal_Vmsr_High[cal_CalibrationType];
+			break
+			
+		default:
+			p("Wrong calibration type!")
+			return
+	}
+	
+	Xstp = (Xmax - Xmin) / cal_Points;
+	SetpointArray = CGEN_GetRange(Xmin, Xmax, Xstp)
+	
+	CAL_ConfigDMM6500()
+
+	CAL_ResetArrays()
+	CAL_ResetCalibration(Calibration)
+	
+	if (CAL_Collect(SetpointArray, cal_Iterations))
+	{
+		CAL_Save()
+		CAL_PlotGraph()
+		CAL_CalculateCorrection(Calibration)
+	}
+}
+//--------------------
+
+function CAL_I_Process(Calibration)
+{	
+	var SetpointArray
+	
+	// Reload values
+	switch(cal_CalibrationType)
+	{
+		case cal_Im:
+			Xmin = cal_Imsr_Low * cal_Rload;
+			Xmax = cal_Imsr_High * cal_Rload;
+			
+			if(Xmin < cal_Vmsr_Low[0] || Xmax > cal_Vmsr_High[1])
+			{
+				p("Wrong calibration parameters!")
+				return
+			}
+		break
+			
+		default:
+			p("Wrong calibration type!")
+			return
+	}
+	
+	Xstp = (Xmax - Xmin) / cal_Points;
+	SetpointArray = CGEN_GetRange(Xmin, Xmax, Xstp)
+	
+	CAL_ConfigDMM6500()
+
+	CAL_ResetArrays()
+	CAL_ResetCalibration(Calibration)
+	
+	dev.w(44,1) // PAU emulate enable
+	
+	if (CAL_Collect(SetpointArray, cal_Iterations))
+	{
+		CAL_Save()
+		CAL_PlotGraph()
+		CAL_CalculateCorrection(Calibration)
+	}
+	
+	dev.w(44,0) // PAU emulate disable
+}
+//--------------------
+
+function CAL_Collect(SetpointValues, IterationsCount)
+{
+	cal_CntTotal = IterationsCount * SetpointValues.length;
+	cal_CntDone = 1;
+	
+	for (var i = 0; i < IterationsCount; i++)
+	{
+		for (var j = 0; j < SetpointValues.length; j++)
+		{
+			print("-- result " + cal_CntDone++ + " of " + cal_CntTotal + " --")
+			//
+			
+			switch(cal_CalibrationType)
+			{
+				case cal_Vm_R0:
+				case cal_Vm_R1:
+					KEI_SetVoltageRange(SetpointValues[j] / cal_VmsrProbe * 1.2)
+					break
+								
+				case cal_Im:
+					KEI_SetCurrentRange(SetpointValues[j] / cal_Rload / 1000 * 1.2)
+					break;
+			}
+			KEI_ActivateTrigger()
+			sleep(500)
+			
+			switch(cal_CalibrationType)
+			{
+				case cal_Vm_R0:
+				case cal_Vm_R1:
+					LCTU_Start(SetpointValues[j], 100);
+					
+					print("Vset,     V: " + SetpointValues[j])
+					break;
+								
+				case cal_Im:
+					LCTU_Start(SetpointValues[j], 100);
+					
+					print("Vset,     V: " + SetpointValues[j])
+					break;
+			}
+			sleep(500)
+			
+			// Setpoint
+			Setpoint.push(SetpointValues[j])
+			
+			switch(cal_CalibrationType)
+			{
+				case cal_Vm_R0:
+				case cal_Vm_R1:
+					var KEIData = KEI_ReadAverage() * cal_VmsrProbe
+					cal_KEIData.push(KEIData)
+					print("KEI,     V: " + KEIData)
+					
+					var Uread = dev.rf(200)
+					cal_V.push(Uread)
+					print("Uread,   V: " + Uread)
+
+					// Relative error
+					var Uerr = ((Uread - KEIData) / KEIData * 100).toFixed(2)
+					cal_Err.push(Uerr)
+					print("Uerr,    %: " + Uerr)
+					break
+					
+				case cal_Im:
+					var KEIData = KEI_ReadAverage() * 1000;
+					cal_KEIData.push(KEIData)
+					print("KEI,     mA: " + KEIData)
+					
+					var Iread = dev.rf(201)
+					cal_I.push(Iread)
+					print("Iread,   mA: " + Iread)
+
+					// Relative error
+					var Ierr = ((Iread - KEIData) / KEIData * 100).toFixed(2)
+					cal_Err.push(Ierr)
+					print("Ierr,     %: " + Ierr)
+					break;
+			}			
+
+			print("--------------------")
+			
+			if(anykey())
+				return 0;
+		}
+	}
+
+	return 1;
+}
+//--------------------
+
+function CAL_PlotGraph()
+{	
+	switch(cal_CalibrationType)
+	{
+		case cal_Vm_R0:
+		case cal_Vm_R1:
+			scattern(cal_KEIData, cal_Err, "Voltage (in V)", "Error (in %)", "Voltage relative error")
+			break
+			
+		case cal_Im:
+			scattern(cal_KEIData, cal_Err, "Current (in mA)", "Error (in %)", "Current relative error")
+			break;
+	}
+}
+//--------------------
+
+function CAL_CalculateCorrection(Calibration)
+{	
+	Reg = []
+	cal_Corr = []
+	
+	if(Calibration)
+	{
+		switch(cal_CalibrationType)
+		{
+			case cal_Vm_R0:
+				Reg = [2,3,4]			// [P2, P1, P0]
+				cal_Corr = CGEN_GetCorrection2("LCTU_V")
+				p('Voltage measurement coefficients, Range 0:')
+				break
+				
+			case cal_Vm_R1:
+				Reg = [7,8,9]			// [P2, P1, P0]
+				cal_Corr = CGEN_GetCorrection2("LCTU_V")
+				p('Voltage measurement coefficients, Range 1:')
+				break
+				
+			case cal_Im:
+				Reg = [12,13,14]		// [P2, P1, P0]
+				cal_Corr = CGEN_GetCorrection2("LCTU_I")
+				p('Current measurement coefficients:')
+				break
+		}
+		
+		CAL_SetCoef(Reg, cal_Corr)
+		CAL_PrintCoef(Reg)
+	}
+}
+//--------------------
+
+function CAL_ResetCalibration(Calibration)
+{	
+	Reg = []
+	Data = [0,1,0]
+	
+	if(Calibration)
+	{
+		switch(cal_CalibrationType)
+		{
+			case cal_Vm_R0:
+				CAL_SetCoef([2,3,4], Data)	// [P2, P1, P0]		
+				break
+				
+			case cal_Vm_R1:
+				CAL_SetCoef([7,8,9], Data)	// [P2, P1, P0]	
+				break
+				
+			case cal_Im:
+				CAL_SetCoef([12,13,14], Data)	// [P2, P1, P0]	
+				break
+		}
+	}
+}
+//--------------------
+
+function CAL_SetCoef(Reg, Data)
+{
+	dev.wf(Reg[0], Data[0])
+	dev.wf(Reg[1], Data[1])
+	dev.wf(Reg[2], Data[2])
+}
+//--------------------
+
+function CAL_PrintCoef(Reg)
+{
+	print("P2 : " + dev.rf(Reg[0]))
+	print("P1 : " + dev.rf(Reg[1]))
+	print("P0 : " + dev.rf(Reg[2]))
+}
+//--------------------
+
+function CAL_Save()
+{		
+	switch(cal_CalibrationType)
+	{
+		case cal_Vm_R0:
+		case cal_Vm_R1:
+			CGEN_SaveArrays("LCTU_V", cal_V, cal_KEIData, cal_Err)
+			break
+			
+		case cal_Im:
+			CGEN_SaveArrays("LCTU_I", cal_I, cal_KEIData, cal_Err)
+			break
+	}
+}
+//--------------------
+
+function CAL_ConfigDMM6500()
+{
+	KEI_Reset()
+	
+	switch(cal_CalibrationType)
+	{
+		case cal_Vm_R0:
+		case cal_Vm_R1:
+			KEI_ConfigVoltage(cal_V_PulsePlate * 1000)
+			KEI_ConfigExtTrigger(cal_V_TriggerDelay)
+			break
+			
+		case cal_Im:
+			KEI_ConfigCurrent(cal_V_PulsePlate * 1000)
+			KEI_ConfigExtTrigger(cal_V_TriggerDelay)
+			break;
+	}
+}
+//--------------------
+
+function CAL_ResetArrays()
+{	
+	// Setpoint storage
+	Setpoint = []
+	
 	// Results storage
-	cal_Uce = [];
-	cal_Ice = [];
-	cal_UceSet = [];
+	cal_V = []
+	cal_I = []
 
 	// Keithley data
-	cal_UceKei = [];
-	cal_IceKei = [];
+	cal_KEIData = []
+	cal_Ikei = []
 
 	// Relative error
-	cal_UceErr = [];
-	cal_IceErr = [];
-	cal_UceSetErr = [];
+	cal_Err = []
+	cal_SetErr = []
 
 	// Correction
-	cal_UceCorr = [];
-	cal_IceCorr = [];
-}
-//--------------------
-
-function CAL_SaveUce(NameUce)
-{
-	CGEN_SaveArrays(NameUce, cal_Uce, cal_UceKei, cal_UceErr);
-}
-//--------------------
-
-function CAL_SaveIce(NameIce)
-{
-	CGEN_SaveArrays(NameIce, cal_Ice, cal_IceKei, cal_IceErr);
-}
-//--------------------
-
-function CAL_ResetUceCal()
-{
-	CAL_SetCoefUce(0, 1, 0);
-}
-//--------------------
-
-function CAL_ResetIceCal()
-{
-	CAL_SetCoefIce(0, 1, 0);
-}
-//--------------------
-
-function CAL_SetCoefUce(P2, P1, P0)
-{
-	if(cal_UceRange)
-	{
-		dev.wf(7, parseFloat(P2));
-		dev.wf(8, parseFloat(P1));
-		dev.wf(9, parseFloat(P0));	
-	}
-	else
-	{
-		dev.wf(2, parseFloat(P2));
-		dev.wf(3, parseFloat(P1));
-		dev.wf(4, parseFloat(P0));	
-	}
-}
-//--------------------
-
-function CAL_SetCoefIce(P2, P1, P0)
-{
-	dev.wf(12, parseFloat(P2));
-	dev.wf(13, parseFloat(P1));
-	dev.wf(14, parseFloat(P0));	
-}
-//--------------------
-
-function CAL_PrintCoefUce()
-{
-	if(cal_UceRange)
-	{
-		print("Uce P2 : " + dev.rf(7));
-		print("Uce P1 : " + dev.rf(8));
-		print("Uce P0 : " + dev.rf(9));
-	}
-	else
-	{
-		print("Uce P2 : " + dev.rf(2));
-		print("Uce P1 : " + dev.rf(3));
-		print("Uce P0 : " + dev.rf(4));
-	}
-}
-//--------------------
-
-function CAL_PrintCoefIce()
-{
-	print("Ice P2 : " + dev.rf(12));
-	print("Ice P1 : " + dev.rf(13));
-	print("Ice P0 : " + dev.rf(14));
+	cal_Corr = []
+	cal_Icorr = []
 }
 //--------------------

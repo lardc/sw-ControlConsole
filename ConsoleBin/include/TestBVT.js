@@ -1,5 +1,13 @@
 include("PrintStatus.js")
 
+// DeviceState
+DS_None			= 0;
+DS_Fault		= 1;
+DS_Disabled		= 2;
+DS_Stopping		= 3;
+DS_Powered		= 4;
+DS_InProcess	= 5;
+
 bvt_vdrm = [];
 bvt_vrrm = [];
 bvt_idrm = [];
@@ -13,7 +21,6 @@ csv_array = [];
 
 bvt_direct = 1;
 bvt_use_microamps = 1;		// use microampere precision
-bvt_use_nanoamps = 1;		// use nanoampere precision
 bvt_start_v = 500;			// in V
 bvt_rate = 10;				// in kV/s x10
 bvt_test_time = 3000;		// in ms
@@ -23,6 +30,32 @@ bvt_resource_test = 8; 		// Продолжительность ресурсно�
 
 function BVT_StartPulse(N, Voltage, Current)
 {	
+	if (dev.r(192) == 1)
+	{
+		print("Fault Reason = " + dev.r(193));
+		dev.c(3);
+		if (dev.r(192) == 0)
+		{
+			print("Ошибка сброшена");
+			dev.c(1);
+			while(dev.r(192) != 4)
+				sleep(100);
+			print("Питание в блок подано");
+		}		
+		else
+			print("Ошибка не сброшена");
+	}
+
+	if (dev.r(192) == 0)
+	{
+		print("Отсуствует питание в блоке");
+		dev.c(1);
+		while(dev.r(192) != 4)
+			sleep(100);
+		print("Питание в блок подано");
+		sleep(500);
+	}
+
 	dev.w(128, 3);				// Test type - reverse pulse
 	dev.w(130, Current);
 	dev.w(131, Voltage);
