@@ -88,7 +88,7 @@ namespace PE.ControlConsole.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("include")]
+        [global::System.Configuration.DefaultSettingValueAttribute("include;..\\sw-ConsoleScripts;..\\..\\sw-ConsoleScripts")]
         public string IncludePath {
             get {
                 return ((string)(this["IncludePath"]));
