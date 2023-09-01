@@ -24,7 +24,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="IncludePath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">include;..\sw-ConsoleScripts;..\..\sw-ConsoleScripts</Value>
+      <Value Profile="(Default)">..\sw-ConsoleScripts;..\..\sw-ConsoleScripts;include</Value>
     </Setting>
   </Settings>
 </SettingsFile>
