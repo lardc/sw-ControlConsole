@@ -143,10 +143,10 @@ namespace PE.ControlConsole
 
                     while ((data = reader.ReadLine()) != null)
                     {
-                        string[] elements = data.Split(' ', ';', ',');
+                        string[] elements = data.Split(new[] { ' ', ';', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                         for (int i = 0; i < elements.Length; i++)
                         {
-                            string element = elements[i].TrimEnd(' ', ';', ',');
+                            string element = elements[i].TrimEnd(' ', ';', '\t').Replace(',', '.');
                             result.Add(element);
                         }
                     }
