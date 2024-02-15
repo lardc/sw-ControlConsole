@@ -73,7 +73,7 @@ function SiC_CALC_SignalRiseFall(Signal, TimeStep, LowPoint)
 
 function SiC_CALC_Recovery(Curves, IsDiode)
 {
-	var Current = IsDiode ? SiC_GD_InvertData(Curves.Ice) : Curves.Ice;
+	var Current = Curves.Ice;
 	var Voltage = IsDiode ? SiC_GD_InvertData(Curves.Vce) : Curves.Vce;
 	var TimeStep = Curves.TimeStep;
 	
@@ -103,7 +103,6 @@ function SiC_CALC_Recovery(Curves, IsDiode)
 		CurrentTrim.push(Current[i] - (i * LineI.k + LineI.b));
 		CurrentCut.push(Current[i]);
 	}
-	plot2(CurrentCut, CurrentTrim, 1, 0);
 	
 	// find Irrm
 	var Irrm_Point = SiC_GD_MAX(CurrentTrim);
@@ -129,7 +128,11 @@ function SiC_CALC_Recovery(Curves, IsDiode)
 	var Power = [];
 	var MaxVoltage = SiC_GD_MAX(Voltage).Value;
 	for (var i = tr0; i < (tr0 + AuxPoint002.X); ++i)
-		Power.push((MaxVoltage - Voltage[i]) * (Current[i] - (i * LineI.k + LineI.b)));
+	{
+		var volt = IsDiode ? Voltage[i] : (MaxVoltage - Voltage[i]);
+		var curr = Current[i] - (i * LineI.k + LineI.b);
+		Power.push(volt * curr);
+	}
 	var Energy = SiC_CALC_Integrate(Power, TimeStep, 0, Power.length - 1) * 1e3;
 	
 	return {trr : trr, trr1 : trr1, trr2 : trr2, Irrm : Irrm, Qrr : Qrr, Energy : Energy};
