@@ -89,12 +89,12 @@ function SiC_Main(Curves)
 	if (k == "y")
 	{
 		var FilePath = "data\\" + SiC_ComposeFileName();
-		SiC_ArrangeDataInFile(OnMode, IsHigh, FilePath, out_data);
+		SiC_ArrangeDataInFile(OnMode, IsHigh, IsDiode, FilePath, out_data);
 		print("Результат записан в: " + FilePath);
 	}
 }
 
-function SiC_ArrangeDataInFile(OnMode, IsHigh, FilePath, Data)
+function SiC_ArrangeDataInFile(OnMode, IsHigh, IsDiode, FilePath, Data)
 {
 	var out = exists(FilePath) ? loadn(FilePath) : [];
 	
@@ -103,7 +103,12 @@ function SiC_ArrangeDataInFile(OnMode, IsHigh, FilePath, Data)
 	out[2] = "-- low --";
 	out[24] = "-- high --";
 	
-	if (OnMode && !IsHigh)
+	if (IsDiode)
+	{
+		for (var i = 0; i < 6; ++i)
+			out[i + 38] = Data[i];
+	}
+	else if (OnMode && !IsHigh)
 	{
 		for (var i = 0; i < 6; ++i)
 			out[i + 3] = Data[i];
