@@ -83,20 +83,14 @@ function SiC_Main(Curves)
 		SiC_DataArrayCompose(out_data, "Erec" + ":\t\t", Recovery.Energy.toFixed(1), "\t(mJ)");
 	}
 	
-	
-	print("\nДля записи результата в файл нажмите \"y\". Для отмены нажмите любую другую клавишу.");
-	var k = readkey();
-	if (k == "y")
-	{
-		var FilePath = "data\\" + SiC_ComposeFileName();
-		SiC_ArrangeDataInFile(OnMode, IsHigh, IsDiode, FilePath, out_data);
-		print("Результат записан в: " + FilePath);
-	}
+	var FilePath = "data\\" + SiC_ComposeFileName();
+	SiC_ArrangeDataInFile(OnMode, IsHigh, IsDiode, FilePath, out_data);
+	print("\nРезультат записан в: " + FilePath);
 }
 
 function SiC_ArrangeDataInFile(OnMode, IsHigh, IsDiode, FilePath, Data)
 {
-	var out = exists(FilePath) ? loadn(FilePath) : [];
+	var out = [];
 	
 	out[0] = sic_device_part_number;
 	out[1] = sic_device_serial_number;
@@ -159,12 +153,12 @@ function SiC_DataArrayCompose(DataArr, Str1, Value, Str2)
 
 function SiC_ComposeFileName()
 {
-	return (sic_device_part_number + "_" + sic_device_serial_number + "_" + SiC_GetDateStr() + ".txt");
+	return (sic_device_part_number + " " + sic_device_serial_number + " " + SiC_GetDateStr() + ".txt");
 }
 
 function SiC_GetDateStr()
 {
-	return (new Date()).toISOString().slice(2, 10).replace(/[\-]/g, "");
+	return (new Date()).toISOString().slice(0, 19).replace(/[\-:]/g, "").replace("T", "_");
 }
 
 function SiC_Start()
@@ -245,13 +239,6 @@ function calc(FileNumber)
 	
 	SiC_PrintPN();
 	SiC_PrintSN();
-	var FileName = SiC_ComposeFileName();
-	
-	print("");
-	if (exists("data\\" + FileName))
-		print("Данные будут добавлены в существующий файл:\n" + FileName + "\n");
-	else
-		print("Будет создан новый файл:\n" + FileName + "\n");
 	
 	var Curves = SiC_GD_GetCurves(sic_ch_vge, sic_ch_vce, sic_ch_ice);
 	SiC_Main(Curves);
