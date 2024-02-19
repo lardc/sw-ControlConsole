@@ -83,9 +83,14 @@ function SiC_Main(Curves)
 		SiC_DataArrayCompose(out_data, "Erec" + ":\t\t", Recovery.Energy.toFixed(1), "\t(mJ)");
 	}
 	
-	var FilePath = "data\\" + SiC_ComposeFileName();
-	SiC_ArrangeDataInFile(OnMode, IsHigh, IsDiode, FilePath, out_data);
-	print("\nРезультат записан в: " + FilePath);
+	print("\nДля записи результата в файл нажмите \"y\". Для отмены нажмите любую другую клавишу.");
+	var k = readkey();
+	if (k == "y")
+	{
+		var FilePath = "data\\" + SiC_ComposeFileName();
+		SiC_ArrangeDataInFile(OnMode, IsHigh, IsDiode, FilePath, out_data);
+		print("Результат записан в: " + FilePath);
+	}
 }
 
 function SiC_ArrangeDataInFile(OnMode, IsHigh, IsDiode, FilePath, Data)
