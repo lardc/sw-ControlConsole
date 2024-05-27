@@ -184,6 +184,21 @@ function SiC_CALC_Energy(Curves)
 	for (var i = start_time; i < stop_time; ++i)
 		Power[i - start_time] = _Vce[i] * _Ice[i];
 	
+	// adjust power level if no control scope
+	if (_Vge.length == 0)
+	{
+		// find shift
+		Pmax = SiC_GD_MAX(Power);
+		InitialShift = 0;
+		for (var i = 0; i < Pmax.Index / 2; i++)
+			InitialShift += Power[i];
+		InitialShift /= Pmax.Index / 2;
+		
+		// apply shift
+		for (var i = 0; i < Power.length; i++)
+			Power[i] -= InitialShift;
+	}
+	
 	var Energy = SiC_CALC_Integrate(Power, TimeStep, 0, Power.length - 1) * 1e3;
 	
 	return {Power : Power, Energy : Energy};
