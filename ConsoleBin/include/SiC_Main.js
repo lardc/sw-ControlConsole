@@ -287,13 +287,15 @@ function doc()
 	print("");
 	print("6. Для повторного отображжения списка COM-портов выполните pp()");
 	print("");
-	print("7. Для формирования сводного отчёта выполните rep()");
+	print("7. Для формирования сводного отчёта выполните rep(). Отчёт формируется с объединением");
+	print("\tданных для приборов с одинаковым SN. Если требуется сформировать отчёт без объединения,")
+	print("\tзапустите rep(0)")
 	print("");
 	print("Изменённые настройки в пп.1-4 сохраняют актуальность до перезагрузки");
 	print("расчётного скрипта или до изменения с помощью соответствующей функции.");
 }
 
-function rep()
+function rep(NoMerge)
 {
 	var Labels =	["PN", "SN", "--",
 					"dI/dt_on", "tri", "dU/dt_on", "tfv", "Eon", "tdi_on",
@@ -312,7 +314,29 @@ function rep()
 	var FilesData = [];
 	for (var i = 0; i < Files.length; ++i)
 		if (Files[i].match(/\.txt/i) != null)
-			FilesData.push(loadn(Files[i]));
+		{
+			if (NoMerge == 0)
+				FilesData.push(loadn(Files[i]));
+			else
+			{
+				var NewData = loadn(Files[i]);
+				
+				// look for DUT with same serial
+				var DUTFound = false;
+				for (var j = 0; j < FilesData.length; j++)
+					if (NewData[1] == FilesData[j][1])
+					{
+						for (var k = 2; k < NewData.length; k++)
+							if (NewData[k] != " ")
+								FilesData[j][k] = NewData[k];
+						DUTFound = true;
+						break;
+					}
+				
+				if (!DUTFound)
+					FilesData.push(NewData);
+			}
+		}
 	
 	// compose report output
 	var out = [];
