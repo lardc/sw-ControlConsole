@@ -49,6 +49,7 @@ namespace PE.ControlConsole
             EngineContext.SetParameter(@"help", new Action(Help));
             EngineContext.SetParameter(@"pl", new Action<IEnumerable<object>>(Plot));
             EngineContext.SetParameter(@"plot", new Action<IEnumerable<object>, double, double>(Plot));
+            EngineContext.SetParameter(@"plotn", new Action<IEnumerable<object>, double, string, string, string>(PlotNamed));
             EngineContext.SetParameter(@"plot2", new Action<IEnumerable<object>, IEnumerable<object>, double, double>(Plot));
             EngineContext.SetParameter(@"plot2s", new Action<IEnumerable<object>, IEnumerable<object>, double, double>(PlotSame));
             EngineContext.SetParameter(@"plot3", new Action<IEnumerable<object>, IEnumerable<object>, IEnumerable<object>, double, double>(Plot));
@@ -283,6 +284,18 @@ namespace PE.ControlConsole
             try
             {
                 PlotForm.RunPlot(YValues.Select(m => Convert.ToDouble(m, CultureInfo.InvariantCulture)), Step, InitX);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        private void PlotNamed(IEnumerable<object> YValues, double Step, string XName, string YName, string PlotName)
+        {
+            try
+            {
+                PlotForm.RunPlot(YValues.Select(m => Convert.ToDouble(m, CultureInfo.InvariantCulture)).ToList(), Step, XName, YName, PlotName);
             }
             catch (Exception e)
             {

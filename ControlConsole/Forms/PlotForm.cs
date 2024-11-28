@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
@@ -16,6 +17,11 @@ namespace PE.ControlConsole.Forms
         internal static void RunPlot(IEnumerable<double> YValues, double Step, double InitX)
         {
             RunPlotInternal(() => new PlotForm(YValues, Step, InitX));
+        }
+
+        internal static void RunPlot(IList<double> YValues, double Step, string XName, string YName, string PlotName)
+        {
+            RunPlotInternal(() => new PlotForm(YValues, Step, XName, YName, PlotName));
         }
 
         internal static void RunPlot(IList<double> YValues1, IList<double> YValues2, double Step, double InitX)
@@ -89,6 +95,13 @@ namespace PE.ControlConsole.Forms
             PlotData(YValues, Step, InitX);
         }
 
+        private PlotForm(IEnumerable<double> YValues, double Step, string XName, string YName, string PlotName)
+            : this(1, false, true)
+        {
+            OverrideNames(XName, YName, PlotName);
+            PlotData(YValues, Step, 0);
+        }
+
         private PlotForm(IList<double> YValues1, IList<double> YValues2, double Step, double InitX)
             : this(2, false, true)
         {
@@ -113,13 +126,13 @@ namespace PE.ControlConsole.Forms
             PlotData(XValues, YValues);
         }
 
-        private PlotForm(IList<double> XValues, IList<double> YValues, bool Scatter)
+        private PlotForm(IList<double> XValues, IList<double> YValues, bool _)
             : this(1, true, true)
         {
             PlotData(XValues, YValues);
         }
 
-        private PlotForm(IList<double> XValues, IList<double> YValues, bool Scatter, string XName, string YName, string PlotName)
+        private PlotForm(IList<double> XValues, IList<double> YValues, bool _, string XName, string YName, string PlotName)
             : this(1, true, true)
         {
             OverrideNames(XName, YName, PlotName);
