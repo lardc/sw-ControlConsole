@@ -349,7 +349,17 @@ namespace PE.ControlConsole
                     using (var reader = new StreamReader(stream))
                     {
                         var script = reader.ReadToEnd();
-                        RequestPostOperation(() => m_Dialog.ExecutionContext.Run(script));
+                        RequestPostOperation(() =>
+                        {
+                            try
+                            {
+                                m_Dialog.ExecutionContext.Run(script);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("Error in included script: " + ex.Message);
+                            }
+                        });
                     }
                 }
             }
