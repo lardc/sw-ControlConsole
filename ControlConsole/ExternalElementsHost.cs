@@ -409,7 +409,7 @@ namespace PE.ControlConsole
             {
                 bool FileFound = false;
 
-                // Åñëè â ïàïêå ïî óìîë÷àíèþ íåò, òî ïðîñìàòðèâàåì ïóòè
+                // Ð•ÑÐ»Ð¸ Ð² Ð¿Ð°Ð¿ÐºÐµ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ Ð½ÐµÑ‚, Ñ‚Ð¾ Ð¿Ñ€Ð¾ÑÐ¼Ð°Ñ‚Ñ€Ð¸Ð²Ð°ÐµÐ¼ Ð¿ÑƒÑ‚Ð¸
                 if (File.Exists(FileName))
                 {
                     FileFound = true;
@@ -436,7 +436,17 @@ namespace PE.ControlConsole
                     using (var reader = new StreamReader(stream))
                     {
                         var script = reader.ReadToEnd();
-                        RequestPostOperation(() => m_Dialog.ExecutionContext.Run(script));
+                        RequestPostOperation(() =>
+                        {
+                            try
+                            {
+                                m_Dialog.ExecutionContext.Run(script);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("Error in included script: " + ex.Message);
+                            }
+                        });
                     }
                 }
             }
