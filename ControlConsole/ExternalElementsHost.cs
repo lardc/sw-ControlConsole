@@ -11,7 +11,6 @@ using System.Threading;
 using System.Text.RegularExpressions;
 using Noesis.Javascript;
 using PE.ControlConsole.Forms;
-using NationalInstruments.Visa;
 using PE.ControlConsole.Properties;
 
 namespace PE.ControlConsole
@@ -33,7 +32,7 @@ namespace PE.ControlConsole
             var configFunctions = new ConfigFunctions(this);
 
             // Set parameters - external functions
-            EngineContext.SetParameter(@"tst", new Action(Tst));
+            EngineContext.SetParameter(@"tmc_list", new Action(TMCList));
             EngineContext.SetParameter(@"cls", new Action(Clr));
             EngineContext.SetParameter(@"closew", new Action(CloseWindows));
             EngineContext.SetParameter(@"exec", new Action<string, string>(Execute));
@@ -103,19 +102,63 @@ namespace PE.ControlConsole
             Console.Clear();
         }
 
-        private void Tst()
+        private void TMCList()
         {
-            using (var rmSession = new ResourceManager())
+            try
             {
-                var resources = rmSession.Find("(USB)?*");
-                foreach (string s in resources)
+                var visaAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                    .FirstOrDefault(a => a.GetName().Name == "NationalInstruments.Visa")
+                    ?? Assembly.Load("NationalInstruments.Visa");
+
+                if (visaAssembly == null)
                 {
-                    Console.WriteLine(s);
-                    var mbSession = (MessageBasedSession)rmSession.Open(s);
-                    mbSession.RawIO.Write("*IDN?");
-                    Console.WriteLine(mbSession.RawIO.ReadString());
-                    mbSession.Dispose();
+                    Console.WriteLine("Библиотека NationalInstruments.Visa не найдена.");
+                    return;
                 }
+
+                var resourceManagerType = visaAssembly.GetType("NationalInstruments.Visa.ResourceManager");
+                var messageBasedSessionType = visaAssembly.GetType("NationalInstruments.Visa.MessageBasedSession");
+
+                if (resourceManagerType == null || messageBasedSessionType == null)
+                {
+                    Console.WriteLine("Типы VISA не найдены.");
+                    return;
+                }
+
+                using (var rmSession = Activator.CreateInstance(resourceManagerType) as IDisposable)
+                {
+                    var findMethod = resourceManagerType.GetMethod("Find", new[] { typeof(string) });
+                    var resources = findMethod.Invoke(rmSession, new object[] { "(USB)?*" }) as IEnumerable<string>;
+                    if (resources == null)
+                    {
+                        Console.WriteLine("Нет доступных ресурсов VISA.");
+                        return;
+                    }
+                    int cnt = 1;
+                    foreach (string s in resources)
+                    {
+                        Console.WriteLine("#{0}, addr: {1}", cnt++, s);
+                        var openMethod = resourceManagerType.GetMethod("Open", new[] { typeof(string) });
+                        var mbSession = openMethod.Invoke(rmSession, new object[] { s });
+                        var rawIOProp = messageBasedSessionType.GetProperty("RawIO");
+                        var rawIO = rawIOProp.GetValue(mbSession, null);
+                        var writeMethod = rawIO.GetType().GetMethod("Write", new[] { typeof(string) });
+                        writeMethod.Invoke(rawIO, new object[] { "*IDN?" });
+                        var readStringMethod = rawIO.GetType().GetMethod("ReadString", Type.EmptyTypes);
+                        var idn = readStringMethod.Invoke(rawIO, null);
+                        Console.WriteLine("idn: {0}", idn);
+                        var disposeMethod = mbSession.GetType().GetMethod("Dispose");
+                        disposeMethod?.Invoke(mbSession, null);
+                    }
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine("Библиотека NationalInstruments.Visa не установлена.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка работы с VISA: " + ex.Message);
             }
         }
 

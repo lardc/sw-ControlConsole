@@ -28,6 +28,7 @@ Commands:
 	- uint(@low, @high) : @dword - create double word from two words
 	- portlist() : @description - create text description of available serial ports in the system
 	- pp() - print list of available serial ports
+	- tmc_list() - list TMS device with their IDN
 	- anykey() : @flag - return true if any key has been pressed
 	- readkey() : @string - wait for and return pressed key
 	- readline() : @string - wait for and return input string

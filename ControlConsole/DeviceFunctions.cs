@@ -6,7 +6,7 @@ using System.Text;
 using PE.ControlConsole.Properties;
 using PE.SCCI;
 using PE.SCCI.Master;
-using NationalInstruments.Visa;
+using System.Reflection;
 
 namespace PE.ControlConsole
 {
@@ -948,9 +948,35 @@ namespace PE.ControlConsole
 
     internal class TMCFunctions : IDisposable
     {
-        private readonly ResourceManager rmSession = new ResourceManager();
-        private MessageBasedSession mbSession;
+        private object rmSession;
+        private object mbSession;
+        private Type resourceManagerType;
+        private Type messageBasedSessionType;
         private bool IsConnected = false;
+
+        public TMCFunctions()
+        {
+            try
+            {
+                var visaAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                    .FirstOrDefault(a => a.GetName().Name == "NationalInstruments.Visa")
+                    ?? Assembly.Load("NationalInstruments.Visa");
+
+                if (visaAssembly == null)
+                    throw new Exception("VISA library not found");
+
+                resourceManagerType = visaAssembly.GetType("NationalInstruments.Visa.ResourceManager");
+                messageBasedSessionType = visaAssembly.GetType("NationalInstruments.Visa.MessageBasedSession");
+
+                rmSession = Activator.CreateInstance(resourceManagerType);
+            }
+            catch
+            {
+                rmSession = null;
+                resourceManagerType = null;
+                messageBasedSessionType = null;
+            }
+        }
 
         private string ReplaceCommonEscapeSequences(string s)
         {
@@ -959,61 +985,99 @@ namespace PE.ControlConsole
 
         public void list()
         {
+            if (rmSession == null || resourceManagerType == null)
+            {
+                Console.WriteLine("VISA не установлена.");
+                return;
+            }
             try
             {
-                var resources = rmSession.Find("(USB)?*");
-                foreach (string s in resources)
-                    Console.WriteLine(ReplaceCommonEscapeSequences(s));
+                var findMethod = resourceManagerType.GetMethod("Find", new[] { typeof(string) });
+                var resources = findMethod.Invoke(rmSession, new object[] { "(USB)?*" }) as IEnumerable<string>;
+                if (resources != null)
+                {
+                    foreach (string s in resources)
+                        Console.WriteLine(ReplaceCommonEscapeSequences(s));
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка работы с VISA: " + ex.Message);
+            }
         }
 
         public void co()
         {
+            if (rmSession == null || resourceManagerType == null || messageBasedSessionType == null)
+            {
+                Console.WriteLine("VISA не установлена.");
+                return;
+            }
             try
             {
-                if (IsConnected)
+                if (IsConnected && mbSession != null)
                 {
                     IsConnected = false;
-                    mbSession.Dispose();
+                    var disposeMethod = mbSession.GetType().GetMethod("Dispose");
+                    disposeMethod?.Invoke(mbSession, null);
+                    mbSession = null;
                 }
             }
             catch { }
 
             try
             {
-                var resources = rmSession.Find("(USB)?*");
-                mbSession = (MessageBasedSession)rmSession.Open(resources.First());
+                var findMethod = resourceManagerType.GetMethod("Find", new[] { typeof(string) });
+                var resources = findMethod.Invoke(rmSession, new object[] { "(USB)?*" }) as IEnumerable<string>;
+                if (resources == null || !resources.Any())
+                {
+                    Console.WriteLine("Нет доступных USB TMC устройств");
+                    return;
+                }
+                var openMethod = resourceManagerType.GetMethod("Open", new[] { typeof(string) });
+                mbSession = openMethod.Invoke(rmSession, new object[] { resources.First() });
                 IsConnected = true;
             }
-            catch(Exception)
+            catch (Exception)
             {
-                Console.WriteLine("No attached USB TMC devices");
+                Console.WriteLine("Нет подключённых USB TMC устройств");
             }
         }
 
         public void dco()
         {
-            try
+            if (mbSession != null)
             {
-                if (IsConnected)
+                try
                 {
-                    IsConnected = false;
-                    mbSession.Dispose();
+                    if (IsConnected)
+                    {
+                        IsConnected = false;
+                        var disposeMethod = mbSession.GetType().GetMethod("Dispose");
+                        disposeMethod?.Invoke(mbSession, null);
+                        mbSession = null;
+                    }
                 }
+                catch { }
             }
-            catch { }
         }
 
         public string q(string Command)
         {
+            if (!IsConnected || mbSession == null)
+            {
+                Console.WriteLine("Нет соединения с TMC устройством");
+                return null;
+            }
             try
             {
-                if (!IsConnected)
-                    throw new InvalidOperationException("No connection to TMC device");
-
-                mbSession.RawIO.Write(Command);
-                return ReplaceCommonEscapeSequences(mbSession.RawIO.ReadString());
+                var rawIOProp = messageBasedSessionType.GetProperty("RawIO");
+                var rawIO = rawIOProp.GetValue(mbSession, null);
+                var writeMethod = rawIO.GetType().GetMethod("Write", new[] { typeof(string) });
+                writeMethod.Invoke(rawIO, new object[] { Command });
+                var readStringMethod = rawIO.GetType().GetMethod("ReadString", Type.EmptyTypes);
+                var result = readStringMethod.Invoke(rawIO, null);
+                return ReplaceCommonEscapeSequences(result?.ToString() ?? string.Empty);
             }
             catch (Exception e)
             {
@@ -1024,12 +1088,17 @@ namespace PE.ControlConsole
 
         public void w(string Command)
         {
+            if (!IsConnected || mbSession == null)
+            {
+                Console.WriteLine("Нет соединения с TMC устройством");
+                return;
+            }
             try
             {
-                if (!IsConnected)
-                    throw new InvalidOperationException("No connection to TMC device");
-
-                mbSession.RawIO.Write(Command);
+                var rawIOProp = messageBasedSessionType.GetProperty("RawIO");
+                var rawIO = rawIOProp.GetValue(mbSession, null);
+                var writeMethod = rawIO.GetType().GetMethod("Write", new[] { typeof(string) });
+                writeMethod.Invoke(rawIO, new object[] { Command });
             }
             catch (Exception e)
             {
@@ -1040,12 +1109,18 @@ namespace PE.ControlConsole
 
         public string r()
         {
+            if (!IsConnected || mbSession == null)
+            {
+                Console.WriteLine("Нет соединения с TMC устройством");
+                return null;
+            }
             try
             {
-                if (!IsConnected)
-                    throw new InvalidOperationException("No connection to TMC device");
-
-                return ReplaceCommonEscapeSequences(mbSession.RawIO.ReadString());
+                var rawIOProp = messageBasedSessionType.GetProperty("RawIO");
+                var rawIO = rawIOProp.GetValue(mbSession, null);
+                var readStringMethod = rawIO.GetType().GetMethod("ReadString", Type.EmptyTypes);
+                var result = readStringMethod.Invoke(rawIO, null);
+                return ReplaceCommonEscapeSequences(result?.ToString() ?? string.Empty);
             }
             catch (Exception e)
             {
@@ -1058,10 +1133,18 @@ namespace PE.ControlConsole
         {
             try
             {
-                if (IsConnected)
-                    mbSession.Dispose();
-
-                rmSession.Dispose();
+                if (IsConnected && mbSession != null)
+                {
+                    var disposeMethod = mbSession.GetType().GetMethod("Dispose");
+                    disposeMethod?.Invoke(mbSession, null);
+                    mbSession = null;
+                }
+                if (rmSession != null)
+                {
+                    var disposeMethod = rmSession.GetType().GetMethod("Dispose");
+                    disposeMethod?.Invoke(rmSession, null);
+                    rmSession = null;
+                }
             }
             catch { }
         }
