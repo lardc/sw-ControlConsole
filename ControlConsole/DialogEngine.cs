@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Noesis.Javascript;
 
@@ -19,6 +20,7 @@ namespace PE.ControlConsole
 
         internal void Run()
         {
+            ReadLine.AutoCompletionHandler = new AutocompletionHandler();
             var input = new StringBuilder();
 
             while (!m_DoExit)
@@ -61,12 +63,14 @@ namespace PE.ControlConsole
 
         private static void InputCommand(StringBuilder Input)
         {
-            Console.Write(Environment.NewLine + @" > ");
-
             Input.Clear();
+            string prompt = Environment.NewLine + " > ";
+
             while (true)
             {
-                var line = Console.ReadLine();
+                var line = ReadLine.Read(prompt);
+                ReadLine.AddHistory(line);
+
                 if (String.IsNullOrWhiteSpace(line))
                     break;
 
@@ -77,7 +81,6 @@ namespace PE.ControlConsole
                 if (Input[Input.Length - 1] == '\\')
                 {
                     Input[Input.Length - 1] = ' ';
-                    Console.Write(@"   ");
                 }
                 else
                     break;
