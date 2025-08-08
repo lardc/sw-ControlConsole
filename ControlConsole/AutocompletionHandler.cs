@@ -8,9 +8,13 @@ using System.Threading.Tasks;
 
 namespace PE.ControlConsole
 {
-    internal class AutocompletionHandler : IAutoCompleteHandler
+    internal class AutoCompletionHandler : IAutoCompleteHandler
     {
-        public char[] Separators { get; set; } = new char[] { ' ', '.', '/', '(' };
+        public char[] Separators { get; set; } = new char[] { ' ', '.', '/', '(', '{' };
+
+        private string[] FunctionList;
+
+        public void SetFunctionList(string[] functionList) { this.FunctionList = functionList; }
 
         public string[] GetSuggestions(string text, int index)
         {
@@ -64,7 +68,7 @@ namespace PE.ControlConsole
                     "w(",
                     "r()"
                 };
-            else if (text.StartsWith("include("))
+            else if (text.StartsWith("include(") || text.StartsWith("i("))
             {
                 suggestions = new string[0];
                 var includePaths = Properties.Settings.Default.IncludePath
@@ -90,6 +94,7 @@ namespace PE.ControlConsole
 
             }
             else
+            {
                 suggestions = new string[]
                 {
                     "help()",
@@ -133,6 +138,10 @@ namespace PE.ControlConsole
                     "cout",
                     "cerr"
                 };
+
+                if (FunctionList != null && FunctionList.Length > 0)
+                    suggestions = suggestions.Concat(FunctionList).ToArray();
+            }
 
             var lastWord = text.Split(Separators).LastOrDefault() ?? text;
             if (!string.IsNullOrEmpty(lastWord))

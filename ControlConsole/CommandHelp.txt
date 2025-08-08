@@ -36,6 +36,8 @@ Commands:
 	- create1(@typename, @Arg1) : @object - create .NET object using string type name and argument
 	- create2(@typename, @Arg1, @Arg2) : @object - create .NET object using string type name and 2 arguments
 	- loadlib(@filename, @method) : @object - load method from .NET dll
+	- functionsList(@substring) - prints list of functions which names contain specified substring, if substring is not specified, prints all functions
+	- fl(@substring) - same as "functionsList"
 	- quit() - quit from program
 
 Predefined objects:

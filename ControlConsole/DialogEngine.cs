@@ -12,6 +12,7 @@ namespace PE.ControlConsole
         private ExternalElementsHost m_Elements;
         private readonly Queue<Action> m_PostOperations = new Queue<Action>();
         private bool m_RecreateContext, m_DoExit;
+        private AutoCompletionHandler m_AutocompletionHandler = new AutoCompletionHandler();
         
         internal DialogEngine()
         {
@@ -20,7 +21,7 @@ namespace PE.ControlConsole
 
         internal void Run()
         {
-            ReadLine.AutoCompletionHandler = new AutocompletionHandler();
+            ReadLine.AutoCompletionHandler = m_AutocompletionHandler;
             var input = new StringBuilder();
 
             while (!m_DoExit)
@@ -56,6 +57,11 @@ namespace PE.ControlConsole
         internal JavascriptContext ExecutionContext
         {
             get { return m_Context; }
+        }
+
+        internal void SetFunctionList(string[] functionList)
+        {
+            m_AutocompletionHandler.SetFunctionList(functionList);
         }
 
 

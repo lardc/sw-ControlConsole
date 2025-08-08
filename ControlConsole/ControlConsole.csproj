@@ -143,7 +143,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AutocompletionHandler.cs" />
+    <Compile Include="AutoCompletionHandler.cs" />
     <Compile Include="ConfigFunctions.cs" />
     <Compile Include="DeviceFunctions.cs" />
     <Compile Include="DialogEngine.cs" />
