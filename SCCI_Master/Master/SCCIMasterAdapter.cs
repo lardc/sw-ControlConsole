@@ -796,6 +796,13 @@ namespace PE.SCCI.Master
                                     PortConfguration.ParityMode, PortConfguration.DataBits,
                                     PortConfguration.StopBits) { ReceivedBytesThreshold = 1 };
 
+            // Настройка аппаратного управления потоком DTR/DSR (опционально)
+            if (PortConfguration.UseDtrDsrHandshake)
+            {
+                m_Port.Handshake = Handshake.RequestToSendXOnXOff;
+                m_Port.DtrEnable = true;
+            }
+
             m_Port.DataReceived += PortDataReceived;
 
             try

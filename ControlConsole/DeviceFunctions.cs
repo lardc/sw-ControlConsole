@@ -48,41 +48,16 @@ namespace PE.ControlConsole
 
         public void Connect(int ComPortNumber)
         {
-            if (m_Adapter.Connected)
-                Disconnect();
-
-            try
-            {
-                m_Adapter.Initialize(new SerialPortConfigurationMaster
-                {
-                    BaudRate = Baudrate,
-                    DataBits = 8,
-                    ParityMode = Settings.Default.SerialParity,
-                    PortNumber = ComPortNumber,
-                    StopBits = Settings.Default.SerialStopBits,
-                    TimeoutForSyncReceive = Settings.Default.RequestTimeout_ms,
-                    TimeoutForSyncStreamReceive = Settings.Default.StreamingTimeout_ms,
-                    RetransmitsCountOnError = m_Retransmits,
-                    UseRetransmitsForArrays = m_UseRetransmitsForArrays
-                });
-
-                NodeID = 0;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                throw;
-            }
-        }
-
-        // ReSharper disable InconsistentNaming
-        public void co(int ComPortNumber)
-        // ReSharper restore InconsistentNaming
-        {
-            Connect(ComPortNumber);
+            Connect(ComPortNumber, Baudrate, false);
+            NodeID = 0;
         }
 
         public void Connect(int ComPortNumber, int CustomBaudRate)
+        {
+            Connect(ComPortNumber, CustomBaudRate, false);
+        }
+
+        public void Connect(int ComPortNumber, int CustomBaudRate, bool useDtrDsrHandshake)
         {
             if (m_Adapter.Connected)
                 Disconnect();
@@ -99,7 +74,8 @@ namespace PE.ControlConsole
                     TimeoutForSyncReceive = Settings.Default.RequestTimeout_ms,
                     TimeoutForSyncStreamReceive = Settings.Default.StreamingTimeout_ms,
                     RetransmitsCountOnError = m_Retransmits,
-                    UseRetransmitsForArrays = m_UseRetransmitsForArrays
+                    UseRetransmitsForArrays = m_UseRetransmitsForArrays,
+                    UseDtrDsrHandshake = useDtrDsrHandshake
                 });
             }
             catch (Exception e)
@@ -110,10 +86,10 @@ namespace PE.ControlConsole
         }
 
         // ReSharper disable InconsistentNaming
-        public void co(int ComPortNumber, int CustomBaudRate)
+        public void co(int ComPortNumber)
         // ReSharper restore InconsistentNaming
         {
-            Connect(ComPortNumber, CustomBaudRate);
+            Connect(ComPortNumber);
         }
 
         public void Disconnect()

@@ -48,6 +48,10 @@ namespace PE.SCCI
         /// Use retransmits during array transfer
         /// </summary>
         public bool RetransmitOnTimeout { get; set; }
+        /// <summary>
+        /// Use DTR/DSR hardware handshake (optional)
+        /// </summary>
+        public bool UseDtrDsrHandshake { get; set; }
     }
 
     /// <summary>
