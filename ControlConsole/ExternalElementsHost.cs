@@ -484,6 +484,13 @@ namespace PE.ControlConsole
                             try
                             {
                                 m_Dialog.ExecutionContext.Run(script);
+                                
+                                var functions = m_Dialog.ExecutionContext.Run(@"Object.getOwnPropertyNames(this).filter(function(name) { return typeof this[name] === 'function'; })");
+                                if (functions is object[] functionsList)
+                                {
+                                    string[] stringFunctionList = functionsList.Select(f => $"{f?.ToString()}(").ToArray();
+                                    m_Dialog.SetFunctionList(stringFunctionList);
+                                }
                             }
                             catch (Exception ex)
                             {

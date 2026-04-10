@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Noesis.Javascript;
 
@@ -11,6 +12,7 @@ namespace PE.ControlConsole
         private ExternalElementsHost m_Elements;
         private readonly Queue<Action> m_PostOperations = new Queue<Action>();
         private bool m_RecreateContext, m_DoExit;
+        private AutoCompletionHandler m_AutocompletionHandler = new AutoCompletionHandler();
         
         internal DialogEngine()
         {
@@ -19,6 +21,7 @@ namespace PE.ControlConsole
 
         internal void Run()
         {
+            ReadLine.AutoCompletionHandler = m_AutocompletionHandler;
             var input = new StringBuilder();
 
             while (!m_DoExit)
@@ -56,17 +59,24 @@ namespace PE.ControlConsole
             get { return m_Context; }
         }
 
+        internal void SetFunctionList(string[] functionList)
+        {
+            m_AutocompletionHandler.SetFunctionList(functionList);
+        }
+
 
         #region Private members
 
         private static void InputCommand(StringBuilder Input)
         {
-            Console.Write(Environment.NewLine + @" > ");
-
             Input.Clear();
+            string prompt = Environment.NewLine + " > ";
+
             while (true)
             {
-                var line = Console.ReadLine();
+                var line = ReadLine.Read(prompt);
+                ReadLine.AddHistory(line);
+
                 if (String.IsNullOrWhiteSpace(line))
                     break;
 
@@ -77,7 +87,6 @@ namespace PE.ControlConsole
                 if (Input[Input.Length - 1] == '\\')
                 {
                     Input[Input.Length - 1] = ' ';
-                    Console.Write(@"   ");
                 }
                 else
                     break;
