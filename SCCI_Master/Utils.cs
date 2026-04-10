@@ -30,19 +30,17 @@ namespace PE.SCCI
             byte[] SourceArray = new byte[Source.Count];
             Source.CopyTo(SourceArray, 0);
 
-            for (var i = 0; i < SourceLength / 4; ++i)
+            for (var i = SourceOffset; i < SourceLength; i += 4)
             {
-                var idx = SourceOffset + i * 4;
-
                 // Flip bytes
                 for (var j = 0; j <= 2; j += 2)
                 {
-                    byte tmp = SourceArray[idx + j];
-                    SourceArray[idx + j] = SourceArray[idx + 1 + j];
-                    SourceArray[idx + 1 + j] = tmp;
+                    byte tmp = SourceArray[i + j];
+                    SourceArray[i + j] = SourceArray[i + 1 + j];
+                    SourceArray[i + 1 + j] = tmp;
                 }
 
-                Destination.Add(System.BitConverter.ToSingle(SourceArray, idx));
+                Destination.Add(System.BitConverter.ToSingle(SourceArray, i));
             }
         }
     }
