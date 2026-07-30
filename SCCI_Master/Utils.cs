@@ -30,8 +30,8 @@ namespace PE.SCCI
             byte[] SourceArray = new byte[Source.Count];
             Source.CopyTo(SourceArray, 0);
 
-            for (var i = SourceOffset; i < SourceLength; i += 4)
-            {
+            for (var i = SourceOffset; i < SourceOffset + SourceLength; i += 4)
+                {
                 // Flip bytes
                 for (var j = 0; j <= 2; j += 2)
                 {

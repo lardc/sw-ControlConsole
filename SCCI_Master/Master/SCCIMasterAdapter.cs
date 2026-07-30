@@ -669,10 +669,11 @@ namespace PE.SCCI.Master
                     var crc = m_ReadBuffer[4];
                     int rawSourceOffset = headerPacketLength * 2 + sourceOffset;
 
-                    ReceiveDataStream(dataCount, useCRC, crc, rawSourceOffset, out int rawDataLength);
+                    ReceiveDataStream(dataCount, useCRC, crc, rawSourceOffset, out _);
                     m_RawReadBufferLength -= rawSourceOffset;
 
-                    Utils.DeserializeBytesToFloatArray(m_RawReadBuffer, rawDataLength, rawSourceOffset, result);
+                    // dataCount — число ushort полезных данных; поток дополнен до кратности DATA_STREAM_QUANTA
+                    Utils.DeserializeBytesToFloatArray(m_RawReadBuffer, dataCount * 2, rawSourceOffset, result);
                 }
                 catch (ProtocolInvaidPacketFormatException e)
                 {
