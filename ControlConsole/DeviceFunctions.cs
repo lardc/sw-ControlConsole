@@ -815,20 +815,21 @@ namespace PE.ControlConsole
                 if (!m_Adapter.Connected)
                     throw new InvalidOperationException("No connection to device");
 
-                if (NodeID != 0)
-                    m_Adapter.ReadFloat(0, 0);
-
-                m_Adapter.ReadFloat((ushort)NodeID, 0);
-            }
-            catch (ProtocolErrorFrameException e)
-            {
-                if (e.Error == SCCIErrors.InvalidSfunction || e.Error == SCCIErrors.NotSupported)
-                    UseFloat = false;
+                m_Adapter.Read16((ushort)NodeID, (ushort)StartAddress);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 throw;
+            }
+
+            try
+            {
+                m_Adapter.ReadFloat((ushort)NodeID, (ushort)StartAddress);
+            }
+            catch (Exception)
+            {
+                UseFloat = false;
             }
 
             try
