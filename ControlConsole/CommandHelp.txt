@@ -10,7 +10,8 @@ Commands:
 	- sleep(@milliseconds) - pause for specified time
 	- save(@filename, [@values]) - write array values to file
 	- append(@filename, [@values]) - append array values to file
-	- load(@filename) : [@values] - read array values from file
+	- load(@filename) : [@values] - read values from file and split in array
+	- loadlines(@filename) : [@values] - read file and return text lines
 	- loadtihex(@filename) : [@values] - read array of hex values from file
 	- loadbin(@filename) : [@values] - read binary file
 	- include(@filename) - include JS functions from the file into current context

@@ -43,6 +43,7 @@ namespace PE.ControlConsole
             EngineContext.SetParameter(@"save", new Action<string, IList<object>>(Save));
             EngineContext.SetParameter(@"append", new Action<string, IList<object>>(Append));
             EngineContext.SetParameter(@"load", new Func<string, object[]>(Load));
+            EngineContext.SetParameter(@"loadlines", new Func<string, object[]>(LoadLines));
             EngineContext.SetParameter(@"loadtihex", new Func<string, object[]>(LoadTIHex));
             EngineContext.SetParameter(@"loadbin", new Func<string, object[]>(LoadBin));
             EngineContext.SetParameter(@"help", new Action(Help));
@@ -247,7 +248,30 @@ namespace PE.ControlConsole
                 return null;
             }             
         }
-        
+
+        private object[] LoadLines(string FileName)
+        {
+            try
+            {
+                using (var stream = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var reader = new StreamReader(stream, Encoding.ASCII))
+                {
+                    var result = new List<object>();
+                    string data;
+
+                    while ((data = reader.ReadLine()) != null)
+                        result.Add(data);
+
+                    return result.ToArray();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
+        }
+
         private object[] LoadTIHex(string FileName)
         {
             try
