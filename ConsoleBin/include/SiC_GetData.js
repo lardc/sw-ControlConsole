@@ -1,7 +1,8 @@
 include("Tektronix.js")
 
-sic_gd_filter_points = 5;
-sic_gd_filter_factor = 0.5;
+// Savitzky-Golay filter settings (window must be odd and greater than order)
+sic_gd_filter_window = 51;
+sic_gd_filter_order = 3;
 
 sic_gd_vce_probe = 100;
 sic_gd_ice_shunt = 2.5e-3;
@@ -55,22 +56,78 @@ function SiC_GD_GetTimeScale()
 	return TEK_Exec("horizontal:main:scale?");
 }
 
+// Savitzky-Golay weights: for each offset X0 from the window center (-m..0) returns
+// the weights of the least squares polynomial fit evaluated at X0
+function SiC_GD_SGWeights(Window, Order)
+{
+	var m = (Window - 1) / 2;
+	var n = Order + 1;
+	var res = [];
+	
+	// normal matrix A'A (x is scaled to [-1, 1] for conditioning)
+	var M = [];
+	for (var r = 0; r < n; ++r)
+	{
+		M[r] = [];
+		for (var c = 0; c < n; ++c)
+		{
+			var sum = 0;
+			for (var k = -m; k <= m; ++k)
+				sum += Math.pow(k / m, r + c);
+			M[r][c] = sum;
+		}
+	}
+	
+	for (var x0 = -m; x0 <= 0; ++x0)
+	{
+		// solve M * v = [1, x0, x0^2, ...] by Gauss elimination with pivoting
+		var A = [];
+		for (var r = 0; r < n; ++r)
+		{
+			A[r] = M[r].slice(0);
+			A[r].push(Math.pow(x0 / m, r));
+		}
+		
+		for (var c = 0; c < n; ++c)
+		{
+			var piv = c;
+			for (var r = c + 1; r < n; ++r)
+				if (Math.abs(A[r][c]) > Math.abs(A[piv][c]))
+					piv = r;
+			var tmp = A[c]; A[c] = A[piv]; A[piv] = tmp;
+			
+			for (var r = 0; r < n; ++r)
+			{
+				if (r == c)
+					continue;
+				var f = A[r][c] / A[c][c];
+				for (var k = c; k <= n; ++k)
+					A[r][k] -= f * A[c][k];
+			}
+		}
+		
+		var v = [];
+		for (var r = 0; r < n; ++r)
+			v[r] = A[r][n] / A[r][r];
+		
+		var w = [];
+		for (var k = -m; k <= m; ++k)
+		{
+			var wk = 0;
+			for (var r = 0; r < n; ++r)
+				wk += v[r] * Math.pow(k / m, r);
+			w.push(wk);
+		}
+		res.push(w);
+	}
+	
+	return res;
+}
+
 function SiC_GD_Filter(Data, ScaleI)
 {
 	if (Data.length == 0)
 		return [];
-	
-	var filtered_avg = [];
-	var filtered_spl = [];
-	
-	// avg filtering
-	for (var i = 0; i < (Data.length - Math.pow(sic_gd_filter_points, 2)); ++i)
-	{
-		var avg_point = 0;
-		for (var j = i; j < (i + Math.pow(sic_gd_filter_points, 2)); j += sic_gd_filter_points)
-			avg_point += parseFloat(Data[j]);
-		filtered_avg[i] = avg_point / sic_gd_filter_points;
-	}
 	
 	// current shunt scale
 	var scale
@@ -79,18 +136,55 @@ function SiC_GD_Filter(Data, ScaleI)
 	else
 		scale = ScaleI;
 	
-	// spline filtering
-	for (var i = 0; i < (filtered_avg.length - 3); ++i)
+	var window = sic_gd_filter_window;
+	if (window % 2 == 0)
+		++window;
+	
+	var raw = [];
+	for (var i = 0; i < Data.length; ++i)
+		raw[i] = parseFloat(Data[i]);
+	
+	var filtered = [];
+	
+	// not enough data for the filter
+	if (window > raw.length || sic_gd_filter_order >= window)
 	{
-		filtered_spl[i] =	Math.pow(1 - sic_gd_filter_factor, 3) * filtered_avg[i] +
-							3 * sic_gd_filter_factor * Math.pow(1 - sic_gd_filter_factor, 2) * filtered_avg[i + 1] +
-							3 * Math.pow(sic_gd_filter_factor, 2) * (1 - sic_gd_filter_factor) * filtered_avg[i + 2] +
-							Math.pow(sic_gd_filter_factor, 3) * filtered_avg[i + 3];
-		
-		filtered_spl[i] *= scale;
+		for (var i = 0; i < raw.length; ++i)
+			filtered[i] = raw[i] * scale;
+		return filtered;
 	}
 	
-	return filtered_spl;
+	var m = (window - 1) / 2;
+	var weights = SiC_GD_SGWeights(window, sic_gd_filter_order);
+	
+	// Savitzky-Golay filtering; the first and the last m points use the
+	// polynomial fitted to the first and the last window respectively
+	for (var i = 0; i < raw.length; ++i)
+	{
+		var start, w;
+		if (i < m)
+		{
+			start = 0;
+			w = weights[i];
+		}
+		else if (i >= raw.length - m)
+		{
+			start = raw.length - window;
+			w = weights[raw.length - 1 - i].slice(0).reverse();
+		}
+		else
+		{
+			start = i - m;
+			w = weights[m];
+		}
+		
+		var sum = 0;
+		for (var k = 0; k < window; ++k)
+			sum += w[k] * raw[start + k];
+		filtered[i] = sum * scale;
+	}
+	
+	return filtered;
 }
 
 function SiC_GD_InvertData(Data)
